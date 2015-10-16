@@ -1,2 +1,2 @@
 # GoToBot
-A slack bot
+A slack bot.

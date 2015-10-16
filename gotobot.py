@@ -80,7 +80,7 @@ def startBot():
                                     sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
                         #sc.rtm_send_message(msg["channel"], msg["text"])
                         elif ("~nye" in msg["text"].lower()):
-                            nyeMlg = "http://gph.is/1JUC72i"
+                            nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
                             sc.rtm_send_message(msg["channel"], nyeMlg)
                 elif("ok" in msg and msg["ok"] == True):
                     timestamp.put({"ts":msg["ts"],"channel":last_channel})

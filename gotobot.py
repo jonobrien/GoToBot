@@ -112,11 +112,14 @@ def quote(msg):
         if(args[1] in people):
             fileName = people[people.index(args[1])] + "Quotes.txt"
             #need to get full quote
-            with open(fileName, "a+") as f:
-                if(os.path.isfile(fileName)):
+            if(os.path.isfile(fileName)):
+                with open(fileName, "a+") as f:
                     f.write("," + args[2])
-                else:
+            else:
+                with open(fileName, "a+") as f:
                     f.write(args[2])
+            
+                
             sc.rtm_send_message(msg["channel"], "Quote added " + args[2])
     elif(len(args) == 2):
         print(2)

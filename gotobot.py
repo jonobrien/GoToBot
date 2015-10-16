@@ -53,7 +53,7 @@ def startBot():
                         startBot()
                     #print("type" in msg and msg["type"] == "message"and "text" in msg)
                     if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable for c in msg["text"].replace("'",""))):
-                        print(msg)
+                        #print(msg)
                         if(msg["text"].lower() == "~addgrouptowhitelist" and msg['channel'] not in whitelist):
                             whitelist.append(msg["channel"])
                             with open("whitelist.txt", "w") as whiteWrite:

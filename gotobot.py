@@ -29,7 +29,7 @@ def startBot():
         while True:
             msg = sc.rtm_read()
             if(len(msg) == 1):
-                print(msg)
+                #print(msg)
                 msg = msg[0]
                 #print("type" in msg and msg["type"] == "message"and "text" in msg)
                 if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable for c in msg["text"].replace("'",""))):

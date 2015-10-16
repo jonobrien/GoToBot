@@ -14,12 +14,12 @@ sc = SlackClient(token)
 interns = ["Jon", "Yura", "Alex", "Avik", "Derek", "Tommy"]
 people = interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda"]
 timestamp = queue.Queue()
+global last_channel
 def startBot():
-    last_channel = ""
     print(datetime.datetime.now())
     # g = git.cmd.Git("C:\\Users\\D\\pfpui")
     whiteWrite = open
-
+    last_channel = ""
     whitelist = []
     with open("whitelist.txt", "r") as whiteRead:
          whitelist = whiteRead.read().split(" ")
@@ -31,6 +31,12 @@ def startBot():
             if(len(msg) == 1):
                 print(msg)
                 msg = msg[0]
+                if("type" in msg and msg["type"] == "error"):
+                    print ("[!!] error in message, restarting bot")
+                    error = "error - no quotes found"
+                    print(sc)
+                    sc.rtm_send_message("G0ARYMG3E", error)
+                    startBot()
                 #print("type" in msg and msg["type"] == "message"and "text" in msg)
                 if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable for c in msg["text"].replace("'",""))):
                     #print(1)

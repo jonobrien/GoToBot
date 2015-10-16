@@ -66,11 +66,13 @@ def startBot():
                             while not timestamp.empty():
                                 ts = timestamp.get()
                                 print(ts)
-                                sc.api_call("chat.delete",channel=str(ts["channel"]), ts=str(ts["ts"]))
+                                for w in whitelist:
+                                    sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
                         elif("~delete" in msg["text"].lower()):
                             if(not timestamp.empty()):
                                 ts = timestamp.get()
-                                sc.api_call("chat.delete",channel=str(ts["channel"]), ts=str(ts["ts"]))
+                                for w in whitelist:
+                                    sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
                         #sc.rtm_send_message(msg["channel"], msg["text"])
                 elif("ok" in msg and msg["ok"] == True):
                     timestamp.put({"ts":msg["ts"],"channel":last_channel})

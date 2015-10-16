@@ -29,7 +29,7 @@ def startBot():
         while True:
             msg = sc.rtm_read()
             if(len(msg) == 1):
-                print(msg)
+                #print(msg)
                 msg = msg[0]
                 if("type" in msg and msg["type"] == "error"):
                     print ("[!!] error in message, restarting bot")

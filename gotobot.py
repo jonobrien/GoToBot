@@ -6,7 +6,17 @@ import os.path
 import datetime
 import queue
 from slackclient import SlackClient
+import sys, traceback
+
 #import git
+
+def connect():
+    pass
+def main():
+    pass
+
+
+
 token = ""
 with open("token.txt", "r") as tRead:
          token = tRead.read()
@@ -16,83 +26,94 @@ people = interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff
 timestamp = queue.Queue()
 last_channel = ""
 def startBot():
-    print(datetime.datetime.now())
-    # g = git.cmd.Git("C:\\Users\\D\\pfpui")
-    whiteWrite = open
-    whitelist = []
-    global last_channel
-    with open("whitelist.txt", "r") as whiteRead:
-         whitelist = whiteRead.read().split(" ")
-    #whitelist.remove('')
-    # g.pull()
-    if sc.rtm_connect():
-        while True:
-            msg = sc.rtm_read()
-            if(len(msg) == 1):
-                #print(msg)
-                msg = msg[0]
-                if("type" in msg and msg["type"] == "error"):
-                    print ("[!!] error in message, restarting bot")
-                    error = "error - no quotes found"
-                    sc.rtm_send_message(last_channel, error)
-                    startBot()
-                #print("type" in msg and msg["type"] == "message"and "text" in msg)
-                if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable for c in msg["text"].replace("'",""))):
-                    #print(1)
-                    if(msg["text"].lower() == "~addgrouptowhitelist" and msg['channel'] not in whitelist):
-                        whitelist.append(msg["channel"])
-                        with open("whitelist.txt", "w") as whiteWrite:
-                            whiteWrite.write(" ".join(whitelist))
-                    elif(msg["channel"] in whitelist):
-                        #print("whitelisted")
-                        if("~colorname" in msg["text"].lower()):
-                            colorCode(msg)
-                        elif("~randomintern" in msg["text"].lower()):
-                            last_channel = msg["channel"]
-                            sc.rtm_send_message(msg["channel"], random.choice(interns))
-                        elif("~catfacts" in msg["text"].lower()):
-                            print("cat")
-                            request = str(urllib.request.urlopen("http://catfacts-api.appspot.com/api/facts?number=1").read())
-                            last_channel = msg["channel"]
-                            sc.rtm_send_message(msg["channel"], request[request.find('[') + 2:request.find(']') - 1])
-                        elif("~quote" in msg["text"].lower()):
-                            print("quote")
-                            quote(msg)
-                        elif("~startpoll" in msg["text"].lower()):
-                            print("poll")
-                            startPoll(msg)
-                        elif("~stoppoll" in msg["text"].lower()):
-                            pass
-                            stopPoll(msg)
-                        elif("~vote" in msg["text"].lower()):
-                            pass
-                            vote(msg)
-                        elif("~deleteall" in msg["text"].lower()):
-                            while not timestamp.empty():
-                                ts = timestamp.get()
-                                print(ts)
-                                for w in whitelist:
-                                    sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
-                        elif("~delete" in msg["text"].lower()):
-                            if(not timestamp.empty()):
-                                ts = timestamp.get()
-                                for w in whitelist:
-                                    sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
-                        #sc.rtm_send_message(msg["channel"], msg["text"])
-                        elif ("~nye" in msg["text"].lower()):
-                            nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
-                            sc.rtm_send_message(msg["channel"], nyeMlg)
-                        elif ("testing" in msg["text"].lower()):
-                            nyeMlg = "blackbox whitebox "*random.randrange(1,4)
-                            sc.rtm_send_message(msg["channel"], nyeMlg)
-                elif("ok" in msg and msg["ok"] == True):
-                    timestamp.put({"ts":msg["ts"],"channel":last_channel})
-            elif(len(msg) > 1):
-                print(msg)
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            time.sleep(.5)
-    else:
-        print("Connection Failed, invalid token?")
+    try:
+
+        print(datetime.datetime.now())
+        # g = git.cmd.Git("C:\\Users\\D\\pfpui")
+        whiteWrite = open
+        whitelist = []
+        global last_channel
+        with open("whitelist.txt", "r") as whiteRead:
+             whitelist = whiteRead.read().split(" ")
+        #whitelist.remove('')
+        # g.pull()
+        if sc.rtm_connect():
+            while True:
+                msg = sc.rtm_read()
+                if(len(msg) == 1):
+                    #print(msg)
+                    msg = msg[0]
+                    #error checking
+                    if("type" in msg and msg["type"] == "error"):
+                        #need a proper reconnect function
+                        #doesnt regain connection token
+                        print ("[!!] error in message, restarting bot")
+                        error = "error - no quotes found"
+                        sc.rtm_send_message(last_channel, error)
+                        startBot()
+                    #print("type" in msg and msg["type"] == "message"and "text" in msg)
+                    if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable for c in msg["text"].replace("'",""))):
+                        print(msg)
+                        if(msg["text"].lower() == "~addgrouptowhitelist" and msg['channel'] not in whitelist):
+                            whitelist.append(msg["channel"])
+                            with open("whitelist.txt", "w") as whiteWrite:
+                                whiteWrite.write(" ".join(whitelist))
+                        elif(msg["channel"] in whitelist):
+                            #print("whitelisted")
+                            if("~colorname" in msg["text"].lower()):
+                                colorCode(msg)
+                            elif("~randomintern" in msg["text"].lower()):
+                                last_channel = msg["channel"]
+                                sc.rtm_send_message(msg["channel"], random.choice(interns))
+                            elif("~catfacts" in msg["text"].lower()):
+                                print("cat")
+                                request = str(urllib.request.urlopen("http://catfacts-api.appspot.com/api/facts?number=1").read())
+                                last_channel = msg["channel"]
+                                sc.rtm_send_message(msg["channel"], request[request.find('[') + 2:request.find(']') - 1])
+                            elif("~quote" in msg["text"].lower()):
+                                print("quote")
+                                quote(msg)
+                            elif("~startpoll" in msg["text"].lower()):
+                                print("poll")
+                                startPoll(msg)
+                            elif("~stoppoll" in msg["text"].lower()):
+                                pass
+                                stopPoll(msg)
+                            elif("~vote" in msg["text"].lower()):
+                                pass
+                                vote(msg)
+                            elif("~deleteall" in msg["text"].lower()):
+                                while not timestamp.empty():
+                                    ts = timestamp.get()
+                                    print(ts)
+                                    for w in whitelist:
+                                        sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
+                            elif("~delete" in msg["text"].lower()):
+                                if(not timestamp.empty()):
+                                    ts = timestamp.get()
+                                    for w in whitelist:
+                                        sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
+                            #sc.rtm_send_message(msg["channel"], msg["text"])
+                            elif ("~nye" in msg["text"].lower()):
+                                nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
+                                sc.rtm_send_message(msg["channel"], nyeMlg)
+                            elif ("testing" in msg["text"].lower()):
+                                testing = "blackbox whitebox "*random.randrange(1,4)
+                                sc.rtm_send_message(msg["channel"], testing)
+                    elif("ok" in msg and msg["ok"] == True):
+                        timestamp.put({"ts":msg["ts"],"channel":last_channel})
+                elif(len(msg) > 1):
+                    print(msg)
+                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                time.sleep(1)
+        else:
+            print("Connection Failed, invalid token?")
+    except AttributeError:
+        print("[!!] error - probably in the send")
+        traceback.print_exc(file=sys.stdout)
+        print("[!!] restarting the bot")
+        startBot()
+
 
 
 def colorCode(msg):

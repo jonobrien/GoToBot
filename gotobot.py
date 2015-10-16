@@ -34,7 +34,6 @@ def startBot():
                 if("type" in msg and msg["type"] == "error"):
                     print ("[!!] error in message, restarting bot")
                     error = "error - no quotes found"
-                    print(sc)
                     sc.rtm_send_message(last_channel, error)
                     startBot()
                 #print("type" in msg and msg["type"] == "message"and "text" in msg)
@@ -80,6 +79,9 @@ def startBot():
                                 for w in whitelist:
                                     sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
                         #sc.rtm_send_message(msg["channel"], msg["text"])
+                        elif ("~nye" in msg["text"].lower()):
+                            nyeMlg = "http://gph.is/1JUC72i"
+                            sc.rtm_send_message(msg["channel"], nyeMlg)
                 elif("ok" in msg and msg["ok"] == True):
                     timestamp.put({"ts":msg["ts"],"channel":last_channel})
             elif(len(msg) > 1):
@@ -116,6 +118,10 @@ def quote(msg):
     print(msg)
     last_channel = msg["channel"]
     args = msg["text"].split(",")
+    channel = msg["channel"]
+    if (channel != "G0CCGHGKS"):
+        print("quote check")
+        return -1
     print(len(args))
     print(args)
     if(len(args) >= 3):

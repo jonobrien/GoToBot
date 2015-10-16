@@ -7,13 +7,15 @@ import datetime
 import queue
 from slackclient import SlackClient
 #import git
-token = "xoxb-10882954435-SMZNaNlnbHilsDWo6fgyuuDT"# found at https://api.slack.com/#auth)
+token = ""
+with open("token.txt", "r") as tRead:
+         token = tRead.read()
 sc = SlackClient(token)
 interns = ["Jon", "Yura", "Alex", "Avik", "Derek", "Tommy"]
 people = interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda"]
 timestamp = queue.Queue()
-last_channel = ""
 def startBot():
+    last_channel = ""
     print(datetime.datetime.now())
     # g = git.cmd.Git("C:\\Users\\D\\pfpui")
     whiteWrite = open

@@ -82,6 +82,9 @@ def startBot():
                         elif ("~nye" in msg["text"].lower()):
                             nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
                             sc.rtm_send_message(msg["channel"], nyeMlg)
+                        elif ("testing" in msg["text"].lower()):
+                            nyeMlg = "blackbox whitebox "*random.randrange(1,4)
+                            sc.rtm_send_message(msg["channel"], nyeMlg)
                 elif("ok" in msg and msg["ok"] == True):
                     timestamp.put({"ts":msg["ts"],"channel":last_channel})
             elif(len(msg) > 1):

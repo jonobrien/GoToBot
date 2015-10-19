@@ -51,7 +51,11 @@ def startBot():
                         #doesnt regain connection token
                         print ("[!!] error in message, restarting bot")
                         error = "error - no quotes found"
-                        sc.rtm_send_message(last_channel, error)
+                        try:
+                            sc.rtm_send_message(last_channel, error)
+                        except Exception:
+                            print("[!!] sending failed")
+                            traceback.print_exc(file=sys.stdout)
                         sc = SlackClient(token)
                         startBot()
                     #print("type" in msg and msg["type"] == "message"and "text" in msg)
@@ -71,7 +75,7 @@ def startBot():
                                     sc.rtm_send_message(last_channel, random.choice(interns))
                                 except Exception:
                                     print("[!!] sending failed")
-                                    print(Exception)
+                                    traceback.print_exc(file=sys.stdout)
                             elif("~catfacts" in msg["text"].lower()):
                                 print("cat")
                                 request = str(urllib.request.urlopen("http://catfacts-api.appspot.com/api/facts?number=1").read())
@@ -80,7 +84,7 @@ def startBot():
                                     sc.rtm_send_message(last_channel, request[request.find('[') + 2:request.find(']') - 1])
                                 except Exception:
                                     print("[!!] sending failed")
-                                    print(Exception)
+                                    traceback.print_exc(file=sys.stdout)
                             elif("~quote" in msg["text"].lower()):
                                 print("quote")
                                 quote(msg)
@@ -111,14 +115,14 @@ def startBot():
                                     sc.rtm_send_message(msg["channel"], nyeMlg)
                                 except Exception:
                                     print("[!!] sending failed")
-                                    print(Exception)
+                                    traceback.print_exc(file=sys.stdout)
                             elif ("testing" in msg["text"].lower()):
                                 testing = "blackbox whitebox "*random.randrange(1,4)
                                 try:
                                     sc.rtm_send_message(msg["channel"], testing)
                                 except Exception:
                                     print("[!!] sending failed")
-                                    print(Exception)
+                                    traceback.print_exc(file=sys.stdout)
                     elif("ok" in msg and msg["ok"] == True):
                         timestamp.put({"ts":msg["ts"],"channel":last_channel})
                 elif(len(msg) > 1):
@@ -151,8 +155,13 @@ def colorCode(msg):
     name = msg["text"][1 + msg["text"].find(" "):]
     if(name == msg['text']):
         last_channel = msg["channel"]
-        sc.rtm_send_message(msg["channel"], "Invalid arguments")
-        return
+        try:
+            sc.rtm_send_message(msg["channel"], "Invalid arguments")
+            return
+        except Exception:
+            print("[!!] sending failed")
+            traceback.print_exc(file=sys.stdout)
+            return -1
     # tmp="#"
     # for ch in name[:3]:
     #     tmp += hex(ord(ch))[2:]
@@ -168,6 +177,7 @@ def colorCode(msg):
         sc.rtm_send_message(msg["channel"], h)
     except Exception:
         print("[!!] sending failed")
+        traceback.print_exc(file=sys.stdout)
         return -1
 
 
@@ -204,9 +214,21 @@ def quote(msg):
             if(os.path.isfile(fileName)):
                 with open(fileName, "r") as read:
                     quotes = read.read().split(",")
+            else:
+                try:
+                    sc.rtm_send_message(msg["channel"], "no quotes for " + args[1] + " you should add some")
+                except Exception:
+                    print("[!!] sending failed")
+                    traceback.print_exc(file=sys.stdout)
+                    return -1
             if(len(quotes) > 0):
                 last_channel = msg["channel"]
-                sc.rtm_send_message(msg["channel"], random.choice(quotes))
+                try:
+                    sc.rtm_send_message(last_channel, random.choice(quotes))
+                except Exception:
+                    print("[!!] sending failed")
+                    traceback.print_exc(file=sys.stdout)
+                    return -1
     else:
         print("[!!] not enough args")
         return -1

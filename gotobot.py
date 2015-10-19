@@ -6,10 +6,21 @@ import os.path
 import datetime
 import queue
 from slackclient import SlackClient
+import sys, traceback
+
 #import git
+
+def connect():
+    pass
+def main():
+    pass
+
+
+
 token = ""
 with open("token.txt", "r") as tRead:
          token = tRead.read()
+#global sc
 sc = SlackClient(token)
 interns = ["Jon", "Yura", "Alex", "Avik", "Derek", "Tommy"]
 people = interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda"]
@@ -17,77 +28,121 @@ timestamp = queue.Queue()
 last_channel = ""
 polls = []
 def startBot():
-    print(datetime.datetime.now())
-    # g = git.cmd.Git("C:\\Users\\D\\pfpui")
-    whiteWrite = open
-    whitelist = []
-    global last_channel
-    with open("whitelist.txt", "r") as whiteRead:
-         whitelist = whiteRead.read().split(" ")
-    #whitelist.remove('')
-    # g.pull()
-    if sc.rtm_connect():
-        while True:
-            msg = sc.rtm_read()
-            if(len(msg) == 1):
-                #print(msg)
-                msg = msg[0]
-                if("type" in msg and msg["type"] == "error"):
-                    print ("[!!] error in message, restarting bot")
-                    error = "error - no quotes found"
-                    print(sc)
-                    last_channel = msg["channel"]
-                    sc.rtm_send_message(last_channel, error)
-                    startBot()
-                #print("type" in msg and msg["type"] == "message"and "text" in msg)
-                if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable for c in msg["text"].replace("'",""))):
-                    #print(1)
-                    if(msg["text"].lower() == "~addgrouptowhitelist" and msg['channel'] not in whitelist):
-                        whitelist.append(msg["channel"])
-                        with open("whitelist.txt", "w") as whiteWrite:
-                            whiteWrite.write(" ".join(whitelist))
-                    elif(msg["channel"] in whitelist):
-                        #print("whitelisted")
-                        if("~colorname" in msg["text"].lower()):
-                            colorCode(msg)
-                        elif("~randomintern" in msg["text"].lower()):
-                            last_channel = msg["channel"]
-                            sc.rtm_send_message(msg["channel"], random.choice(interns))
-                        elif("~catfacts" in msg["text"].lower()):
-                            print("cat")
-                            request = str(urllib.request.urlopen("http://catfacts-api.appspot.com/api/facts?number=1").read())
-                            last_channel = msg["channel"]
-                            sc.rtm_send_message(msg["channel"], request[request.find('[') + 2:request.find(']') - 1])
-                        elif("~quote" in msg["text"].lower()):
-                            print("quote")
-                            quote(msg)
-                        elif("~startpoll" in msg["text"].lower()):
-                            print("poll")
-                            startPoll(msg)
-                        elif("~stoppoll" in msg["text"].lower()):
-                            stopPoll(msg)
-                        elif("~vote" in msg["text"].lower()):
-                            vote(msg)
-                        elif("~deleteall" in msg["text"].lower()):
-                            while not timestamp.empty():
-                                ts = timestamp.get()
-                                print(ts)
-                                for w in whitelist:
-                                    sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
-                        elif("~delete" in msg["text"].lower()):
-                            if(not timestamp.empty()):
-                                ts = timestamp.get()
-                                for w in whitelist:
-                                    sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
-                elif("ok" in msg and msg["ok"] == True):
-                    timestamp.put({"ts":msg["ts"],"channel":last_channel})
-            elif(len(msg) > 1):
-                print(msg)
-                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            time.sleep(.5)
-    else:
-        print("Connection Failed, invalid token?")
-
+    try:
+        print(datetime.datetime.now())
+        # g = git.cmd.Git("C:\\Users\\D\\pfpui")
+        whiteWrite = open
+        whitelist = []
+        global last_channel
+        with open("whitelist.txt", "r") as whiteRead:
+             whitelist = whiteRead.read().split(" ")
+        #whitelist.remove('')
+        # g.pull()
+        if sc.rtm_connect():
+            print("connected")
+            while True:
+                msg = sc.rtm_read()
+                if(len(msg) == 1):
+                    #print(msg)
+                    msg = msg[0]
+                    #error checking
+                    if("type" in msg and msg["type"] == "error"):
+                        #need a proper reconnect function
+                        #doesnt regain connection token
+                        print ("[!!] error in message, restarting bot")
+                        error = "error - no quotes found"
+                        try:
+                            sc.rtm_send_message(last_channel, error)
+                        except Exception:
+                            print("[!!] sending failed")
+                            traceback.print_exc(file=sys.stdout)
+                        sc = SlackClient(token)
+                        startBot()
+                    #print("type" in msg and msg["type"] == "message"and "text" in msg)
+                    if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable for c in msg["text"].replace("'",""))):
+                        #print(msg)
+                        if(msg["text"].lower() == "~addgrouptowhitelist" and msg['channel'] not in whitelist):
+                            whitelist.append(msg["channel"])
+                            with open("whitelist.txt", "w") as whiteWrite:
+                                whiteWrite.write(" ".join(whitelist))
+                        elif(msg["channel"] in whitelist):
+                            #print("whitelisted")
+                            if("~colorname" in msg["text"].lower()):
+                                colorCode(msg)
+                            elif("~randomintern" in msg["text"].lower()):
+                                last_channel = msg["channel"]
+                                try:
+                                    sc.rtm_send_message(last_channel, random.choice(interns))
+                                except Exception:
+                                    print("[!!] sending failed")
+                                    traceback.print_exc(file=sys.stdout)
+                            elif("~catfacts" in msg["text"].lower()):
+                                print("cat")
+                                request = str(urllib.request.urlopen("http://catfacts-api.appspot.com/api/facts?number=1").read())
+                                last_channel = msg["channel"]
+                                try:
+                                    sc.rtm_send_message(last_channel, request[request.find('[') + 2:request.find(']') - 1])
+                                except Exception:
+                                    print("[!!] sending failed")
+                                    traceback.print_exc(file=sys.stdout)
+                            elif("~quote" in msg["text"].lower()):
+                                print("quote")
+                                quote(msg)
+                            elif("~startpoll" in msg["text"].lower()):
+                                print("poll")
+                                startPoll(msg)
+                            elif("~stoppoll" in msg["text"].lower()):
+                                stopPoll(msg)
+                            elif("~vote" in msg["text"].lower()):
+                                vote(msg)
+                            elif("~deleteall" in msg["text"].lower()):
+                                while not timestamp.empty():
+                                    ts = timestamp.get()
+                                    print(ts)
+                                    for w in whitelist:
+                                        sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
+                            elif("~delete" in msg["text"].lower()):
+                                if(not timestamp.empty()):
+                                    ts = timestamp.get()
+                                    for w in whitelist:
+                                        sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
+                            #sc.rtm_send_message(msg["channel"], msg["text"])
+                            elif ("~nye" in msg["text"].lower()):
+                                nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
+                                try:
+                                    sc.rtm_send_message(msg["channel"], nyeMlg)
+                                except Exception:
+                                    print("[!!] sending failed")
+                                    traceback.print_exc(file=sys.stdout)
+                            elif ("testing" in msg["text"].lower()):
+                                testing = "blackbox whitebox "*random.randrange(1,4)
+                                try:
+                                    sc.rtm_send_message(msg["channel"], testing)
+                                except Exception:
+                                    print("[!!] sending failed")
+                                    traceback.print_exc(file=sys.stdout)
+                    elif("ok" in msg and msg["ok"] == True):
+                        timestamp.put({"ts":msg["ts"],"channel":last_channel})
+                elif(len(msg) > 1):
+                    print(msg)
+                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                time.sleep(1)
+        else:
+            print("Connection Failed, invalid token?")
+    except AttributeError:
+        global sc
+        print("[!!] error - probably in the send")
+        traceback.print_exc(file=sys.stdout)
+        print("[!!] restarting the bot")
+        sc = SlackClient(token)
+        startBot()
+    except Exception:
+        print("uncaught error")
+        print("!!!")
+        traceback.print_exc(file=sys.stdout)
+        print("[!!] restarting the bot")
+        sc = SlackClient(token)
+        startBot()
 
 def colorCode(msg):
     global last_channel
@@ -95,8 +150,13 @@ def colorCode(msg):
     name = msg["text"][1 + msg["text"].find(" "):]
     if(name == msg['text']):
         last_channel = msg["channel"]
-        sc.rtm_send_message(msg["channel"], "Invalid arguments")
-        return
+        try:
+            sc.rtm_send_message(msg["channel"], "Invalid arguments")
+            return
+        except Exception:
+            print("[!!] sending failed")
+            traceback.print_exc(file=sys.stdout)
+            return -1
     # tmp="#"
     # for ch in name[:3]:
     #     tmp += hex(ord(ch))[2:]
@@ -108,13 +168,23 @@ def colorCode(msg):
         h = "#" + hex(abs(hash(name)))[2:8]
     #print (h)
     last_channel = msg["channel"]
-    sc.rtm_send_message(msg["channel"], h)
+    try:
+        sc.rtm_send_message(msg["channel"], h)
+    except Exception:
+        print("[!!] sending failed")
+        traceback.print_exc(file=sys.stdout)
+        return -1
+
 
 def quote(msg):
     global last_channel
     print(msg)
     last_channel = msg["channel"]
     args = msg["text"].split(",")
+    channel = msg["channel"]
+    if (channel != "G0CCGHGKS"):
+        print("quote check")
+        return -1
     print(len(args))
     print(args)
     if(len(args) >= 3):
@@ -138,9 +208,25 @@ def quote(msg):
             if(os.path.isfile(fileName)):
                 with open(fileName, "r") as read:
                     quotes = read.read().split(",")
+            else:
+                try:
+                    sc.rtm_send_message(msg["channel"], "no quotes for " + args[1] + " you should add some")
+                except Exception:
+                    print("[!!] sending failed")
+                    traceback.print_exc(file=sys.stdout)
+                    return -1
             if(len(quotes) > 0):
                 last_channel = msg["channel"]
-                sc.rtm_send_message(msg["channel"], random.choice(quotes))
+                try:
+                    sc.rtm_send_message(last_channel, random.choice(quotes))
+                except Exception:
+                    print("[!!] sending failed")
+                    traceback.print_exc(file=sys.stdout)
+                    return -1
+    else:
+        print("[!!] not enough args")
+        return -1
+
 
 def findName(ds, nam):
     for d in ds:
@@ -156,7 +242,7 @@ def startPoll(msg):
     args = msg["text"].split(",")
     last_channel = msg["channel"]
     if(len(args) > 4):
-        poll = {"name":args[1]}
+        poll = {"name":args[1].lower()}
         i = 2
         while(i < len(args)):
             poll[args[i]] = 0
@@ -191,7 +277,7 @@ def stopPoll(msg):
     args = msg["text"].split(",")
     last_channel = msg["channel"]
     if(len(args) == 2):
-        d = findName(polls, args[1])
+        d = findName(polls, args[1].lower())
         if(d != None):
             polls.remove(d)
             printPoll(d, msg)

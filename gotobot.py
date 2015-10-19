@@ -20,6 +20,7 @@ def main():
 token = ""
 with open("token.txt", "r") as tRead:
          token = tRead.read()
+global sc
 sc = SlackClient(token)
 interns = ["Jon", "Yura", "Alex", "Avik", "Derek", "Tommy"]
 people = interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda"]
@@ -38,6 +39,7 @@ def startBot():
         #whitelist.remove('')
         # g.pull()
         if sc.rtm_connect():
+            print("connected")
             while True:
                 msg = sc.rtm_read()
                 if(len(msg) == 1):
@@ -50,6 +52,7 @@ def startBot():
                         print ("[!!] error in message, restarting bot")
                         error = "error - no quotes found"
                         sc.rtm_send_message(last_channel, error)
+                        sc = SlackClient(token)
                         startBot()
                     #print("type" in msg and msg["type"] == "message"and "text" in msg)
                     if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable for c in msg["text"].replace("'",""))):
@@ -64,12 +67,20 @@ def startBot():
                                 colorCode(msg)
                             elif("~randomintern" in msg["text"].lower()):
                                 last_channel = msg["channel"]
-                                sc.rtm_send_message(msg["channel"], random.choice(interns))
+                                try:
+                                    sc.rtm_send_message(last_channel, random.choice(interns))
+                                except Exception:
+                                    print("[!!] sending failed")
+                                    print(Exception)
                             elif("~catfacts" in msg["text"].lower()):
                                 print("cat")
                                 request = str(urllib.request.urlopen("http://catfacts-api.appspot.com/api/facts?number=1").read())
                                 last_channel = msg["channel"]
-                                sc.rtm_send_message(msg["channel"], request[request.find('[') + 2:request.find(']') - 1])
+                                try:
+                                    sc.rtm_send_message(last_channel, request[request.find('[') + 2:request.find(']') - 1])
+                                except Exception:
+                                    print("[!!] sending failed")
+                                    print(Exception)
                             elif("~quote" in msg["text"].lower()):
                                 print("quote")
                                 quote(msg)
@@ -96,10 +107,18 @@ def startBot():
                             #sc.rtm_send_message(msg["channel"], msg["text"])
                             elif ("~nye" in msg["text"].lower()):
                                 nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
-                                sc.rtm_send_message(msg["channel"], nyeMlg)
+                                try:
+                                    sc.rtm_send_message(msg["channel"], nyeMlg)
+                                except Exception:
+                                    print("[!!] sending failed")
+                                    print(Exception)
                             elif ("testing" in msg["text"].lower()):
                                 testing = "blackbox whitebox "*random.randrange(1,4)
-                                sc.rtm_send_message(msg["channel"], testing)
+                                try:
+                                    sc.rtm_send_message(msg["channel"], testing)
+                                except Exception:
+                                    print("[!!] sending failed")
+                                    print(Exception)
                     elif("ok" in msg and msg["ok"] == True):
                         timestamp.put({"ts":msg["ts"],"channel":last_channel})
                 elif(len(msg) > 1):
@@ -109,10 +128,20 @@ def startBot():
         else:
             print("Connection Failed, invalid token?")
     except AttributeError:
+        global sc
         print("[!!] error - probably in the send")
         traceback.print_exc(file=sys.stdout)
         print("[!!] restarting the bot")
+        sc = SlackClient(token)
         startBot()
+    except Exception:
+        print("uncaught error")
+        print("!!!")
+        traceback.print_exc(file=sys.stdout)
+        print("[!!] restarting the bot")
+        sc = SlackClient(token)
+        startBot()
+
 
 
 
@@ -135,7 +164,12 @@ def colorCode(msg):
         h = "#" + hex(abs(hash(name)))[2:8]
     #print (h)
     last_channel = msg["channel"]
-    sc.rtm_send_message(msg["channel"], h)
+    try:
+        sc.rtm_send_message(msg["channel"], h)
+    except Exception:
+        print("[!!] sending failed")
+        return -1
+
 
 def quote(msg):
     global last_channel
@@ -173,6 +207,10 @@ def quote(msg):
             if(len(quotes) > 0):
                 last_channel = msg["channel"]
                 sc.rtm_send_message(msg["channel"], random.choice(quotes))
+    else:
+        print("[!!] not enough args")
+        return -1
+
 
 def startPoll(msg):
     pass

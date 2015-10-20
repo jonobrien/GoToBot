@@ -46,8 +46,6 @@ last_channel = ""
 userDict = {}
 polls = []
 
-
-
 def startBot():
     try:
         slack = Slacker(token)
@@ -106,51 +104,9 @@ def startBot():
                             with open("whitelist.txt", "w") as whiteWrite:
                                 whiteWrite.write(" ".join(whitelist))
                         elif(msg["channel"] in whitelist):
-                            #print("whitelisted")
-                            if("~colorname" in msg["text"].lower()):
-                                colorCode(msg)
-                            elif("~randomintern" in msg["text"].lower()):
-                                last_channel = msg["channel"]
-                                sendMessage(last_channel, random.choice(interns))
-                            elif("~catfacts" in msg["text"].lower()):
-                                print("cat")
-                                request = str(urllib.request.urlopen("http://catfacts-api.appspot.com/api/facts?number=1").read())
-                                last_channel = msg["channel"]
-                                sendMessage(last_channel, request[request.find('[') + 2:request.find(']') - 1])
-                            elif("~quote" in msg["text"].lower()):
-                                print("quote")
-                                quote(msg)
-                            elif("~startpoll" in msg["text"].lower()):
-                                print("poll")
-                                startPoll(msg)
-                            elif("~stoppoll" in msg["text"].lower()):
-                                stopPoll(msg)
-                            elif("~vote" in msg["text"].lower()):
-                                vote(msg)
-                            elif("~deleteall" in msg["text"].lower()):
-                                while not timestamp.empty():
-                                    ts = timestamp.get()
-                                    print(ts)
-                                    for w in whitelist:
-                                        sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
-                            elif("~delete" in msg["text"].lower()):
-                                if(not timestamp.empty()):
-                                    ts = timestamp.get()
-                                    for w in whitelist:
-                                        sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
-                            #sc.rtm_send_message(msg["channel"], msg["text"])
-                            elif ("~nye" in msg["text"].lower()):
-                                nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
-                                sendMessage(msg["channel"], nyeMlg)
-                            elif ("test" in msg["text"].lower()):
-                                testing = "blackbox whitebox "*random.randrange(1,4)
-                                sendMessage(msg["channel"], testing)
-                            elif("ship it" in msg["text"]):
-                                last_channel = msg["channel"]
-                                sc.rtm_send_message(last_channel, random.choice(squirrels))
-                            elif ("~gif" in msg["text"].lower()):
-                                print("gif")
-                                getGiphy(msg)
+                            for r in router:
+                                if(r["text"].lower() in msg["text"]):
+                                    r["callback"](msg)
                     elif("ok" in msg and msg["ok"] == True):
                         timestamp.put({"ts":msg["ts"],"channel":last_channel})
                 elif(len(msg) > 1):
@@ -175,8 +131,10 @@ def startBot():
 
 
 def sendMessage(channel, message):
+    global last_channel
     try:
         sc.rtm_send_message(channel, message)
+        last_channel = channel
     except Exception:
         exception = traceback.print_exc(file=sys.stdout)
         sendError(exception)
@@ -200,8 +158,7 @@ def getGiphy(msg):
         gif = jsonData["data"][0]["images"]["original"]["url"]
     except IndexError:
         gif = "gif not found"
-    last_channel = msg["channel"]
-    sendMessage(last_channel, gif)
+    sendMessage(msg["channel"], gif)
     #print (jsonData)#(json.dumps(data, sort_keys=True, indent=4))
     #print()
     #print(jsonData["data"])
@@ -211,13 +168,11 @@ def getGiphy(msg):
 
 
 def colorCode(msg):
-    global last_channel
     print("color")
     name = msg["text"][1 + msg["text"].find(" "):]
     if(name == msg['text']):
-        last_channel = msg["channel"]
         message = "invalid arguments"
-        sendMessage(last_channel, message)
+        sendMessage(msg["channel"], message)
         return
     # tmp="#"
     # for ch in name[:3]:
@@ -229,14 +184,13 @@ def colorCode(msg):
     else:
         h = "#" + hex(abs(hash(name)))[2:8]
     #print (h)
-    last_channel = msg["channel"]
-    sendMessage(last_channel, h)
+    sendMessage(msg["channel"], h)
 
+def randomIntern(msg):
+    sendMessage(msg["channel"], random.choice(interns))
 
 def quote(msg):
-    global last_channel
     print(msg)
-    last_channel = msg["channel"]
     args = msg["text"].split(",")
     channel = msg["channel"]
     if (channel != "G0CCGHGKS"):
@@ -255,7 +209,7 @@ def quote(msg):
             else:
                 with open(fileName, "a+") as f:
                     f.write(args[2])
-            sendMessage(last_channel, "Quote added " + args[2])
+            sendMessage(msg["channel"], "Quote added " + args[2])
     elif(len(args) == 2):
         print(2)
         quotes = []
@@ -265,9 +219,9 @@ def quote(msg):
                 with open(fileName, "r") as read:
                     quotes = read.read().split(",")
             else:
-                sendMessage(last_channel, "no quotes for " + args[1] + " you should add some")
+                sendMessage(msg["channel"], "no quotes for " + args[1] + " you should add some")
             if(len(quotes) > 0):
-                sendMessage(last_channel, random.choice(quotes))
+                sendMessage(msg["channel"], random.choice(quotes))
     else:
         print("[!!] not enough args")
         return -1
@@ -283,9 +237,7 @@ def findName(ds, nam):
 
 def startPoll(msg):
     global polls
-    global last_channel
     args = msg["text"].split(",")
-    last_channel = msg["channel"]
     if(len(args) > 4):
         poll = {"name":args[1].lower()}
         i = 2
@@ -293,15 +245,13 @@ def startPoll(msg):
             poll[args[i]] = 0
             i += 1
         polls.append(poll)
-        sendMessage(last_channel, "Poll created")
+        sendMessage(msg["channel"], "Poll created")
     else:
-        sendMessage(last_channel, "Not enough arguments")
+        sendMessage(msg["channel"], "Not enough arguments")
 
 def vote(msg):
     global polls
-    global last_channel
     args = msg["text"].split(",")
-    last_channel = msg["channel"]
     if(len(args) == 3):
         d = findName(polls, args[1])
         if(d != None):
@@ -309,31 +259,28 @@ def vote(msg):
                 d[args[2]] += 1
                 printPoll(d,msg)
             else:
-                sendMessage(last_channel, "Invalid vote option")
+                sendMessage(msg["channel"], "Invalid vote option")
         else:
-            sendMessage(last_channel, "Could not find poll")
+            sendMessage(msg["channel"], "Could not find poll")
     else:
-        sendMessage(last_channel, "Incorrect number of arugments")
+        sendMessage(msg["channel"], "Incorrect number of arugments")
 
 def stopPoll(msg):
     print("endpoll")
     global polls
-    global last_channel
     args = msg["text"].split(",")
-    last_channel = msg["channel"]
     if(len(args) == 2):
         d = findName(polls, args[1].lower())
         if(d != None):
             polls.remove(d)
             printPoll(d, msg)
         else:
-            sendMessage(last_channel, "Could not find poll")
+            sendMessage(msg["channel"], "Could not find poll")
     else:
-        sendMessage(last_channel, "Incorrect number of arugments")
+        sendMessage(msg["channel"], "Incorrect number of arugments")
 
 def printPoll(poll, msg):
     global polls
-    global last_channel
     #p = findName(polls,name).copy()
     p = poll.copy()
     name = p["name"]
@@ -343,11 +290,74 @@ def printPoll(poll, msg):
         s += "\n  " + str(w) + (" " * (10 - len(w))) + " " + str(p[w])
     s += "```"
     #print(s)
-    last_channel = msg["channel"]
     sendMessage(msg["channel"], s)
 
+def catFacts(msg):
+    request = str(urllib.request.urlopen("http://catfacts-api.appspot.com/api/facts?number=1").read())
+    sendMessage(msg["channel"], request[request.find('[') + 2:request.find(']') - 1])
+
+def delete(msg):
+    if(not timestamp.empty()):
+        ts = timestamp.get()
+        for w in whitelist:
+            sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
+def deleteAll(msg):
+    while not timestamp.empty():
+        ts = timestamp.get()
+        print(ts)
+        for w in whitelist:
+            sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
+def nye(msg):
+    nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
+    sendMessage(msg["channel"], nyeMlg)
+def test(msg):
+    testing = "blackbox whitebox "*random.randrange(1,4)
+    sendMessage(msg["channel"], testing)
+def shipIt(msg):
+    sc.rtm_send_message(msg["channel"], random.choice(squirrels))
 #def send(msg):
 
 
-
+router = [
+{
+  "text": "~colorname",
+  "callback":colorCode
+},{
+  "text": "~randomintern",
+  "callback":randomIntern
+},{
+  "text": "~catfacts",
+  "callback":catFacts
+},{
+  "text": "~quote",
+  "callback":quote
+},{
+  "text": "~startpoll",
+  "callback":startPoll
+},{
+  "text": "~stoppoll",
+  "callback":stopPoll
+},{
+  "text": "~vote",
+  "callback":vote
+},{
+  "text": "~deleteall",
+  "callback":deleteAll
+},{
+  "text": "~delete",
+  "callback":delete
+},{
+  "text": "~nye",
+  "callback":nye
+},{
+  "text": "test",
+  "callback":test
+},{
+  "text": "ship it",
+  "callback":shipIt
+},{
+  "text": "~gif",
+  "callback":getGiphy
+},
+]
 startBot()

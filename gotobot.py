@@ -37,8 +37,8 @@ with open("token.txt", "r") as tRead:
          token = tRead.read()
 #global sc
 sc = SlackClient(token)
-interns = ["Jon", "Yura", "Alex", "Avik", "Derek", "Tommy"]
-people = interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda"]
+interns = ["Jon", "Yura", "Alex", "Avik", "StevieG", "Tommy"]*3+["Alex"]
+people = interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek"]
 timestamp = queue.Queue()
 last_channel = ""
 polls = []

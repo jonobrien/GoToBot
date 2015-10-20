@@ -6,7 +6,9 @@ import os.path
 import datetime
 import queue
 from slackclient import SlackClient
+from slacker import Slacker
 import sys, traceback
+import json
 
 #import git
 
@@ -41,9 +43,19 @@ interns = ["Jon", "Yura", "Alex", "Avik", "Tommy"]
 people = interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek"]
 timestamp = queue.Queue()
 last_channel = ""
+userDict = {}
 polls = []
+
+
+
 def startBot():
     try:
+        slack = Slacker(token)
+        #slack.chat.post_message('G0ARYMG3E', 'slacker test')
+        response = slack.users.list()
+        users = response.body['members']
+        for user in users:
+            userDict[user["name"]] = user["id"]
         print(datetime.datetime.now())
         # g = git.cmd.Git("C:\\Users\\D\\pfpui")
         whiteWrite = open
@@ -58,9 +70,22 @@ def startBot():
             while True:
                 msg = sc.rtm_read()
                 if(len(msg) == 1):
-                    #print(msg)
+                    print(msg)
                     msg = msg[0]
                     #error checking
+                    #[{'type': 'presence_change', 'user': 'U0CK96B71', 'presence': 'active'}]
+                    #[{'type': 'user_typing', 'user': 'U054XSGNL', 'channel': 'D0CK8L0S1'}]
+                    #[{'text': 'message', 'ts': '1445352439.000002', 'user': 'U054XSGNL', 'team': 'T04QY6Z1G', 'type': 'message', 'channel': 'D0CK8L0S1'}]
+                    #join message
+                    #[{'type': 'group_joined', 'channel': {'topic': {'last_set': 0, 'value': '', 'creator': ''}, 'name': 'website', 'last_read': '1445356948.000853', 'creator': 'U051UQDN6', 'is_mpim': False, 'is_archived': False, 'created': 1436198627, 'is_group': True, 'members': ['U051UQDN6', 'U052GCW57', 'U054XSGNL', 'U0665DKSL', 'U09JUD8PN', 'U09JVCNTX', 'U0B20MP8C', 'U0CK96B71'], 'unread_count': 0, 'is_open': True, 'purpose': {'last_set': 1440532002, 'value': 'general p3scan issues, questions, discussions, rants about scala/play problems...', 'creator': 'U054XSGNL'}, 'unread_count_display': 0, 'id': 'G0786E43B', 'latest': {'reactions': [{'count': 1, 'name': '-1', 'users': ['U09JUD8PN']}], 'text': 'Mine still breaks', 'type': 'message', 'user': 'U09JVCNTX', 'ts': '1445356948.000853'}}}]
+
+                    #[{'text': '<@U0CK96B71|b0t> has joined the group', 'ts': '1445357442.000855', 'subtype': 'group_join', 'inviter': 'U054XSGNL', 'type': 'message', 'channel': 'G0786E43B', 'user': 'U0CK96B71'}]
+
+                    if("type" in msg and msg["type"] == "presence_change" and msg["presence"] == "active" and msg["user"]):
+                        print("activeeeeeeee")
+                        #last_channel = msg["channel"]
+                        #sendMessage(last_channel, "active yay")
+                        #slack.files.upload('hello.txt')
                     if("type" in msg and msg["type"] == "error"):
                         #need a proper reconnect function
                         #doesnt regain connection token
@@ -86,20 +111,12 @@ def startBot():
                                 colorCode(msg)
                             elif("~randomintern" in msg["text"].lower()):
                                 last_channel = msg["channel"]
-                                try:
-                                    sc.rtm_send_message(last_channel, random.choice(interns))
-                                except Exception:
-                                    print("[!!] sending failed")
-                                    traceback.print_exc(file=sys.stdout)
+                                sendMessage(last_channel, random.choice(interns))
                             elif("~catfacts" in msg["text"].lower()):
                                 print("cat")
                                 request = str(urllib.request.urlopen("http://catfacts-api.appspot.com/api/facts?number=1").read())
                                 last_channel = msg["channel"]
-                                try:
-                                    sc.rtm_send_message(last_channel, request[request.find('[') + 2:request.find(']') - 1])
-                                except Exception:
-                                    print("[!!] sending failed")
-                                    traceback.print_exc(file=sys.stdout)
+                                sendMessage(last_channel, request[request.find('[') + 2:request.find(']') - 1])
                             elif("~quote" in msg["text"].lower()):
                                 print("quote")
                                 quote(msg)
@@ -124,21 +141,16 @@ def startBot():
                             #sc.rtm_send_message(msg["channel"], msg["text"])
                             elif ("~nye" in msg["text"].lower()):
                                 nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
-                                try:
-                                    sc.rtm_send_message(msg["channel"], nyeMlg)
-                                except Exception:
-                                    print("[!!] sending failed")
-                                    traceback.print_exc(file=sys.stdout)
-                            elif ("testing" in msg["text"].lower()):
+                                sendMessage(msg["channel"], nyeMlg)
+                            elif ("test" in msg["text"].lower()):
                                 testing = "blackbox whitebox "*random.randrange(1,4)
-                                try:
-                                    sc.rtm_send_message(msg["channel"], testing)
-                                except Exception:
-                                    print("[!!] sending failed")
-                                    traceback.print_exc(file=sys.stdout)
+                                sendMessage(msg["channel"], testing)
                             elif("ship it" in msg["text"]):
                                 last_channel = msg["channel"]
                                 sc.rtm_send_message(last_channel, random.choice(squirrels))
+                            elif ("~gif" in msg["text"].lower()):
+                                print("gif")
+                                getGiphy(msg)
                     elif("ok" in msg and msg["ok"] == True):
                         timestamp.put({"ts":msg["ts"],"channel":last_channel})
                 elif(len(msg) > 1):
@@ -155,12 +167,48 @@ def startBot():
         sc = SlackClient(token)
         startBot()
     except Exception:
-        print("uncaught error")
-        print("!!!")
+        print("[!!] uncaught error")
         traceback.print_exc(file=sys.stdout)
         print("[!!] restarting the bot")
         sc = SlackClient(token)
         startBot()
+
+
+def sendMessage(channel, message):
+    try:
+        sc.rtm_send_message(channel, message)
+    except Exception:
+        exception = traceback.print_exc(file=sys.stdout)
+        sendError(exception)
+
+
+def sendError(exceptT):
+    print("[!!] sending failed")
+    print(exceptT)
+    print("[!!] restarting the bot")
+    sc = SlackClient(token)
+    startBot()
+
+
+def getGiphy(msg):
+    url = "http://api.giphy.com/v1/gifs/search?q="
+    keywords = ",".join(msg["text"].split(",")[1:])
+    print(keywords)
+    data = urllib.request.urlopen(url + keywords +"&api_key=dc6zaTOxFJmzC&limit=1").read().decode("utf-8")#.read())
+    jsonData = json.loads(data)
+    try:
+        gif = jsonData["data"][0]["images"]["original"]["url"]
+    except IndexError:
+        gif = "gif not found"
+    last_channel = msg["channel"]
+    sendMessage(last_channel, gif)
+    #print (jsonData)#(json.dumps(data, sort_keys=True, indent=4))
+    #print()
+    #print(jsonData["data"])
+    ###for i in jsonData["data"][0].keys():
+    ###    print (jsonData["data"][0][i])
+    ###print(jsonData["data"][0]["images"]["original"]["url"])
+
 
 def colorCode(msg):
     global last_channel
@@ -168,13 +216,9 @@ def colorCode(msg):
     name = msg["text"][1 + msg["text"].find(" "):]
     if(name == msg['text']):
         last_channel = msg["channel"]
-        try:
-            sc.rtm_send_message(msg["channel"], "Invalid arguments")
-            return
-        except Exception:
-            print("[!!] sending failed")
-            traceback.print_exc(file=sys.stdout)
-            return -1
+        message = "invalid arguments"
+        sendMessage(last_channel, message)
+        return
     # tmp="#"
     # for ch in name[:3]:
     #     tmp += hex(ord(ch))[2:]
@@ -186,12 +230,7 @@ def colorCode(msg):
         h = "#" + hex(abs(hash(name)))[2:8]
     #print (h)
     last_channel = msg["channel"]
-    try:
-        sc.rtm_send_message(msg["channel"], h)
-    except Exception:
-        print("[!!] sending failed")
-        traceback.print_exc(file=sys.stdout)
-        return -1
+    sendMessage(last_channel, h)
 
 
 def quote(msg):
@@ -216,8 +255,7 @@ def quote(msg):
             else:
                 with open(fileName, "a+") as f:
                     f.write(args[2])
-            last_channel = msg["channel"]
-            sc.rtm_send_message(msg["channel"], "Quote added " + args[2])
+            sendMessage(last_channel, "Quote added " + args[2])
     elif(len(args) == 2):
         print(2)
         quotes = []
@@ -227,20 +265,9 @@ def quote(msg):
                 with open(fileName, "r") as read:
                     quotes = read.read().split(",")
             else:
-                try:
-                    sc.rtm_send_message(msg["channel"], "no quotes for " + args[1] + " you should add some")
-                except Exception:
-                    print("[!!] sending failed")
-                    traceback.print_exc(file=sys.stdout)
-                    return -1
+                sendMessage(last_channel, "no quotes for " + args[1] + " you should add some")
             if(len(quotes) > 0):
-                last_channel = msg["channel"]
-                try:
-                    sc.rtm_send_message(last_channel, random.choice(quotes))
-                except Exception:
-                    print("[!!] sending failed")
-                    traceback.print_exc(file=sys.stdout)
-                    return -1
+                sendMessage(last_channel, random.choice(quotes))
     else:
         print("[!!] not enough args")
         return -1
@@ -266,9 +293,9 @@ def startPoll(msg):
             poll[args[i]] = 0
             i += 1
         polls.append(poll)
-        sc.rtm_send_message(msg["channel"], "Poll created")
+        sendMessage(last_channel, "Poll created")
     else:
-        sc.rtm_send_message(msg["channel"], "Not enough arguments")
+        sendMessage(last_channel, "Not enough arguments")
 
 def vote(msg):
     global polls
@@ -282,11 +309,11 @@ def vote(msg):
                 d[args[2]] += 1
                 printPoll(d,msg)
             else:
-                sc.rtm_send_message(msg["channel"], "Invalid vote option")
+                sendMessage(last_channel, "Invalid vote option")
         else:
-            sc.rtm_send_message(msg["channel"], "Could not find poll")
+            sendMessage(last_channel, "Could not find poll")
     else:
-        sc.rtm_send_message(msg["channel"], "Incorrect number of arugments")
+        sendMessage(last_channel, "Incorrect number of arugments")
 
 def stopPoll(msg):
     print("endpoll")
@@ -300,9 +327,9 @@ def stopPoll(msg):
             polls.remove(d)
             printPoll(d, msg)
         else:
-            sc.rtm_send_message(msg["channel"], "Could not find poll")
+            sendMessage(last_channel, "Could not find poll")
     else:
-        sc.rtm_send_message(msg["channel"], "Incorrect number of arugments")
+        sendMessage(last_channel, "Incorrect number of arugments")
 
 def printPoll(poll, msg):
     global polls
@@ -317,12 +344,7 @@ def printPoll(poll, msg):
     s += "```"
     #print(s)
     last_channel = msg["channel"]
-    sc.rtm_send_message(msg["channel"], s)
-
-
-    
-
-
+    sendMessage(msg["channel"], s)
 
 #def send(msg):
 

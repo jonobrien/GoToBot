@@ -7,6 +7,7 @@ import datetime
 import queue
 from slackclient import SlackClient
 import sys, traceback
+import json
 
 #import git
 
@@ -139,6 +140,9 @@ def startBot():
                             elif("ship it" in msg["text"]):
                                 last_channel = msg["channel"]
                                 sc.rtm_send_message(last_channel, random.choice(squirrels))
+                            elif ("~gif" in msg["text"].lower()):
+                                print("gif")
+                                getGiphy(msg)
                     elif("ok" in msg and msg["ok"] == True):
                         timestamp.put({"ts":msg["ts"],"channel":last_channel})
                 elif(len(msg) > 1):
@@ -155,12 +159,37 @@ def startBot():
         sc = SlackClient(token)
         startBot()
     except Exception:
-        print("uncaught error")
-        print("!!!")
+        print("[!!] uncaught error")
         traceback.print_exc(file=sys.stdout)
         print("[!!] restarting the bot")
         sc = SlackClient(token)
         startBot()
+
+def getGiphy(msg):
+    url = "http://api.giphy.com/v1/gifs/search?q="
+    keywords = ",".join(msg["text"].split(",")[1:])
+    print(keywords)
+    data = urllib.request.urlopen(url + keywords +"&api_key=dc6zaTOxFJmzC&limit=1").read().decode("utf-8")#.read())
+    jsonData = json.loads(data)
+    try:
+        gif = jsonData["data"][0]["images"]["original"]["url"]
+    except IndexError:
+        gif = "gif not found"
+    last_channel = msg["channel"]
+    try:
+        sc.rtm_send_message(msg["channel"], gif)
+    except Exception:
+        print("[!!] sending failed")
+        traceback.print_exc(file=sys.stdout)
+        return -1
+    #print (jsonData)#(json.dumps(data, sort_keys=True, indent=4))
+    #print()
+    #print(jsonData["data"])
+    ###for i in jsonData["data"][0].keys():
+    ###    print (jsonData["data"][0][i])
+    ###print(jsonData["data"][0]["images"]["original"]["url"])
+
+
 
 def colorCode(msg):
     global last_channel

@@ -67,7 +67,7 @@ def startBot():
                         if(msg["user"] not in bots):
                             #not b0t, Luna, gotoo
                             #post to interns-education as "user is active"
-                            #message = userDict[msg["user"]] + " is active"
+                            message = userDict[msg["user"]] + " is active"
                             #sendMessage("G09LLA9EW",message)
                             #print("[I] sent: "+message)
                     if("type" in msg and msg["type"] == "error"):

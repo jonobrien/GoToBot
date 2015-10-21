@@ -41,6 +41,7 @@ with open("token.txt", "r") as tRead:
 sc = SlackClient(token)
 interns = ["Jon", "Yura", "Alex", "Avik", "Tommy","StevieG"]
 people = interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek"]
+bots = ["U0CK96B71","U0CK96B71","U0ARYU2CT"]
 timestamp = queue.Queue()
 last_channel = ""
 #{"@username":"ID","@user2":"ID2"}
@@ -80,7 +81,7 @@ def startBot():
                     #[{'text': '<@U0CK96B71|b0t> has joined the group', 'ts': '1445357442.000855', 'subtype': 'group_join', 'inviter': 'U054XSGNL', 'type': 'message', 'channel': 'G0786E43B', 'user': 'U0CK96B71'}]
                     
                     if("type" in msg and msg["type"] == "presence_change" and msg["presence"] == "active" and msg["user"]):
-                        if((msg["user"] != "U0CK96B71") or (msg["user"] != "U0CNP6WRK") or (msg["user"] != "U0ARYU2CT")):
+                        if(msg["user"] not in bots):
                             #not b0t, Luna, gotoo
                             #post to interns-education as "user is active"
                             message = userDict[msg["user"]] + " is active"

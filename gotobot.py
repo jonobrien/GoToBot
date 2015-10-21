@@ -22,10 +22,11 @@ with open("token.txt", "r") as tRead:
          token = tRead.read()
 #global sc
 sc = SlackClient(token)
-interns = ["Jon", "Yura", "Alex", "Avik", "Tommy"]
+interns = ["Jon", "Yura", "Alex", "Avik", "Tommy","StevieG"]
 people = interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek"]
 timestamp = queue.Queue()
 last_channel = ""
+#{"@username":"ID","@user2":"ID2"}
 userDict = {}
 polls = []
 
@@ -36,8 +37,9 @@ def startBot():
         response = slack.users.list()
         users = response.body['members']
         for user in users:
-            userDict[user["name"]] = user["id"]
+            userDict[user["id"]] = user["name"]
         print(datetime.datetime.now())
+        print (userDict)
         # g = git.cmd.Git("C:\\Users\\D\\pfpui")
         whiteWrite = open
         whitelist = []
@@ -54,31 +56,25 @@ def startBot():
                     print(msg)
                     msg = msg[0]
                     #error checking
-                    #[{'type': 'presence_change', 'user': 'U0CK96B71', 'presence': 'active'}]
                     #[{'type': 'user_typing', 'user': 'U054XSGNL', 'channel': 'D0CK8L0S1'}]
                     #[{'text': 'message', 'ts': '1445352439.000002', 'user': 'U054XSGNL', 'team': 'T04QY6Z1G', 'type': 'message', 'channel': 'D0CK8L0S1'}]
                     #join message
                     #[{'type': 'group_joined', 'channel': {'topic': {'last_set': 0, 'value': '', 'creator': ''}, 'name': 'website', 'last_read': '1445356948.000853', 'creator': 'U051UQDN6', 'is_mpim': False, 'is_archived': False, 'created': 1436198627, 'is_group': True, 'members': ['U051UQDN6', 'U052GCW57', 'U054XSGNL', 'U0665DKSL', 'U09JUD8PN', 'U09JVCNTX', 'U0B20MP8C', 'U0CK96B71'], 'unread_count': 0, 'is_open': True, 'purpose': {'last_set': 1440532002, 'value': 'general p3scan issues, questions, discussions, rants about scala/play problems...', 'creator': 'U054XSGNL'}, 'unread_count_display': 0, 'id': 'G0786E43B', 'latest': {'reactions': [{'count': 1, 'name': '-1', 'users': ['U09JUD8PN']}], 'text': 'Mine still breaks', 'type': 'message', 'user': 'U09JVCNTX', 'ts': '1445356948.000853'}}}]
-
                     #[{'text': '<@U0CK96B71|b0t> has joined the group', 'ts': '1445357442.000855', 'subtype': 'group_join', 'inviter': 'U054XSGNL', 'type': 'message', 'channel': 'G0786E43B', 'user': 'U0CK96B71'}]
-
+                    
                     if("type" in msg and msg["type"] == "presence_change" and msg["presence"] == "active" and msg["user"]):
-                        print("activeeeeeeee")
-                        #last_channel = msg["channel"]
-                        #sendMessage(last_channel, "active yay")
-                        #slack.files.upload('hello.txt')
+                        if((msg["user"] != "U0CK96B71") or (msg["user"] != "U0CNP6WRK") or (msg["user"] != "U0ARYU2CT")):
+                            #not b0t, Luna, gotoo
+                            #post to interns-education as "user is active"
+                            message = userDict[msg["user"]] + " is active"
+                            sendMessage("G09LLA9EW",message)
+                            print("[I] sent: "+message)
                     if("type" in msg and msg["type"] == "error"):
                         #need a proper reconnect function
                         #doesnt regain connection token
                         print ("[!!] error in message, restarting bot")
-                        error = "error - no quotes found"
-                        try:
-                            sc.rtm_send_message(last_channel, error)
-                        except Exception:
-                            print("[!!] sending failed")
-                            traceback.print_exc(file=sys.stdout)
-                        sc = SlackClient(token)
-                        startBot()
+                        error = "message error - no quotes found"
+                        sendMessage(last_channel, error)
                     #print("type" in msg and msg["type"] == "message"and "text" in msg)
                     if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable for c in msg["text"].replace("'",""))):
                         #print(msg)
@@ -120,15 +116,42 @@ def sendMessage(channel, message):
         last_channel = channel
     except Exception:
         exception = traceback.print_exc(file=sys.stdout)
-        sendError(exception)
+        sendError()
 
 
-def sendError(exceptT):
-    print("[!!] sending failed")
-    print(exceptT)
-    print("[!!] restarting the bot")
+def sendError():
+    global sc
+    print("\n[!!] sending failed")
+    traceback.print_exc(file=sys.stdout)
+    print("\n[!!] restarting the bot\n")
     sc = SlackClient(token)
     startBot()
+
+#~DM,user,msg
+def sendDM(msg):
+    global last_channel
+    last_channel = msg["channel"]
+    args = msg["text"].split(",")
+    user = args[1]
+    message = args[2]
+    try:
+        sendUser = userDict[user]
+        print(token)
+        print(sendUser)
+        send = sc.api_call("im_open",token=token, user=sendUser)
+        print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+        print(send)
+        sc.api_call("chat.postMessage", as_user="true", channel=sendUser, text=message)
+    except Exception:
+        sendError()
+
+
+
+
+
+
+
+
 
 
 def getGiphy(msg):

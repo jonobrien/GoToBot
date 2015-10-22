@@ -23,7 +23,7 @@ with open("token.txt", "r") as tRead:
 #global sc
 sc = SlackClient(token)
 interns = ["Jon", "Yura", "Alex", "Avik", "Tommy","StevieG"]
-people = interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek"]
+people = interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"]
 bots = ["U0CK96B71","U0CK96B71","U0ARYU2CT"]
 timestamp = queue.Queue()
 last_channel = ""

@@ -9,11 +9,12 @@ from slackclient import SlackClient
 from slacker import Slacker
 import sys, traceback
 import json
+#import pony
 
 #import git
 
 def connect():
-    pass
+    print("connect")
 def main():
     pass
 
@@ -30,6 +31,9 @@ last_channel = ""
 #{"@username":"ID","@user2":"ID2"}
 userDict = {}
 polls = []
+
+def getSC():
+    return sc
 
 def startBot():
     try:
@@ -365,5 +369,6 @@ router = [{
 },{
   "text": "~gif",
   "callback":getGiphy
-},]
-startBot()
+}]
+if __name__ == "__main__":
+    startBot()

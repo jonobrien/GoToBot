@@ -9,8 +9,7 @@ from slackclient import SlackClient
 from slacker import Slacker
 import sys, traceback
 import json
-#import pony
-
+import pony as p
 #import git
 
 def connect():
@@ -310,6 +309,12 @@ def nye(msg):
 def test(msg):
     testing = "blackbox whitebox "*random.randrange(1,4)
     sendMessage(msg["channel"], testing)
+def pony(msg):
+    #print(dir(p.pony))
+    pony = "```"
+    pony += p.Pony.getPony()
+    pony += "```"
+    sendMessage(msg["channel"], pony)
 def shipIt(msg):
     squirrels = [
       "http://shipitsquirrel.github.io/images/ship%20it%20squirrel.png",
@@ -366,6 +371,9 @@ router = [{
 },{
   "text": "ship it",
   "callback":shipIt
+},{
+  "text": "pony",
+  "callback":pony
 },{
   "text": "~gif",
   "callback":getGiphy

@@ -146,14 +146,6 @@ def sendDM(msg):
         sendError()
 
 
-
-
-
-
-
-
-
-
 def getGiphy(msg):
     url = "http://api.giphy.com/v1/gifs/search?q="
     keywords = ",".join(msg["text"].split(",")[1:])
@@ -171,7 +163,6 @@ def getGiphy(msg):
     ###for i in jsonData["data"][0].keys():
     ###    print (jsonData["data"][0][i])
     ###print(jsonData["data"][0]["images"]["original"]["url"])
-
 
 def colorCode(msg):
     print("color")
@@ -196,16 +187,12 @@ def randomIntern(msg):
     sendMessage(msg["channel"], random.choice(interns))
 
 def quote(msg):
-    print(msg)
     args = msg["text"].split(",")
     channel = msg["channel"]
     if (channel != "G0CCGHGKS"):
         print("quote check")
         return -1
-    print(len(args))
-    print(args)
     if(len(args) >= 3):
-        print(3)
         if(args[1] in people):
             fileName = people[people.index(args[1])] + "Quotes.txt"
             #need to get full quote
@@ -217,7 +204,6 @@ def quote(msg):
                     f.write(args[2])
             sendMessage(msg["channel"], "Quote added " + args[2])
     elif(len(args) == 2):
-        print(2)
         quotes = []
         if(args[1] in people):
             fileName = people[people.index(args[1])] + "Quotes.txt"

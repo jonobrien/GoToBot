@@ -296,13 +296,13 @@ if __name__ == "__main__":
       "text": ["~quote"],
       "callback":quote
     },{
-      "text": ["~startpoll"],
+      "text": ["~startpoll","~poll","~createpoll"],
       "callback":poll.startPoll
     },{
-      "text": ["~stoppoll"],
+      "text": ["~stoppoll",'~removepoll'],
       "callback":poll.stopPoll
     },{
-      "text": ["~vote"],
+      "text": ["~vote","~votepoll"],
       "callback":poll.vote
     },{
       "text": ["~addoption"],
@@ -326,7 +326,7 @@ if __name__ == "__main__":
       "text": ["~gif"],
       "callback":getGiphy
     },{
-      "text": "~insanity",
+      "text": ["~insanity"],
       "callback":getMemeInsanity
     },{
       "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],

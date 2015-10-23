@@ -9,8 +9,7 @@ from slackclient import SlackClient
 from slacker import Slacker
 import sys, traceback
 import json
-#import pony
-
+import pony as p
 #import git
 class GoTo:
 
@@ -59,7 +58,7 @@ class GoTo:
                 while True:
                     msg = self.sc.rtm_read()
                     if(len(msg) == 1):
-                        print(msg)
+                        #print(msg)
                         msg = msg[0]
                         #error checking
                         #[{'type': 'user_typing', 'user': 'U054XSGNL', 'channel': 'D0CK8L0S1'}]
@@ -110,8 +109,8 @@ class GoTo:
             print("[!!] uncaught error")
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
-            # sc = SlackClient(self.token)
-            # self.startBot()
+            sc = SlackClient(self.token)
+            self.startBot()
 
 
     def sendMessage(self,channel, message):
@@ -303,7 +302,10 @@ def nye(bot, msg):
 def test(bot, msg):
     testing = "blackbox whitebox "*random.randrange(1,4)
     bot.sendMessage(msg["channel"], testing)
-def shipIt(bot, msg):
+def pony(bot, msg):
+    #print(dir(p.pony))
+    bot.sendMessage(msg["channel"], "```" + p.Pony.getPony() + "```")
+def shipIt(msg):
     squirrels = [
       "http://shipitsquirrel.github.io/images/ship%20it%20squirrel.png",
       "http://images.cheezburger.com/completestore/2011/11/2/aa83c0c4-2123-4bd3-8097-966c9461b30c.jpg",
@@ -362,11 +364,9 @@ if __name__ == "__main__":
     },{
       "text": "~gif",
       "callback":getGiphy
-    }
-    # ,{
-    #   "text": "pony",
-    #   "callback": pony.sendPony
-    # }
-    ]
+    },{
+      "text": "pony",
+      "callback": pony
+    }]
     g = GoTo()
     g.startBot()

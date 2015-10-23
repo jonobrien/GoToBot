@@ -163,11 +163,9 @@ def getGiphy(bot, msg):
     #print(jsonData["data"])
     ###for i in jsonData["data"][0].keys():
     ###    print (jsonData["data"][0][i])
-    ###print(jsonData["data"][0]["images"]["original"]["url"])
+    ###print(jsonData["data"][0]["images"]["original"]["url"]
 
-<<<<<<< HEAD
-
-#get a meme of keyword passed in
+        #get a meme of keyword passed in
 def getMeme(msg):
     pass
 
@@ -181,12 +179,10 @@ def getMemeInsanity(msg):
         randomWolf = jsonData["result"][random.randrange(0,len(jsonData["result"]))]["instanceImageUrl"]
     except IndexError:
         gif = "wolf not found"
-    sendMessage(msg["channel"], randomWolf)
+    bot.sendMessage(msg["channel"], randomWolf)
 
-def colorCode(msg):
-=======
+
 def colorCode(bot, msg):
->>>>>>> 8adb454e36cdb959e7a37aae810134c21a483aa7
     print("color")
     name = msg["text"][1 + msg["text"].find(" "):]
     if(name == msg['text']):
@@ -290,14 +286,9 @@ def stopPoll(bot, msg):
     else:
         bot.sendMessage(msg["channel"], "Incorrect number of arugments")
 
-<<<<<<< HEAD
-def printPoll(poll, msg):
-    global polls
-    #p = findName(polls,name).copy()l
-=======
+
 def printPoll(bot, poll, msg):
     #p = findName(polls,name).copy()
->>>>>>> 8adb454e36cdb959e7a37aae810134c21a483aa7
     p = poll.copy()
     name = p["name"]
     del(p["name"])
@@ -351,55 +342,6 @@ def shipIt(msg):
     ]
     bot.sc.rtm_send_message(msg["channel"], random.choice(squirrels))
 
-<<<<<<< HEAD
-router = [{
-  "text": "~colorname",
-  "callback":colorCode
-},{
-  "text": "~randomintern",
-  "callback":randomIntern
-},{
-  "text": "~catfacts",
-  "callback":catFacts
-},{
-  "text": "~quote",
-  "callback":quote
-},{
-  "text": "~startpoll",
-  "callback":startPoll
-},{
-  "text": "~stoppoll",
-  "callback":stopPoll
-},{
-  "text": "~vote",
-  "callback":vote
-},{
-  "text": "~deleteall",
-  "callback":deleteAll
-},{
-  "text": "~delete",
-  "callback":delete
-},{
-  "text": "~nye",
-  "callback":nye
-},{
-  "text": "test",
-  "callback":test
-},{
-  "text": "ship it",
-  "callback":shipIt
-},{
-  "text": "pony",
-  "callback":pony
-},{
-  "text": "~gif",
-  "callback":getGiphy
-},{
-  "text": "~insanity",
-  "callback":getMemeInsanity
-}]
-=======
->>>>>>> 8adb454e36cdb959e7a37aae810134c21a483aa7
 if __name__ == "__main__":
     router = [{
       "text": "~colorname",

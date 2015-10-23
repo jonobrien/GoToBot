@@ -9,7 +9,7 @@ def findName(bot, ds, nam):
 def startPoll(bot, msg):
     args = msg["text"].split(",")
     if(len(args) > 2):
-        poll = {"name":args[1].lower()}
+        poll = {"name":args[1].lower(), "voted":[]}
         i = 2
         while(i < len(args)):
             poll[args[i].lower().strip()] = 0
@@ -24,11 +24,12 @@ def vote(bot, msg):
     if(len(args) == 3):
         d = findName(bot, bot.polls, args[1])
         if(d != None):
-            if(args[2].lower().strip() in d):
+            if(args[2].lower().strip() in d and msg["user"] not in d["voted"]):
                 d[args[2].lower().strip()] += 1
+                d["voted"].append(msg["user"])
                 printPoll(bot, d,msg)
             else:
-                bot.sendMessage(msg["channel"], "Invalid vote option")
+                bot.sendMessage(msg["channel"], "Invalid vote option or user already voted")
         else:
             bot.sendMessage(msg["channel"], "Could not find poll")
     else:
@@ -64,6 +65,7 @@ def printPoll(bot, poll, msg):
     p = poll.copy()
     name = p["name"]
     del(p["name"])
+    del(p["voted"])
     s = "```" + name
     for w in sorted(p, key=p.get, reverse=True):
         s += "\n  " + str(w) + (" " * (20 - len(w))) + " " + str(p[w])

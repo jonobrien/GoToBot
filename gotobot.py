@@ -89,8 +89,9 @@ class GoTo:
                                     self.whiteWrite.write(" ".join(self.whitelist))
                             elif(msg["channel"] in self.whitelist):
                                 for r in router:
-                                    if(r["text"].lower() in msg["text"]):
-                                        r["callback"](self, msg)
+                                    for t in r["text"]:
+                                        if(t.lower() in msg["text"].lower()):
+                                            r["callback"](self, msg)
                         elif("ok" in msg and msg["ok"] == True):
                             self.timestamp.put({"ts":msg["ts"],"channel":self.last_channel})
                     elif(len(msg) > 1):
@@ -234,7 +235,7 @@ def startPoll(bot, msg):
         poll = {"name":args[1].lower()}
         i = 2
         while(i < len(args)):
-            poll[args[i]] = 0
+            poll[args[i].lower().strip()] = 0
             i += 1
         bot.polls.append(poll)
         bot.sendMessage(msg["channel"], "Poll created")
@@ -246,8 +247,8 @@ def vote(bot, msg):
     if(len(args) == 3):
         d = findName(bot, bot.polls, args[1])
         if(d != None):
-            if(args[2] in d):
-                d[args[2]] += 1
+            if(args[2].lower().strip() in d):
+                d[args[2].lower().strip()] += 1
                 printPoll(bot, d,msg)
             else:
                 bot.sendMessage(msg["channel"], "Invalid vote option")
@@ -269,6 +270,18 @@ def stopPoll(bot, msg):
     else:
         bot.sendMessage(msg["channel"], "Incorrect number of arugments")
 
+def addOption(bot, msg):
+    args = msg["text"].split(",")
+    if(len(args) == 3):
+        d = findName(bot, bot.polls, args[1].lower())
+        if(d != None):
+            d[args[2].lower().strip()] = 0
+            printPoll(bot, d, msg)
+        else:
+            bot.sendMessage(msg["channel"], "Could not find poll")
+    else:
+        bot.sendMessage(msg["channel"], "Incorrect number of arugments")
+
 def printPoll(bot, poll, msg):
     #p = findName(polls,name).copy()
     p = poll.copy()
@@ -276,7 +289,7 @@ def printPoll(bot, poll, msg):
     del(p["name"])
     s = "```" + name
     for w in sorted(p, key=p.get, reverse=True):
-        s += "\n  " + str(w) + (" " * (10 - len(w))) + " " + str(p[w])
+        s += "\n  " + str(w) + (" " * (20 - len(w))) + " " + str(p[w])
     s += "```"
     #print(s)
     bot.sendMessage(msg["channel"], s)
@@ -305,9 +318,10 @@ def test(bot, msg):
 def pony(bot, msg):
     #print(dir(p.pony))
     bot.sendMessage(msg["channel"], "```" + p.Pony.getPony() + "```")
-def shipIt(msg):
+def shipIt(bot, msg):
     squirrels = [
       "http://shipitsquirrel.github.io/images/ship%20it%20squirrel.png",
+      "http://shipitsquirrel.github.io/images/squirrel.png",
       "http://images.cheezburger.com/completestore/2011/11/2/aa83c0c4-2123-4bd3-8097-966c9461b30c.jpg",
       "http://images.cheezburger.com/completestore/2011/11/2/46e81db3-bead-4e2e-a157-8edd0339192f.jpg",
       "http://28.media.tumblr.com/tumblr_lybw63nzPp1r5bvcto1_500.jpg",
@@ -326,46 +340,49 @@ def shipIt(msg):
 
 if __name__ == "__main__":
     router = [{
-      "text": "~colorname",
+      "text": ["~colorname"],
       "callback":colorCode
     },{
-      "text": "~randomintern",
+      "text": ["~randomintern"],
       "callback":randomIntern
     },{
-      "text": "~catfacts",
+      "text": ["~catfacts"],
       "callback":catFacts
     },{
-      "text": "~quote",
+      "text": ["~quote"],
       "callback":quote
     },{
-      "text": "~startpoll",
+      "text": ["~startpoll"],
       "callback":startPoll
     },{
-      "text": "~stoppoll",
+      "text": ["~stoppoll"],
       "callback":stopPoll
     },{
-      "text": "~vote",
+      "text": ["~vote"],
       "callback":vote
     },{
-      "text": "~deleteall",
+      "text": ["~addoption"],
+      "callback": addOption
+    },{
+      "text": ["~deleteall"],
       "callback":deleteAll
     },{
-      "text": "~delete",
+      "text": ["~delete"],
       "callback":delete
     },{
-      "text": "~nye",
+      "text": ["~nye"],
       "callback":nye
     },{
-      "text": "test",
+      "text": ["test"],
       "callback":test
     },{
-      "text": "ship it",
+      "text": ["ship it",":shipit:"],
       "callback":shipIt
     },{
-      "text": "~gif",
+      "text": ["~gif"],
       "callback":getGiphy
     },{
-      "text": "pony",
+      "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],
       "callback": pony
     }]
     g = GoTo()

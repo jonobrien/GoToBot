@@ -11,146 +11,143 @@ import sys, traceback
 import json
 import pony as p
 #import git
+class GoTo:
 
-def connect():
-    print("connect")
-def main():
-    pass
+    def __init__(self):
+        self.token = ""
+        with open("token.txt", "r") as tRead:
+                 self.token = tRead.read()
+        #global sc
+        self.sc = SlackClient(self.token)
+        self.interns = ["Jon", "Yura", "Alex", "Avik", "Tommy","Alex"]
+        self.people = self.interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"]
+        self.bots = ["U0CK96B71","U0CK96B71","U0ARYU2CT"]
+        self.timestamp = queue.Queue()
+        self.last_channel = ""
+        #{"@username":"ID","@user2":"ID2"}
+        self.userDict = {}
+        self.polls = []
+        self.whiteWrite = open
+        self.whitelist = []
+        with open("whitelist.txt", "r") as self.whiteRead:
+             self.whitelist = self.whiteRead.read().split(" ")
 
-token = ""
-with open("token.txt", "r") as tRead:
-         token = tRead.read()
-#global sc
-sc = SlackClient(token)
-interns = ["Jon", "Yura", "Alex", "Avik", "Tommy","Alex"]
-people = interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"]
-bots = ["U0CK96B71","U0CK96B71","U0ARYU2CT"]
-timestamp = queue.Queue()
-last_channel = ""
-#{"@username":"ID","@user2":"ID2"}
-userDict = {}
-polls = []
+    def connect(self):
+        print("connect")
+    def main(self):
+        pass
 
-def getSC():
-    return sc
+    def getSC(self):
+        return sc
 
-def startBot():
-    try:
-        slack = Slacker(token)
-        #slack.chat.post_message('G0ARYMG3E', 'slacker test')
-        response = slack.users.list()
-        users = response.body['members']
-        for user in users:
-            userDict[user["id"]] = user["name"]
-        print(datetime.datetime.now())
-        print (userDict)
-        # g = git.cmd.Git("C:\\Users\\D\\pfpui")
-        whiteWrite = open
-        whitelist = []
-        global last_channel
-        with open("whitelist.txt", "r") as whiteRead:
-             whitelist = whiteRead.read().split(" ")
-        #whitelist.remove('')
-        # g.pull()
-        if sc.rtm_connect():
-            print("connected")
-            while True:
-                msg = sc.rtm_read()
-                if(len(msg) == 1):
-                    print(msg)
-                    msg = msg[0]
-                    #error checking
-                    #[{'type': 'user_typing', 'user': 'U054XSGNL', 'channel': 'D0CK8L0S1'}]
-                    #[{'text': 'message', 'ts': '1445352439.000002', 'user': 'U054XSGNL', 'team': 'T04QY6Z1G', 'type': 'message', 'channel': 'D0CK8L0S1'}]
-                    #join message
-                    #[{'type': 'group_joined', 'channel': {'topic': {'last_set': 0, 'value': '', 'creator': ''}, 'name': 'website', 'last_read': '1445356948.000853', 'creator': 'U051UQDN6', 'is_mpim': False, 'is_archived': False, 'created': 1436198627, 'is_group': True, 'members': ['U051UQDN6', 'U052GCW57', 'U054XSGNL', 'U0665DKSL', 'U09JUD8PN', 'U09JVCNTX', 'U0B20MP8C', 'U0CK96B71'], 'unread_count': 0, 'is_open': True, 'purpose': {'last_set': 1440532002, 'value': 'general p3scan issues, questions, discussions, rants about scala/play problems...', 'creator': 'U054XSGNL'}, 'unread_count_display': 0, 'id': 'G0786E43B', 'latest': {'reactions': [{'count': 1, 'name': '-1', 'users': ['U09JUD8PN']}], 'text': 'Mine still breaks', 'type': 'message', 'user': 'U09JVCNTX', 'ts': '1445356948.000853'}}}]
-                    #[{'text': '<@U0CK96B71|b0t> has joined the group', 'ts': '1445357442.000855', 'subtype': 'group_join', 'inviter': 'U054XSGNL', 'type': 'message', 'channel': 'G0786E43B', 'user': 'U0CK96B71'}]
-                    
-                    if("type" in msg and msg["type"] == "presence_change" and msg["presence"] == "active" and msg["user"]):
-                        if(msg["user"] not in bots):
-                            #not b0t, Luna, gotoo
-                            #post to interns-education as "user is active"
-                            message = userDict[msg["user"]] + " is active"
-                            #sendMessage("G09LLA9EW",message)
-                            #print("[I] sent: "+message)
-                    if("type" in msg and msg["type"] == "error"):
-                        #need a proper reconnect function
-                        #doesnt regain connection token
-                        print ("[!!] error in message, restarting bot")
-                        error = "message error - no quotes found"
-                        sendMessage(last_channel, error)
-                    #print("type" in msg and msg["type"] == "message"and "text" in msg)
-                    if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable for c in msg["text"].replace("'",""))):
+    def startBot(self):
+        try:
+            slack = Slacker(self.token)
+            #slack.chat.post_message('G0ARYMG3E', 'slacker test')
+            response = slack.users.list()
+            users = response.body['members']
+            for user in users:
+                self.userDict[user["id"]] = user["name"]
+            print(datetime.datetime.now())
+            print(self.userDict)
+            # g = git.cmd.Git("C:\\Users\\D\\pfpui")
+            #whitelist.remove('')
+            # g.pull()
+            if self.sc.rtm_connect():
+                print("connected")
+                while True:
+                    msg = self.sc.rtm_read()
+                    if(len(msg) == 1):
                         #print(msg)
-                        if(msg["text"].lower() == "~addgrouptowhitelist" and msg['channel'] not in whitelist):
-                            whitelist.append(msg["channel"])
-                            with open("whitelist.txt", "w") as whiteWrite:
-                                whiteWrite.write(" ".join(whitelist))
-                        elif(msg["channel"] in whitelist):
-                            for r in router:
-                                if(r["text"].lower() in msg["text"]):
-                                    r["callback"](msg)
-                    elif("ok" in msg and msg["ok"] == True):
-                        timestamp.put({"ts":msg["ts"],"channel":last_channel})
-                elif(len(msg) > 1):
-                    print(msg)
-                    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                time.sleep(1)
-        else:
-            print("Connection Failed, invalid token?")
-    except AttributeError:
-        global sc
-        print("[!!] error - probably in the send")
+                        msg = msg[0]
+                        #error checking
+                        #[{'type': 'user_typing', 'user': 'U054XSGNL', 'channel': 'D0CK8L0S1'}]
+                        #[{'text': 'message', 'ts': '1445352439.000002', 'user': 'U054XSGNL', 'team': 'T04QY6Z1G', 'type': 'message', 'channel': 'D0CK8L0S1'}]
+                        #join message
+                        #[{'type': 'group_joined', 'channel': {'topic': {'last_set': 0, 'value': '', 'creator': ''}, 'name': 'website', 'last_read': '1445356948.000853', 'creator': 'U051UQDN6', 'is_mpim': False, 'is_archived': False, 'created': 1436198627, 'is_group': True, 'members': ['U051UQDN6', 'U052GCW57', 'U054XSGNL', 'U0665DKSL', 'U09JUD8PN', 'U09JVCNTX', 'U0B20MP8C', 'U0CK96B71'], 'unread_count': 0, 'is_open': True, 'purpose': {'last_set': 1440532002, 'value': 'general p3scan issues, questions, discussions, rants about scala/play problems...', 'creator': 'U054XSGNL'}, 'unread_count_display': 0, 'id': 'G0786E43B', 'latest': {'reactions': [{'count': 1, 'name': '-1', 'users': ['U09JUD8PN']}], 'text': 'Mine still breaks', 'type': 'message', 'user': 'U09JVCNTX', 'ts': '1445356948.000853'}}}]
+                        #[{'text': '<@U0CK96B71|b0t> has joined the group', 'ts': '1445357442.000855', 'subtype': 'group_join', 'inviter': 'U054XSGNL', 'type': 'message', 'channel': 'G0786E43B', 'user': 'U0CK96B71'}]
+                        
+                        if("type" in msg and msg["type"] == "presence_change" and msg["presence"] == "active" and msg["user"]):
+                            if(msg["user"] not in self.bots):
+                                #not b0t, Luna, gotoo
+                                #post to interns-education as "user is active"
+                                message = self.userDict[msg["user"]] + " is active"
+                                #sendMessage("G09LLA9EW",message)
+                                #print("[I] sent: "+message)
+                        if("type" in msg and msg["type"] == "error"):
+                            #need a proper reconnect function
+                            #doesnt regain connection token
+                            print ("[!!] error in message, restarting bot")
+                            error = "message error - no quotes found"
+                            self.sendMessage(self.last_channel, error)
+                        #print("type" in msg and msg["type"] == "message"and "text" in msg)
+                        if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable for c in msg["text"].replace("'",""))):
+                            #print(msg)
+                            if(msg["text"].lower() == "~addgrouptowhitelist" and msg['channel'] not in self.whitelist):
+                                self.whitelist.append(msg["channel"])
+                                with open("whitelist.txt", "w") as self.whiteWrite:
+                                    self.whiteWrite.write(" ".join(self.whitelist))
+                            elif(msg["channel"] in self.whitelist):
+                                for r in router:
+                                    if(r["text"].lower() in msg["text"]):
+                                        r["callback"](self, msg)
+                        elif("ok" in msg and msg["ok"] == True):
+                            self.timestamp.put({"ts":msg["ts"],"channel":self.last_channel})
+                    elif(len(msg) > 1):
+                        print(msg)
+                        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                    time.sleep(1)
+            else:
+                print("Connection Failed, invalid token?")
+        except AttributeError:
+            print("[!!] error - probably in the send")
+            traceback.print_exc(file=sys.stdout)
+            print("[!!] restarting the bot")
+            self.sc = SlackClient(token)
+            startBot()
+        except Exception:
+            print("[!!] uncaught error")
+            traceback.print_exc(file=sys.stdout)
+            print("[!!] restarting the bot")
+            sc = SlackClient(self.token)
+            self.startBot()
+
+
+    def sendMessage(self,channel, message):
+        try:
+            self.sc.rtm_send_message(channel, message)
+            self.last_channel = channel
+        except Exception:
+            exception = traceback.print_exc(file=sys.stdout)
+            self.sendError()
+
+
+    def sendError(self):
+        print("\n[!!] sending failed")
         traceback.print_exc(file=sys.stdout)
-        print("[!!] restarting the bot")
-        sc = SlackClient(token)
-        startBot()
-    except Exception:
-        print("[!!] uncaught error")
-        traceback.print_exc(file=sys.stdout)
-        print("[!!] restarting the bot")
-        sc = SlackClient(token)
+        print("\n[!!] restarting the bot\n")
+        self.sc = SlackClient(token)
         startBot()
 
-
-def sendMessage(channel, message):
-    global last_channel
-    try:
-        sc.rtm_send_message(channel, message)
-        last_channel = channel
-    except Exception:
-        exception = traceback.print_exc(file=sys.stdout)
-        sendError()
-
-
-def sendError():
-    global sc
-    print("\n[!!] sending failed")
-    traceback.print_exc(file=sys.stdout)
-    print("\n[!!] restarting the bot\n")
-    sc = SlackClient(token)
-    startBot()
-
-#~DM,user,msg
-def sendDM(msg):
-    global last_channel
-    last_channel = msg["channel"]
-    args = msg["text"].split(",")
-    user = args[1]
-    message = args[2]
-    try:
-        sendUser = userDict[user]
-        print(token)
-        print(sendUser)
-        send = sc.api_call("im_open",token=token, user=sendUser)
-        print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-        print(send)
-        sc.api_call("chat.postMessage", as_user="true", channel=sendUser, text=message)
-    except Exception:
-        sendError()
+    #~DM,user,msg
+    def sendDM(self,msg):
+        self.last_channel = msg["channel"]
+        args = msg["text"].split(",")
+        user = args[1]
+        message = args[2]
+        try:
+            sendUser = self.userDict[user]
+            print(token)
+            print(sendUser)
+            send = self.sc.api_call("im_open",token=token, user=sendUser)
+            print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+            print(send)
+            self.sc.api_call("chat.postMessage", as_user="true", channel=sendUser, text=message)
+        except Exception:
+            self.sendError()
 
 
-def getGiphy(msg):
+def getGiphy(bot, msg):
     url = "http://api.giphy.com/v1/gifs/search?q="
     keywords = ",".join(msg["text"].split(",")[1:])
     print(keywords)
@@ -160,7 +157,7 @@ def getGiphy(msg):
         gif = jsonData["data"][0]["images"]["original"]["url"]
     except IndexError:
         gif = "gif not found"
-    sendMessage(msg["channel"], gif)
+    bot.sendMessage(msg["channel"], gif)
     #print (jsonData)#(json.dumps(data, sort_keys=True, indent=4))
     #print()
     #print(jsonData["data"])
@@ -168,6 +165,7 @@ def getGiphy(msg):
     ###    print (jsonData["data"][0][i])
     ###print(jsonData["data"][0]["images"]["original"]["url"])
 
+<<<<<<< HEAD
 
 #get a meme of keyword passed in
 def getMeme(msg):
@@ -186,11 +184,14 @@ def getMemeInsanity(msg):
     sendMessage(msg["channel"], randomWolf)
 
 def colorCode(msg):
+=======
+def colorCode(bot, msg):
+>>>>>>> 8adb454e36cdb959e7a37aae810134c21a483aa7
     print("color")
     name = msg["text"][1 + msg["text"].find(" "):]
     if(name == msg['text']):
         message = "invalid arguments"
-        sendMessage(msg["channel"], message)
+        bot.sendMessage(msg["channel"], message)
         return
     # tmp="#"
     # for ch in name[:3]:
@@ -202,20 +203,20 @@ def colorCode(msg):
     else:
         h = "#" + hex(abs(hash(name)))[2:8]
     #print (h)
-    sendMessage(msg["channel"], h)
+    bot.sendMessage(msg["channel"], h)
 
-def randomIntern(msg):
-    sendMessage(msg["channel"], random.choice(interns))
+def randomIntern(bot, msg):
+    bot.sendMessage(msg["channel"], random.choice(bot.interns))
 
-def quote(msg):
+def quote(bot, msg):
     args = msg["text"].split(",")
     channel = msg["channel"]
     if (channel != "G0CCGHGKS"):
         print("quote check")
         return -1
     if(len(args) >= 3):
-        if(args[1] in people):
-            fileName = people[people.index(args[1])] + "Quotes.txt"
+        if(args[1] in bot.people):
+            fileName = bot.people[bot.people.index(args[1])] + "Quotes.txt"
             #need to get full quote
             if(os.path.isfile(fileName)):
                 with open(fileName, "a+") as f:
@@ -223,24 +224,24 @@ def quote(msg):
             else:
                 with open(fileName, "a+") as f:
                     f.write(args[2])
-            sendMessage(msg["channel"], "Quote added " + args[2])
+            bot.sendMessage(msg["channel"], "Quote added " + args[2])
     elif(len(args) == 2):
         quotes = []
-        if(args[1] in people):
-            fileName = people[people.index(args[1])] + "Quotes.txt"
+        if(args[1] in bot.people):
+            fileName = bot.people[bot.people.index(args[1])] + "Quotes.txt"
             if(os.path.isfile(fileName)):
                 with open(fileName, "r") as read:
                     quotes = read.read().split(",")
             else:
-                sendMessage(msg["channel"], "no quotes for " + args[1] + " you should add some")
+                bot.sendMessage(msg["channel"], "no quotes for " + args[1] + " you should add some")
             if(len(quotes) > 0):
-                sendMessage(msg["channel"], random.choice(quotes))
+                bot.sendMessage(msg["channel"], random.choice(quotes))
     else:
         print("[!!] not enough args")
         return -1
 
 
-def findName(ds, nam):
+def findName(bot, ds, nam):
     for d in ds:
         if("name" in d):
             if(d["name"] == nam):
@@ -248,8 +249,7 @@ def findName(ds, nam):
     return None
 
 
-def startPoll(msg):
-    global polls
+def startPoll(bot, msg):
     args = msg["text"].split(",")
     if(len(args) > 4):
         poll = {"name":args[1].lower()}
@@ -257,44 +257,47 @@ def startPoll(msg):
         while(i < len(args)):
             poll[args[i]] = 0
             i += 1
-        polls.append(poll)
-        sendMessage(msg["channel"], "Poll created")
+        bot.polls.append(poll)
+        bot.sendMessage(msg["channel"], "Poll created")
     else:
-        sendMessage(msg["channel"], "Not enough arguments")
+        bot.sendMessage(msg["channel"], "Not enough arguments")
 
-def vote(msg):
-    global polls
+def vote(bot, msg):
     args = msg["text"].split(",")
     if(len(args) == 3):
-        d = findName(polls, args[1])
+        d = findName(bot, bot.polls, args[1])
         if(d != None):
             if(args[2] in d):
                 d[args[2]] += 1
-                printPoll(d,msg)
+                printPoll(bot, d,msg)
             else:
-                sendMessage(msg["channel"], "Invalid vote option")
+                bot.sendMessage(msg["channel"], "Invalid vote option")
         else:
-            sendMessage(msg["channel"], "Could not find poll")
+            bot.sendMessage(msg["channel"], "Could not find poll")
     else:
-        sendMessage(msg["channel"], "Incorrect number of arugments")
+        bot.sendMessage(msg["channel"], "Incorrect number of arugments")
 
-def stopPoll(msg):
+def stopPoll(bot, msg):
     print("endpoll")
-    global polls
     args = msg["text"].split(",")
     if(len(args) == 2):
-        d = findName(polls, args[1].lower())
+        d = findName(bot, bot.polls, args[1].lower())
         if(d != None):
-            polls.remove(d)
-            printPoll(d, msg)
+            bot.polls.remove(d)
+            printPoll(bot, d, msg)
         else:
-            sendMessage(msg["channel"], "Could not find poll")
+            bot.sendMessage(msg["channel"], "Could not find poll")
     else:
-        sendMessage(msg["channel"], "Incorrect number of arugments")
+        bot.sendMessage(msg["channel"], "Incorrect number of arugments")
 
+<<<<<<< HEAD
 def printPoll(poll, msg):
     global polls
     #p = findName(polls,name).copy()l
+=======
+def printPoll(bot, poll, msg):
+    #p = findName(polls,name).copy()
+>>>>>>> 8adb454e36cdb959e7a37aae810134c21a483aa7
     p = poll.copy()
     name = p["name"]
     del(p["name"])
@@ -303,35 +306,32 @@ def printPoll(poll, msg):
         s += "\n  " + str(w) + (" " * (10 - len(w))) + " " + str(p[w])
     s += "```"
     #print(s)
-    sendMessage(msg["channel"], s)
+    bot.sendMessage(msg["channel"], s)
 
-def catFacts(msg):
+def catFacts(bot, msg):
     request = str(urllib.request.urlopen("http://catfacts-api.appspot.com/api/facts?number=1").read())
-    sendMessage(msg["channel"], request[request.find('[') + 2:request.find(']') - 1])
+    bot.sendMessage(msg["channel"], request[request.find('[') + 2:request.find(']') - 1])
 
-def delete(msg):
-    if(not timestamp.empty()):
-        ts = timestamp.get()
-        for w in whitelist:
-            sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
-def deleteAll(msg):
-    while not timestamp.empty():
-        ts = timestamp.get()
+def delete(bot, msg):
+    if(not bot.timestamp.empty()):
+        ts = bot.timestamp.get()
+        for w in bot.whitelist:
+            bot.sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
+def deleteAll(bot, msg):
+    while not bot.timestamp.empty():
+        ts = bot.timestamp.get()
         print(ts)
-        for w in whitelist:
-            sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
-def nye(msg):
+        for w in bot.whitelist:
+            bot.sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
+def nye(bot, msg):
     nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
-    sendMessage(msg["channel"], nyeMlg)
-def test(msg):
+    bot.sendMessage(msg["channel"], nyeMlg)
+def test(bot, msg):
     testing = "blackbox whitebox "*random.randrange(1,4)
-    sendMessage(msg["channel"], testing)
-def pony(msg):
+    bot.sendMessage(msg["channel"], testing)
+def pony(bot, msg):
     #print(dir(p.pony))
-    pony = "```"
-    pony += p.Pony.getPony()
-    pony += "```"
-    sendMessage(msg["channel"], pony)
+    bot.sendMessage(msg["channel"], "```" + p.Pony.getPony() + "```")
 def shipIt(msg):
     squirrels = [
       "http://shipitsquirrel.github.io/images/ship%20it%20squirrel.png",
@@ -349,9 +349,9 @@ def shipIt(msg):
       "https://dl.dropboxusercontent.com/u/602885/github/soldier-squirrel.jpg",
       "https://dl.dropboxusercontent.com/u/602885/github/squirrelmobster.jpeg",
     ]
-    sc.rtm_send_message(msg["channel"], random.choice(squirrels))
-#def send(msg):
+    bot.sc.rtm_send_message(msg["channel"], random.choice(squirrels))
 
+<<<<<<< HEAD
 router = [{
   "text": "~colorname",
   "callback":colorCode
@@ -398,5 +398,51 @@ router = [{
   "text": "~insanity",
   "callback":getMemeInsanity
 }]
+=======
+>>>>>>> 8adb454e36cdb959e7a37aae810134c21a483aa7
 if __name__ == "__main__":
-    startBot()
+    router = [{
+      "text": "~colorname",
+      "callback":colorCode
+    },{
+      "text": "~randomintern",
+      "callback":randomIntern
+    },{
+      "text": "~catfacts",
+      "callback":catFacts
+    },{
+      "text": "~quote",
+      "callback":quote
+    },{
+      "text": "~startpoll",
+      "callback":startPoll
+    },{
+      "text": "~stoppoll",
+      "callback":stopPoll
+    },{
+      "text": "~vote",
+      "callback":vote
+    },{
+      "text": "~deleteall",
+      "callback":deleteAll
+    },{
+      "text": "~delete",
+      "callback":delete
+    },{
+      "text": "~nye",
+      "callback":nye
+    },{
+      "text": "test",
+      "callback":test
+    },{
+      "text": "ship it",
+      "callback":shipIt
+    },{
+      "text": "~gif",
+      "callback":getGiphy
+    },{
+      "text": "pony",
+      "callback": pony
+    }]
+    g = GoTo()
+    g.startBot()

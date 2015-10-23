@@ -166,11 +166,11 @@ def getGiphy(bot, msg):
     ###print(jsonData["data"][0]["images"]["original"]["url"]
 
         #get a meme of keyword passed in
-def getMeme(msg):
+def getMeme(bot, msg):
     pass
 
 
-def getMemeInsanity(msg):
+def getMemeInsanity(bot, msg):
     
     url = "http://version1.api.memegenerator.net/Instances_Select_ByNew?languageCode=en&pageIndex=0&pageSize=12&urlName=Insanity-Wolf"
     data = urllib.request.urlopen(url).read().decode("utf-8")#.read())
@@ -382,6 +382,9 @@ if __name__ == "__main__":
     },{
       "text": "~gif",
       "callback":getGiphy
+    },{
+      "text": "~insanity",
+      "callback":getMemeInsanity
     },{
       "text": "pony",
       "callback": pony

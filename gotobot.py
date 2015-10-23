@@ -168,6 +168,23 @@ def getGiphy(msg):
     ###    print (jsonData["data"][0][i])
     ###print(jsonData["data"][0]["images"]["original"]["url"])
 
+
+#get a meme of keyword passed in
+def getMeme(msg):
+    pass
+
+
+def getMemeInsanity(msg):
+    
+    url = "http://version1.api.memegenerator.net/Instances_Select_ByNew?languageCode=en&pageIndex=0&pageSize=12&urlName=Insanity-Wolf"
+    data = urllib.request.urlopen(url).read().decode("utf-8")#.read())
+    jsonData = json.loads(data)
+    try:
+        randomWolf = jsonData["result"][random.randrange(0,len(jsonData["result"]))]["instanceImageUrl"]
+    except IndexError:
+        gif = "wolf not found"
+    sendMessage(msg["channel"], randomWolf)
+
 def colorCode(msg):
     print("color")
     name = msg["text"][1 + msg["text"].find(" "):]
@@ -277,7 +294,7 @@ def stopPoll(msg):
 
 def printPoll(poll, msg):
     global polls
-    #p = findName(polls,name).copy()
+    #p = findName(polls,name).copy()l
     p = poll.copy()
     name = p["name"]
     del(p["name"])
@@ -377,6 +394,9 @@ router = [{
 },{
   "text": "~gif",
   "callback":getGiphy
+},{
+  "text": "~insanity",
+  "callback":getMemeInsanity
 }]
 if __name__ == "__main__":
     startBot()

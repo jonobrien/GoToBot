@@ -165,7 +165,24 @@ def getGiphy(bot, msg):
     #print(jsonData["data"])
     ###for i in jsonData["data"][0].keys():
     ###    print (jsonData["data"][0][i])
-    ###print(jsonData["data"][0]["images"]["original"]["url"])
+    ###print(jsonData["data"][0]["images"]["original"]["url"]
+
+        #get a meme of keyword passed in
+def getMeme(bot, msg):
+    pass
+
+
+def getMemeInsanity(bot, msg):
+    
+    url = "http://version1.api.memegenerator.net/Instances_Select_ByNew?languageCode=en&pageIndex=0&pageSize=12&urlName=Insanity-Wolf"
+    data = urllib.request.urlopen(url).read().decode("utf-8")#.read())
+    jsonData = json.loads(data)
+    try:
+        randomWolf = jsonData["result"][random.randrange(0,len(jsonData["result"]))]["instanceImageUrl"]
+    except IndexError:
+        gif = "wolf not found"
+    bot.sendMessage(msg["channel"], randomWolf)
+
 
 def colorCode(bot, msg):
     print("color")
@@ -263,7 +280,7 @@ def shipIt(bot, msg):
       "https://dl.dropboxusercontent.com/u/602885/github/soldier-squirrel.jpg",
       "https://dl.dropboxusercontent.com/u/602885/github/squirrelmobster.jpeg",
     ]
-    bot.sc.rtm_send_message(msg["channel"], random.choice(squirrels))
+    bot.sendMessage(msg["channel"], random.choice(squirrels))
 
 if __name__ == "__main__":
     router = [{
@@ -308,6 +325,9 @@ if __name__ == "__main__":
     },{
       "text": ["~gif"],
       "callback":getGiphy
+    },{
+      "text": "~insanity",
+      "callback":getMemeInsanity
     },{
       "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],
       "callback": pony

@@ -323,7 +323,7 @@ def test(bot, msg):
 def pony(bot, msg):
     #print(dir(p.pony))
     bot.sendMessage(msg["channel"], "```" + p.Pony.getPony() + "```")
-def shipIt(msg):
+def shipIt(bot, msg):
     squirrels = [
       "http://shipitsquirrel.github.io/images/ship%20it%20squirrel.png",
       "http://images.cheezburger.com/completestore/2011/11/2/aa83c0c4-2123-4bd3-8097-966c9461b30c.jpg",
@@ -340,7 +340,7 @@ def shipIt(msg):
       "https://dl.dropboxusercontent.com/u/602885/github/soldier-squirrel.jpg",
       "https://dl.dropboxusercontent.com/u/602885/github/squirrelmobster.jpeg",
     ]
-    bot.sc.rtm_send_message(msg["channel"], random.choice(squirrels))
+    bot.sendMessage(msg["channel"], random.choice(squirrels))
 
 if __name__ == "__main__":
     router = [{

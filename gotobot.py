@@ -167,9 +167,19 @@ def getGiphy(bot, msg):
     ###    print (jsonData["data"][0][i])
     ###print(jsonData["data"][0]["images"]["original"]["url"]
 
-        #get a meme of keyword passed in
+
+# get a meme of keyword passed in
+# used memeGenerator API to query for memes
 def getMeme(bot, msg):
-    pass
+    keyword = msg["text"].split(",")[1]
+    url = "http://version1.api.memegenerator.net/Instances_Select_ByNew?languageCode=en&pageIndex=0&pageSize=12&urlName="
+    data = urllib.request.urlopen(url+keyword).read().decode("utf-8")
+    jsonData = json.loads(data)
+    try:
+        meme = jsonData["result"][random.randrange(0,len(jsonData["result"]))]["instanceImageUrl"]
+    except:
+        meme = "nope.jpg"
+    bot.sendMessage(msg["channel"],meme)
 
 
 def getMemeInsanity(bot, msg):
@@ -180,7 +190,7 @@ def getMemeInsanity(bot, msg):
     try:
         randomWolf = jsonData["result"][random.randrange(0,len(jsonData["result"]))]["instanceImageUrl"]
     except IndexError:
-        gif = "wolf not found"
+        randomWolf = "wolf not found"
     bot.sendMessage(msg["channel"], randomWolf)
 
 
@@ -319,6 +329,9 @@ if __name__ == "__main__":
     },{
       "text": ["test"],
       "callback":test
+    },{
+      "text": ["~meme"],
+      "callback":getMeme
     },{
       "text": ["ship it",":shipit:"],
       "callback":shipIt

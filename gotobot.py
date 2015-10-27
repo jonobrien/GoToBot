@@ -78,9 +78,10 @@ class GoTo:
                         if("type" in msg and msg["type"] == "error"):
                             #need a proper reconnect function
                             #doesnt regain connection token
-                            print ("[!!] error in message, restarting bot")
+                            print ("[!!] error message received, restarting bot")
                             error = "message error - no quotes found"
                             self.sendMessage(self.last_channel, error)
+                            self.sendError()
                         #print("type" in msg and msg["type"] == "message"and "text" in msg)
                         if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable for c in msg["text"].replace("'",""))):
                             #print(msg)
@@ -106,13 +107,15 @@ class GoTo:
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
             self.sc = SlackClient(token)
+            __init__()
             startBot()
         except Exception:
             print("[!!] uncaught error")
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
             sc = SlackClient(self.token)
-            self.startBot()
+            __init__()
+            startBot()
 
 
     def sendMessage(self,channel, message):
@@ -129,6 +132,7 @@ class GoTo:
         traceback.print_exc(file=sys.stdout)
         print("\n[!!] restarting the bot\n")
         self.sc = SlackClient(token)
+        __init__()
         startBot()
 
     #~DM,user,msg

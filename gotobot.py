@@ -20,7 +20,7 @@ class GoTo:
                  self.token = tRead.read()
         #global sc
         self.sc = SlackClient(self.token)
-        self.interns = ["Jon", "Yura", "Steven G", "Avik", "Tommy"] + (["Yura"] * 5)
+        self.interns = ["Jon", "Yura", "Steven G", "Avik", "Tommy"] + (["Yura"] * 5) + ["Alex"]
         self.people = self.interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"]
         self.bots = ["U0CK96B71","U0CK96B71","U0ARYU2CT"]
         self.timestamp = queue.Queue()
@@ -218,39 +218,47 @@ def colorCode(bot, msg):
     bot.sendMessage(msg["channel"], h)
 
 def randomIntern(bot, msg):
-    bot.sendMessage(msg["channel"], random.choice(bot.interns))
+    ranIntern = random.choice(bot.interns)
+    if (ranIntern != "Alex"):
+        bot.sendMessage(msg["channel"], ranIntern)
+    else:
+        bot.sendMessage(msg["channel"], "nope")
 
 def quote(bot, msg):
-    args = msg["text"].split(",")
-    channel = msg["channel"]
-    if (channel != "G0CCGHGKS"):
-        print("quote check")
-        return -1
-    if(len(args) >= 3):
-        if(args[1] in bot.people):
-            fileName = bot.people[bot.people.index(args[1])] + "Quotes.txt"
-            #need to get full quote
-            if(os.path.isfile(fileName)):
-                with open(fileName, "a+") as f:
-                    f.write("," + args[2])
-            else:
-                with open(fileName, "a+") as f:
-                    f.write(args[2])
-            bot.sendMessage(msg["channel"], "Quote added " + args[2])
-    elif(len(args) == 2):
-        quotes = []
-        if(args[1] in bot.people):
-            fileName = bot.people[bot.people.index(args[1])] + "Quotes.txt"
-            if(os.path.isfile(fileName)):
-                with open(fileName, "r") as read:
-                    quotes = read.read().split(",")
-            else:
-                bot.sendMessage(msg["channel"], "no quotes for " + args[1] + " you should add some")
-            if(len(quotes) > 0):
-                bot.sendMessage(msg["channel"], random.choice(quotes))
-    else:
-        print("[!!] not enough args")
-        return -1
+    try:
+        print(msg)
+        args = msg["text"].split(",")
+        channel = msg["channel"]
+        if (channel != "G0CCGHGKS"):
+            print("quote check")
+            return -1
+        if(len(args) >= 3):
+            if(args[1] in bot.people):
+                fileName = bot.people[bot.people.index(args[1])] + "Quotes.txt"
+                #need to get full quote
+                if(os.path.isfile(fileName)):
+                    with open(fileName, "a+") as f:
+                        f.write("," + args[2])
+                else:
+                    with open(fileName, "a+") as f:
+                        f.write(args[2])
+                bot.sendMessage(channel, "Quote added " + args[2])
+        elif(len(args) == 2):
+            quotes = []
+            if(args[1] in bot.people):
+                fileName = bot.people[bot.people.index(args[1])] + "Quotes.txt"
+                if(os.path.isfile(fileName)):
+                    with open(fileName, "r") as read:
+                        quotes = read.read().split(",")
+                else:
+                    bot.sendMessage(channel, "no quotes for " + args[1] + " you should add some")
+                if(len(quotes) > 0):
+                    bot.sendMessage(channel, random.choice(quotes))
+        else:
+            print("[!!] not enough args")
+            return -1
+    except Exception:
+        sendError()
 
 def catFacts(bot, msg):
     request = str(urllib.request.urlopen("http://catfacts-api.appspot.com/api/facts?number=1").read())

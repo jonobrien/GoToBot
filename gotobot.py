@@ -20,7 +20,7 @@ class GoTo:
                  self.token = tRead.read()
         #global sc
         self.sc = SlackClient(self.token)
-        self.interns = ["Jon", "Yura", "Alex", "Avik", "Tommy","Alex"]
+        self.interns = ["Jon", "Yura", "Steven G", "Avik", "Tommy"] + (["Yura"] * 5)
         self.people = self.interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"]
         self.bots = ["U0CK96B71","U0CK96B71","U0ARYU2CT"]
         self.timestamp = queue.Queue()
@@ -282,27 +282,30 @@ def shipIt(bot, msg):
     ]
     bot.sendMessage(msg["channel"], random.choice(squirrels))
 
+def randominterns(bot,msg):
+    bot.sendMessage(msg["channel"],"Alex")
+
 if __name__ == "__main__":
     router = [{
-      "text": ["~colorname"],
+      "text": ["~colorname", "~color name"],
       "callback":colorCode
     },{
       "text": ["~randomintern"],
       "callback":randomIntern
     },{
-      "text": ["~catfacts"],
+      "text": ["~catfacts", "~cat facts"],
       "callback":catFacts
     },{
       "text": ["~quote"],
       "callback":quote
     },{
-      "text": ["~startpoll","~poll","~createpoll"],
+      "text": ["~startpoll","~poll","~createpoll","~start poll","~poll","~create poll"],
       "callback":poll.startPoll
     },{
-      "text": ["~stoppoll",'~removepoll'],
+      "text": ["~stoppoll",'~removepoll',"~stop poll",'~remove poll'],
       "callback":poll.stopPoll
     },{
-      "text": ["~vote","~votepoll"],
+      "text": ["~vote","~votepoll","~vote poll"],
       "callback":poll.vote
     },{
       "text": ["~addoption"],
@@ -320,7 +323,7 @@ if __name__ == "__main__":
       "text": ["test"],
       "callback":test
     },{
-      "text": ["ship it",":shipit:"],
+      "text": ["ship it",":shipit:", "ship it"],
       "callback":shipIt
     },{
       "text": ["~gif"],
@@ -331,6 +334,9 @@ if __name__ == "__main__":
     },{
       "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],
       "callback": pony
+    },{
+      "text": ["~random intern"],
+      "callback": randominterns
     }]
     g = GoTo()
     g.startBot()

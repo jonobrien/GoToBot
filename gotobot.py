@@ -336,7 +336,7 @@ if __name__ == "__main__":
       "text": ["~meme"],
       "callback":getMeme
     },{
-      "text": ["ship it",":shipit:", "ship it"],
+      "text": ["ship it",":shipit:", "shipit"],
       "callback":shipIt
     },{
       "text": ["~gif"],
@@ -348,7 +348,7 @@ if __name__ == "__main__":
       "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],
       "callback": pony
     },{
-      "text": ["~random intern"],
+      "text": ["~random intern", "~ randomintern"],
       "callback": randominterns
     }]
     g = GoTo()

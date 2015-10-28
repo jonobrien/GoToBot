@@ -101,6 +101,7 @@ class GoTo:
                         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     time.sleep(1)
             else:
+                #Remove this comment
                 print("Connection Failed, invalid token?")
         except AttributeError:
             print("[!!] error - probably in the send")

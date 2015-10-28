@@ -108,14 +108,14 @@ class GoTo:
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
             self.sc = SlackClient(token)
-            __init__()
+            __init__
             startBot()
         except Exception:
             print("[!!] uncaught error")
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
             sc = SlackClient(self.token)
-            __init__()
+            __init__
             startBot()
 
 
@@ -133,7 +133,7 @@ class GoTo:
         traceback.print_exc(file=sys.stdout)
         print("\n[!!] restarting the bot\n")
         self.sc = SlackClient(token)
-        __init__()
+        __init__
         startBot()
 
     #~DM,user,msg

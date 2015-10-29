@@ -20,7 +20,7 @@ class GoTo:
                  self.token = tRead.read()
         #global sc
         self.sc = SlackClient(self.token)
-        self.interns = ["Jon", "Yura", "Steven G", "Avik", "Tommy"] + (["Yura"] * 5) + ["Alex"]
+        self.interns = ["Jon", "Yura", "Steven G", "Avik", "Tommy"] + ["Alex"]
         self.people = self.interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"]
         self.bots = ["U0CK96B71","U0CK96B71","U0ARYU2CT"]
         self.timestamp = queue.Queue()
@@ -108,14 +108,14 @@ class GoTo:
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
             self.sc = SlackClient(token)
-            __init__()
+            __init__
             startBot()
         except Exception:
             print("[!!] uncaught error")
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
             sc = SlackClient(self.token)
-            __init__()
+            __init__
             startBot()
 
 
@@ -133,7 +133,7 @@ class GoTo:
         traceback.print_exc(file=sys.stdout)
         print("\n[!!] restarting the bot\n")
         self.sc = SlackClient(token)
-        __init__()
+        __init__
         startBot()
 
     #~DM,user,msg

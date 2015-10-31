@@ -20,7 +20,7 @@ class GoTo:
                  self.token = tRead.read()
         #global sc
         self.sc = SlackClient(self.token)
-        self.interns = ["Jon", "Yura", "Steven G", "Avik", "Tommy"] + ["Alex"]
+        self.interns = ["Jon", "Yura", "Steven G", "Avik", "Tommy"] + ["Alex"] + (["Yura"]*5)
         self.people = self.interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"]
         self.bots = ["U0CK96B71","U0CK96B71","U0ARYU2CT"]
         self.timestamp = queue.Queue()

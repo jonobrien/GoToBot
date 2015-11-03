@@ -310,6 +310,9 @@ def shipIt(bot, msg):
 def randominterns(bot,msg):
     bot.sendMessage(msg["channel"],"Alex")
 
+def luna(bot,msg):
+    bot.sendMessage(msg["channel"], "luna test")
+
 if __name__ == "__main__":
     router = [{
       "text": ["~colorname", "~color name"],
@@ -365,6 +368,9 @@ if __name__ == "__main__":
     },{
       "text": ["~random intern", "~ randomintern"],
       "callback": randominterns
+    },{
+      "text": ["Running all tests, give me a moment..."],
+      "callback": luna
     }]
     g = GoTo()
     g.startBot()

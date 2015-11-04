@@ -9,8 +9,10 @@ from slackclient import SlackClient
 from slacker import Slacker
 import sys, traceback
 import json
-import pony as p
+#import pony as p
 import poll
+import wave
+import pyaudio
 #import git
 class GoTo:
 
@@ -59,15 +61,17 @@ class GoTo:
                 while True:
                     msg = self.sc.rtm_read()
                     if(len(msg) == 1):
-                        #print(msg)
                         msg = msg[0]
+        
                         #error checking
                         #[{'type': 'user_typing', 'user': 'U054XSGNL', 'channel': 'D0CK8L0S1'}]
                         #[{'text': 'message', 'ts': '1445352439.000002', 'user': 'U054XSGNL', 'team': 'T04QY6Z1G', 'type': 'message', 'channel': 'D0CK8L0S1'}]
                         #join message
                         #[{'type': 'group_joined', 'channel': {'topic': {'last_set': 0, 'value': '', 'creator': ''}, 'name': 'website', 'last_read': '1445356948.000853', 'creator': 'U051UQDN6', 'is_mpim': False, 'is_archived': False, 'created': 1436198627, 'is_group': True, 'members': ['U051UQDN6', 'U052GCW57', 'U054XSGNL', 'U0665DKSL', 'U09JUD8PN', 'U09JVCNTX', 'U0B20MP8C', 'U0CK96B71'], 'unread_count': 0, 'is_open': True, 'purpose': {'last_set': 1440532002, 'value': 'general p3scan issues, questions, discussions, rants about scala/play problems...', 'creator': 'U054XSGNL'}, 'unread_count_display': 0, 'id': 'G0786E43B', 'latest': {'reactions': [{'count': 1, 'name': '-1', 'users': ['U09JUD8PN']}], 'text': 'Mine still breaks', 'type': 'message', 'user': 'U09JVCNTX', 'ts': '1445356948.000853'}}}]
                         #[{'text': '<@U0CK96B71|b0t> has joined the group', 'ts': '1445357442.000855', 'subtype': 'group_join', 'inviter': 'U054XSGNL', 'type': 'message', 'channel': 'G0786E43B', 'user': 'U0CK96B71'}]
-                        
+                        if("subtype" in msg and msg["subtype"] == 'group_join'):
+                            print("remove")
+                            print(self.sc.api_call("groups.kick",channel=msg["channel"], user="U0CNP6WRK"))
                         if("type" in msg and msg["type"] == "presence_change" and msg["presence"] == "active" and msg["user"]):
                             if(msg["user"] not in self.bots):
                                 #not b0t, Luna, gotoo
@@ -115,7 +119,7 @@ class GoTo:
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
             sc = SlackClient(self.token)
-            __init__
+            __init__()
             startBot()
 
 
@@ -309,7 +313,30 @@ def randominterns(bot,msg):
     bot.sendMessage(msg["channel"],"Alex")
 
 def luna(bot,msg):
-    bot.sendMessage(msg["channel"], "luna test")
+    bot.sendMessage(msg["channel"], "luna shutdown")
+
+def playGong(bot, msg):
+    CHUNK = 1024
+
+    wf = wave.open('gong.wav', 'rb')
+
+    p = pyaudio.PyAudio()
+
+    stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+                    channels=wf.getnchannels(),
+                    rate=wf.getframerate(),
+                    output=True)
+
+    data = wf.readframes(CHUNK)
+
+    while data != '':
+        stream.write(data)
+        data = wf.readframes(CHUNK)
+
+    stream.stop_stream()
+    stream.close()
+
+    p.terminate()
 
 if __name__ == "__main__":
     router = [{
@@ -360,15 +387,22 @@ if __name__ == "__main__":
     },{
       "text": ["~insanity"],
       "callback":getMemeInsanity
-    },{
-      "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],
-      "callback": pony
-    },{
+    },
+    # {
+    #   "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],
+    #   "callback": pony
+    # },
+    {
       "text": ["~random intern", "~ randomintern"],
       "callback": randominterns
-    },{
-      "text": ["Running all tests, give me a moment..."],
-      "callback": luna
+    },
+    # {
+    #   "text": ["Sorry, but you aren't authorized to use this command.", "luna"],
+    #   "callback": luna
+    # }
+    {
+      "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", ":heart_eyes:",":heartbeat:",":heartpulse:",":hearts:"],
+      "callback": playGong
     }]
     g = GoTo()
     g.startBot()

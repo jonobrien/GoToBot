@@ -17,12 +17,16 @@ import pyaudio
 class GoTo:
 
     def __init__(self):
+        self.start()
+
+
+    def start(self):
         self.token = ""
         with open("token.txt", "r") as tRead:
                  self.token = tRead.read()
         #global sc
         self.sc = SlackClient(self.token)
-        self.interns = ["Jon", "Yura", "Steven G", "Avik", "Tommy"] + ["Alex"] + (["Yura"]*5)
+        self.interns = ["Jon"] + ["Alex"] + (["Yura", "Steven G", "Avik", "Tommy","Yura"]*5)
         self.people = self.interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"]
         self.bots = ["U0CK96B71","U0CK96B71","U0ARYU2CT"]
         self.timestamp = queue.Queue()
@@ -34,6 +38,7 @@ class GoTo:
         self.whitelist = []
         with open("whitelist.txt", "r") as self.whiteRead:
              self.whitelist = self.whiteRead.read().split(" ")
+        self.startBot()
 
     def connect(self):
         print("connect")
@@ -112,15 +117,13 @@ class GoTo:
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
             self.sc = SlackClient(token)
-            __init__
-            startBot()
+            self.start()
         except Exception:
             print("[!!] uncaught error")
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
             sc = SlackClient(self.token)
-            __init__()
-            startBot()
+            self.start()
 
 
     def sendMessage(self,channel, message):
@@ -137,8 +140,7 @@ class GoTo:
         traceback.print_exc(file=sys.stdout)
         print("\n[!!] restarting the bot\n")
         self.sc = SlackClient(token)
-        __init__
-        startBot()
+        self.start()
 
     #~DM,user,msg
     def sendDM(self,msg):

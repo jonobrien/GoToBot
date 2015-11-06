@@ -163,6 +163,8 @@ class GoTo:
 def getGiphy(bot, msg):
     url = "http://api.giphy.com/v1/gifs/search?q="
     keywords = ",".join(msg["text"].split(",")[1:])
+    if("jon" in keywords.lower()):
+        keywords = "sloth"
     print(keywords)
     data = urllib.request.urlopen(url + keywords +"&api_key=dc6zaTOxFJmzC&limit=1").read().decode("utf-8")#.read())
     jsonData = json.loads(data)

@@ -1,4 +1,5 @@
 import time
+import datetime
 import string
 import random
 import urllib.request
@@ -64,6 +65,13 @@ class GoTo:
             if self.sc.rtm_connect():
                 print("connected")
                 while True:
+                    now = time.strftime("%H:%M:%S")
+                    if (now == "16:20:00" or now == "16:20:30"):
+                        print("\nblaze")
+                        blaze(self)
+                        print("it\n")
+
+
                     msg = self.sc.rtm_read()
                     if(len(msg) == 1):
                         msg = msg[0]
@@ -85,13 +93,10 @@ class GoTo:
                                 #sendMessage("G09LLA9EW",message)
                                 #print("[I] sent: "+message)
                         if("type" in msg and msg["type"] == "error"):
-                            #need a proper reconnect function
-                            #doesnt regain connection token
                             print ("[!!] error message received, restarting bot")
                             error = "message error - no quotes found"
                             self.sendMessage(self.last_channel, error)
                             self.sendError()
-                        #print("type" in msg and msg["type"] == "message"and "text" in msg)
                         if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable for c in msg["text"].replace("'",""))):
                             #print(msg)
                             if(msg["text"].lower() == "~addgrouptowhitelist" and msg['channel'] not in self.whitelist):
@@ -110,7 +115,6 @@ class GoTo:
                         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     time.sleep(1)
             else:
-                #Remove this comment
                 print("Connection Failed, invalid token?")
         except AttributeError:
             print("[!!] error - probably in the send")
@@ -181,6 +185,21 @@ def getGiphy(bot, msg):
     ###print(jsonData["data"][0]["images"]["original"]["url"]
 
 
+
+# sends a 420 giphy at 16:20:00 and 16:20:30
+def blaze(bot):
+    url = "http://api.giphy.com/v1/gifs/search?q="
+    keywords = "420"
+    print(keywords)
+    data = urllib.request.urlopen(url + keywords +"&api_key=dc6zaTOxFJmzC&limit=1").read().decode("utf-8")#.read())
+    jsonData = json.loads(data)
+    try:
+        gif = jsonData["data"][0]["images"]["original"]["url"]
+    except IndexError:
+        gif = "can't blaze it"
+    bot.sendMessage("G09LLA9EW", gif)
+
+
 # get a meme of keyword passed in
 # used memeGenerator API to query for memes
 def getMeme(bot, msg):
@@ -196,7 +215,6 @@ def getMeme(bot, msg):
 
 
 def getMemeInsanity(bot, msg):
-    
     url = "http://version1.api.memegenerator.net/Instances_Select_ByNew?languageCode=en&pageIndex=0&pageSize=12&urlName=Insanity-Wolf"
     data = urllib.request.urlopen(url).read().decode("utf-8")#.read())
     jsonData = json.loads(data)

@@ -14,6 +14,7 @@ import json
 import poll
 import wave
 import pyaudio
+import images
 #import git
 class GoTo:
 
@@ -68,7 +69,7 @@ class GoTo:
                     now = time.strftime("%H:%M:%S")
                     if (now == "16:20:00" or now == "16:20:30"):
                         print("\nblaze")
-                        blaze(self)
+                        images.blaze(self)
                         print("it\n")
 
 
@@ -164,65 +165,7 @@ class GoTo:
             self.sendError()
 
 
-def getGiphy(bot, msg):
-    url = "http://api.giphy.com/v1/gifs/search?q="
-    keywords = ",".join(msg["text"].split(",")[1:])
-    if("jon" in keywords.lower()):
-        keywords = "sloth"
-    print(keywords)
-    data = urllib.request.urlopen(url + keywords +"&api_key=dc6zaTOxFJmzC&limit=1").read().decode("utf-8")#.read())
-    jsonData = json.loads(data)
-    try:
-        gif = jsonData["data"][0]["images"]["original"]["url"]
-    except IndexError:
-        gif = "gif not found"
-    bot.sendMessage(msg["channel"], gif)
-    #print (jsonData)#(json.dumps(data, sort_keys=True, indent=4))
-    #print()
-    #print(jsonData["data"])
-    ###for i in jsonData["data"][0].keys():
-    ###    print (jsonData["data"][0][i])
-    ###print(jsonData["data"][0]["images"]["original"]["url"]
 
-
-
-# sends a 420 giphy at 16:20:00 and 16:20:30
-def blaze(bot):
-    url = "http://api.giphy.com/v1/gifs/search?q="
-    keywords = "420"
-    print(keywords)
-    data = urllib.request.urlopen(url + keywords +"&api_key=dc6zaTOxFJmzC&limit=1").read().decode("utf-8")#.read())
-    jsonData = json.loads(data)
-    try:
-        gif = jsonData["data"][0]["images"]["original"]["url"]
-    except IndexError:
-        gif = "can't blaze it"
-    bot.sendMessage("G09LLA9EW", gif)
-
-
-# get a meme of keyword passed in
-# used memeGenerator API to query for memes
-def getMeme(bot, msg):
-    keyword = msg["text"].split(",")[1]
-    url = "http://version1.api.memegenerator.net/Instances_Select_ByNew?languageCode=en&pageIndex=0&pageSize=12&urlName="
-    data = urllib.request.urlopen(url+keyword).read().decode("utf-8")
-    jsonData = json.loads(data)
-    try:
-        meme = jsonData["result"][random.randrange(0,len(jsonData["result"]))]["instanceImageUrl"]
-    except:
-        meme = "nope.jpg"
-    bot.sendMessage(msg["channel"],meme)
-
-
-def getMemeInsanity(bot, msg):
-    url = "http://version1.api.memegenerator.net/Instances_Select_ByNew?languageCode=en&pageIndex=0&pageSize=12&urlName=Insanity-Wolf"
-    data = urllib.request.urlopen(url).read().decode("utf-8")#.read())
-    jsonData = json.loads(data)
-    try:
-        randomWolf = jsonData["result"][random.randrange(0,len(jsonData["result"]))]["instanceImageUrl"]
-    except IndexError:
-        randomWolf = "wolf not found"
-    bot.sendMessage(msg["channel"], randomWolf)
 
 
 def colorCode(bot, msg):
@@ -244,12 +187,14 @@ def colorCode(bot, msg):
     #print (h)
     bot.sendMessage(msg["channel"], h)
 
+
 def randomIntern(bot, msg):
     ranIntern = random.choice(bot.interns)
     if (ranIntern != "Alex"):
         bot.sendMessage(msg["channel"], ranIntern)
     else:
         bot.sendMessage(msg["channel"], "nope")
+
 
 def quote(bot, msg):
     try:
@@ -287,30 +232,42 @@ def quote(bot, msg):
     except Exception:
         sendError()
 
+
 def catFacts(bot, msg):
     request = str(urllib.request.urlopen("http://catfacts-api.appspot.com/api/facts?number=1").read())
     bot.sendMessage(msg["channel"], request[request.find('[') + 2:request.find(']') - 1])
+
 
 def delete(bot, msg):
     if(not bot.timestamp.empty()):
         ts = bot.timestamp.get()
         for w in bot.whitelist:
             bot.sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
+
+
 def deleteAll(bot, msg):
     while not bot.timestamp.empty():
         ts = bot.timestamp.get()
         print(ts)
         for w in bot.whitelist:
             bot.sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
+
+
 def nye(bot, msg):
     nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
     bot.sendMessage(msg["channel"], nyeMlg)
+
+
 def test(bot, msg):
     testing = "blackbox whitebox "*random.randrange(1,4)
     bot.sendMessage(msg["channel"], testing)
+
+
 def pony(bot, msg):
     #print(dir(p.pony))
     bot.sendMessage(msg["channel"], "```" + p.Pony.getPony() + "```")
+
+    
 def shipIt(bot, msg):
     squirrels = [
       "http://shipitsquirrel.github.io/images/ship%20it%20squirrel.png",
@@ -331,34 +288,31 @@ def shipIt(bot, msg):
     ]
     bot.sendMessage(msg["channel"], random.choice(squirrels))
 
+
 def randominterns(bot,msg):
     bot.sendMessage(msg["channel"],"Alex")
+
 
 def luna(bot,msg):
     bot.sendMessage(msg["channel"], "luna shutdown")
 
+
 def playGong(bot, msg):
     CHUNK = 1024
-
     wf = wave.open('gong.wav', 'rb')
-
     p = pyaudio.PyAudio()
-
     stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
                     channels=wf.getnchannels(),
                     rate=wf.getframerate(),
                     output=True)
-
     data = wf.readframes(CHUNK)
-
     while data != '':
         stream.write(data)
         data = wf.readframes(CHUNK)
-
     stream.stop_stream()
     stream.close()
-
     p.terminate()
+
 
 if __name__ == "__main__":
     router = [{
@@ -399,16 +353,16 @@ if __name__ == "__main__":
       "callback":test
     },{
       "text": ["~meme"],
-      "callback":getMeme
+      "callback":images.getMeme
     },{
       "text": ["ship it",":shipit:", "shipit"],
       "callback":shipIt
     },{
       "text": ["~gif"],
-      "callback":getGiphy
+      "callback":images.getGiphy
     },{
       "text": ["~insanity"],
-      "callback":getMemeInsanity
+      "callback":images.getMemeInsanity
     },
     # {
     #   "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],

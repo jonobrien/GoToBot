@@ -1,3 +1,6 @@
+import urllib.request
+import json
+import random
 
 
 def getGiphy(bot, msg):

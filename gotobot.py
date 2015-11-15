@@ -121,13 +121,13 @@ class GoTo:
             print("[!!] error - probably in the send")
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
-            self.sc = SlackClient(token)
+            self.sc = SlackClient(self.token)
             self.start()
         except Exception:
             print("[!!] uncaught error")
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
-            sc = SlackClient(self.token)
+            self.sc = SlackClient(self.token)
             self.start()
 
 
@@ -144,7 +144,7 @@ class GoTo:
         print("\n[!!] sending failed")
         traceback.print_exc(file=sys.stdout)
         print("\n[!!] restarting the bot\n")
-        self.sc = SlackClient(token)
+        self.sc = SlackClient(self.token)
         self.start()
 
     #~DM,user,msg
@@ -155,9 +155,9 @@ class GoTo:
         message = args[2]
         try:
             sendUser = self.userDict[user]
-            print(token)
+            print(self.token)
             print(sendUser)
-            send = self.sc.api_call("im_open",token=token, user=sendUser)
+            send = self.sc.api_call("im_open",token=self.token, user=sendUser)
             print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
             print(send)
             self.sc.api_call("chat.postMessage", as_user="true", channel=sendUser, text=message)
@@ -267,7 +267,7 @@ def pony(bot, msg):
     #print(dir(p.pony))
     bot.sendMessage(msg["channel"], "```" + p.Pony.getPony() + "```")
 
-    
+
 def shipIt(bot, msg):
     squirrels = [
       "http://shipitsquirrel.github.io/images/ship%20it%20squirrel.png",

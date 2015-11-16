@@ -23,6 +23,7 @@ class GoTo:
 
 
     def start(self):
+        print("start")
         self.token = ""
         with open("token.txt", "r") as tRead:
                  self.token = tRead.read()
@@ -36,10 +37,15 @@ class GoTo:
         #{"@username":"ID","@user2":"ID2"}
         self.userDict = {}
         self.polls = []
+        self.messageCount = 0
         self.whiteWrite = open
         self.whitelist = []
+        self.words = []
         with open("whitelist.txt", "r") as self.whiteRead:
-             self.whitelist = self.whiteRead.read().split(" ")
+            self.whitelist = self.whiteRead.read().split(" ")
+        with open("EN_dict.txt", "r") as readLines:
+            self.words = readLines.read().split("\n")
+        print("starting bot loop")
         self.startBot()
 
     def connect(self):
@@ -52,6 +58,7 @@ class GoTo:
 
     def startBot(self):
         try:
+            print("startBot")
             slack = Slacker(self.token)
             #slack.chat.post_message('G0ARYMG3E', 'slacker test')
             response = slack.users.list()
@@ -59,7 +66,7 @@ class GoTo:
             for user in users:
                 self.userDict[user["id"]] = user["name"]
             print(datetime.datetime.now())
-            print(self.userDict)
+            #print(self.userDict)
             # g = git.cmd.Git("C:\\Users\\D\\pfpui")
             #whitelist.remove('')
             # g.pull()
@@ -76,7 +83,20 @@ class GoTo:
                     msg = self.sc.rtm_read()
                     if(len(msg) == 1):
                         msg = msg[0]
-        
+
+                        self.messageCount += 1
+                        if (self.messageCount % 20 == 0):
+                            randomWord = random.choice(self.words)
+                            print("random word: " + randomWord)
+                            url = "http://api.giphy.com/v1/gifs/search?q="
+                            data = urllib.request.urlopen(url + randomWord +"&api_key=dc6zaTOxFJmzC&limit=1").read().decode("utf-8")#.read())
+                            jsonData = json.loads(data)
+                            try:
+                                wordGif = jsonData["data"][0]["images"]["original"]["url"]
+                            except IndexError:
+                                wordGif = "random gif not found for " + randomWord
+                            self.sendMessage("G0EFAE1EE", wordGif)
+
                         #error checking
                         #[{'type': 'user_typing', 'user': 'U054XSGNL', 'channel': 'D0CK8L0S1'}]
                         #[{'text': 'message', 'ts': '1445352439.000002', 'user': 'U054XSGNL', 'team': 'T04QY6Z1G', 'type': 'message', 'channel': 'D0CK8L0S1'}]
@@ -381,4 +401,4 @@ if __name__ == "__main__":
       "callback": playGong
     }]
     g = GoTo()
-    g.startBot()
+    g.start()

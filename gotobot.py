@@ -118,7 +118,7 @@ class GoTo:
                             error = "message error - no quotes found"
                             self.sendMessage(self.last_channel, error)
                             self.sendError()
-                        if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable for c in msg["text"].replace("'",""))):
+                        if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable.replace("`", "") for c in msg["text"].replace("'",""))):
                             #print(msg)
                             if(msg["text"].lower() == "~addgrouptowhitelist" and msg['channel'] not in self.whitelist):
                                 self.whitelist.append(msg["channel"])

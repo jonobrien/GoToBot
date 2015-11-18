@@ -41,6 +41,7 @@ class GoTo:
         self.whiteWrite = open
         self.whitelist = []
         self.words = []
+        self.legalChars = string.printable.replace("`", "")
         with open("whitelist.txt", "r") as self.whiteRead:
             self.whitelist = self.whiteRead.read().split(" ")
         with open("EN_dict.txt", "r") as readLines:
@@ -120,7 +121,7 @@ class GoTo:
                             error = "message error - no quotes found"
                             self.sendMessage(self.last_channel, error)
                             self.sendError()
-                        if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in string.printable for c in msg["text"].replace("'",""))):
+                        if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in self.legalChars for c in msg["text"].replace("'",""))):
                             #print(msg)
 
                             # TODO function

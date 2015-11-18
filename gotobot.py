@@ -30,7 +30,8 @@ class GoTo:
         #global sc
         self.sc = SlackClient(self.token)
         self.interns = ["Jon"] + ["Alex"] + (["Yura", "Steven G", "Avik", "Tommy","Yura"]*5)
-        self.people = self.interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"]
+        self.people = self.interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", 
+                "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"]
         self.bots = ["U0CK96B71","U0CK96B71","U0ARYU2CT"]
         self.timestamp = queue.Queue()
         self.last_channel = ""
@@ -87,7 +88,8 @@ class GoTo:
                         if("subtype" in msg and msg["subtype"] == 'group_join'):
                             print("remove")
                             print(self.sc.api_call("groups.kick",channel=msg["channel"], user="U0CNP6WRK"))
-                        if("type" in msg and msg["type"] == "presence_change" and msg["presence"] == "active" and msg["user"]):
+                        if("type" in msg and msg["type"] == "presence_change" and 
+                                                        msg["presence"] == "active" and msg["user"]):
                             if(msg["user"] not in self.bots):
                                 #not b0t, Luna, gotoo
                                 #post to interns-education as "user is active"
@@ -96,14 +98,12 @@ class GoTo:
                                 #print("[I] sent: "+message)
                         if("type" in msg and msg["type"] == "error"):
                             print("\n[!!] error: \n" + msg)
-                            print ("[!!] error message received, restarting bot")
-                            error = "message error - no quotes found"
+                            error = "message error - probably no quotes found"
                             self.sendMessage(self.last_channel, error)
                             self.sendError()
                         if("type" in msg and msg["type"] == "message"and "text" in msg and 
-                            all(c in self.legalChars for c in msg["text"].replace("'",""))):
+                                                        all(c in self.legalChars for c in msg["text"].replace("'",""))):
                             #print(msg)
-
                             if(self.inWhitelist(msg)):
                                 pass # channel added, now can utilize bot
                             elif(msg["channel"] in self.whitelist):
@@ -393,7 +393,8 @@ if __name__ == "__main__":
     #   "callback": luna
     # }
     {
-      "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", ":heart_eyes:",":heartbeat:",":heartpulse:",":hearts:"],
+      "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", 
+            ":heart_eyes:",":heartbeat:",":heartpulse:",":hearts:"],
       "callback": playGong
     }]
     g = GoTo()

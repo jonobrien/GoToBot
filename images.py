@@ -32,10 +32,11 @@ def blaze(bot):
     url = "http://api.giphy.com/v1/gifs/search?q="
     keywords = "420"
     print(keywords)
-    data = urllib.request.urlopen(url + keywords +"&api_key=dc6zaTOxFJmzC&limit=1").read().decode("utf-8")#.read())
+    data = urllib.request.urlopen(url + keywords +"&api_key=dc6zaTOxFJmzC&limit=4").read().decode("utf-8")#.read())
     jsonData = json.loads(data)
     try:
-        gif = jsonData["data"][0]["images"]["original"]["url"]
+        jsonData = random.choice(jsonData["data"]) # take a random gif from the array of returned images
+        gif = jsonData["images"]["original"]["url"]#jsonData["data"][0]["images"]["original"]["url"]
     except IndexError:
         gif = "can't blaze it"
     bot.sendMessage("G09LLA9EW", gif)

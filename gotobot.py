@@ -85,8 +85,10 @@ class GoTo:
                     if(len(msg) == 1):
                         msg = msg[0]
 
+                        # TODO function
                         self.messageCount += 1
                         if (self.messageCount % 20 == 0):
+                            print(self.messageCount)
                             randomWord = random.choice(self.words)
                             print("random word: " + randomWord)
                             url = "http://api.giphy.com/v1/gifs/search?q="
@@ -121,6 +123,8 @@ class GoTo:
                             self.sendError()
                         if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in self.legalChars for c in msg["text"].replace("'",""))):
                             #print(msg)
+
+                            # TODO function
                             if(msg["text"].lower() == "~addgrouptowhitelist" and msg['channel'] not in self.whitelist):
                                 self.whitelist.append(msg["channel"])
                                 with open("whitelist.txt", "w") as self.whiteWrite:
@@ -260,6 +264,12 @@ def catFacts(bot, msg):
 
 
 def delete(bot, msg):
+    # seemed easy to delete messages and test other functions at the same time
+    # slack = Slacker(bot.token)
+    # images.blaze(bot)
+    # for chan in bot.whitelist:
+    #     print("\n\n" + chan + "\n")
+    #     print(slack.groups.history(channel='G0EFAE1EE'))
     if(not bot.timestamp.empty()):
         ts = bot.timestamp.get()
         for w in bot.whitelist:
@@ -280,7 +290,7 @@ def nye(bot, msg):
 
 
 def test(bot, msg):
-    testing = "blackbox whitebox "*random.randrange(1,4)
+    testing = "blackbox whitebox "*random.randrange(5,20)
     bot.sendMessage(msg["channel"], testing)
 
 

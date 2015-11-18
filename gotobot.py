@@ -243,9 +243,7 @@ def quote(bot, msg):
         sendError()
 
 
-def catFacts(bot, msg):
-    request = str(urllib.request.urlopen("http://catfacts-api.appspot.com/api/facts?number=1").read())
-    bot.sendMessage(msg["channel"], request[request.find('[') + 2:request.find(']') - 1])
+
 
 
 def delete(bot, msg):
@@ -269,9 +267,7 @@ def deleteAll(bot, msg):
             bot.sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
 
 
-def nye(bot, msg):
-    nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
-    bot.sendMessage(msg["channel"], nyeMlg)
+
 
 
 def test(bot, msg):
@@ -284,25 +280,7 @@ def pony(bot, msg):
     bot.sendMessage(msg["channel"], "```" + p.Pony.getPony() + "```")
 
 
-def shipIt(bot, msg):
-    squirrels = [
-      "http://shipitsquirrel.github.io/images/ship%20it%20squirrel.png",
-      "http://shipitsquirrel.github.io/images/squirrel.png",
-      "http://images.cheezburger.com/completestore/2011/11/2/aa83c0c4-2123-4bd3-8097-966c9461b30c.jpg",
-      "http://images.cheezburger.com/completestore/2011/11/2/46e81db3-bead-4e2e-a157-8edd0339192f.jpg",
-      "http://28.media.tumblr.com/tumblr_lybw63nzPp1r5bvcto1_500.jpg",
-      "http://i.imgur.com/DPVM1.png",
-      "http://d2f8dzk2mhcqts.cloudfront.net/0772_PEW_Roundup/09_Squirrel.jpg",
-      "http://www.cybersalt.org/images/funnypictures/s/supersquirrel.jpg",
-      "http://www.zmescience.com/wp-content/uploads/2010/09/squirrel.jpg",
-      "http://img70.imageshack.us/img70/4853/cutesquirrels27rn9.jpg",
-      "http://img70.imageshack.us/img70/9615/cutesquirrels15ac7.jpg",
-      "https://dl.dropboxusercontent.com/u/602885/github/sniper-squirrel.jpg",
-      "http://1.bp.blogspot.com/_v0neUj-VDa4/TFBEbqFQcII/AAAAAAAAFBU/E8kPNmF1h1E/s640/squirrelbacca-thumb.jpg",
-      "https://dl.dropboxusercontent.com/u/602885/github/soldier-squirrel.jpg",
-      "https://dl.dropboxusercontent.com/u/602885/github/squirrelmobster.jpeg",
-    ]
-    bot.sendMessage(msg["channel"], random.choice(squirrels))
+
 
 
 def randominterns(bot,msg):
@@ -339,7 +317,7 @@ if __name__ == "__main__":
       "callback":randomIntern
     },{
       "text": ["~catfacts", "~cat facts"],
-      "callback":catFacts
+      "callback":images.catFacts
     },{
       "text": ["~quote"],
       "callback":quote
@@ -363,7 +341,7 @@ if __name__ == "__main__":
       "callback":delete
     },{
       "text": ["~nye"],
-      "callback":nye
+      "callback":images.nye
     },{
       "text": ["test"],
       "callback":test
@@ -372,7 +350,7 @@ if __name__ == "__main__":
       "callback":images.getMeme
     },{
       "text": ["ship it",":shipit:", "shipit"],
-      "callback":shipIt
+      "callback":images.shipIt
     },{
       "text": ["~gif"],
       "callback":images.getGiphy

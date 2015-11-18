@@ -76,36 +76,14 @@ class GoTo:
                 while True:
                     now = time.strftime("%H:%M:%S")
                     if (now == "16:20:00" or now == "16:20:30"):
-                        print("\nblaze")
                         images.blaze(self)
-                        print("it\n")
-
 
                     msg = self.sc.rtm_read()
                     if(len(msg) == 1):
                         msg = msg[0]
 
-                        # TODO function
-                        self.messageCount += 1
-                        if (self.messageCount % 20 == 0):
-                            print(self.messageCount)
-                            randomWord = random.choice(self.words)
-                            print("random word: " + randomWord)
-                            url = "http://api.giphy.com/v1/gifs/search?q="
-                            data = urllib.request.urlopen(url + randomWord +"&api_key=dc6zaTOxFJmzC&limit=1").read().decode("utf-8")#.read())
-                            jsonData = json.loads(data)
-                            try:
-                                wordGif = jsonData["data"][0]["images"]["original"]["url"]
-                            except IndexError:
-                                wordGif = "random gif not found for " + randomWord
-                            self.sendMessage("G0EFAE1EE", wordGif)
+                        images.distractionChan(self)
 
-                        #error checking
-                        #[{'type': 'user_typing', 'user': 'U054XSGNL', 'channel': 'D0CK8L0S1'}]
-                        #[{'text': 'message', 'ts': '1445352439.000002', 'user': 'U054XSGNL', 'team': 'T04QY6Z1G', 'type': 'message', 'channel': 'D0CK8L0S1'}]
-                        #join message
-                        #[{'type': 'group_joined', 'channel': {'topic': {'last_set': 0, 'value': '', 'creator': ''}, 'name': 'website', 'last_read': '1445356948.000853', 'creator': 'U051UQDN6', 'is_mpim': False, 'is_archived': False, 'created': 1436198627, 'is_group': True, 'members': ['U051UQDN6', 'U052GCW57', 'U054XSGNL', 'U0665DKSL', 'U09JUD8PN', 'U09JVCNTX', 'U0B20MP8C', 'U0CK96B71'], 'unread_count': 0, 'is_open': True, 'purpose': {'last_set': 1440532002, 'value': 'general p3scan issues, questions, discussions, rants about scala/play problems...', 'creator': 'U054XSGNL'}, 'unread_count_display': 0, 'id': 'G0786E43B', 'latest': {'reactions': [{'count': 1, 'name': '-1', 'users': ['U09JUD8PN']}], 'text': 'Mine still breaks', 'type': 'message', 'user': 'U09JVCNTX', 'ts': '1445356948.000853'}}}]
-                        #[{'text': '<@U0CK96B71|b0t> has joined the group', 'ts': '1445357442.000855', 'subtype': 'group_join', 'inviter': 'U054XSGNL', 'type': 'message', 'channel': 'G0786E43B', 'user': 'U0CK96B71'}]
                         if("subtype" in msg and msg["subtype"] == 'group_join'):
                             print("remove")
                             print(self.sc.api_call("groups.kick",channel=msg["channel"], user="U0CNP6WRK"))
@@ -117,18 +95,17 @@ class GoTo:
                                 #sendMessage("G09LLA9EW",message)
                                 #print("[I] sent: "+message)
                         if("type" in msg and msg["type"] == "error"):
+                            print("\n[!!] error: \n" + msg)
                             print ("[!!] error message received, restarting bot")
                             error = "message error - no quotes found"
                             self.sendMessage(self.last_channel, error)
                             self.sendError()
-                        if("type" in msg and msg["type"] == "message"and "text" in msg and all(c in self.legalChars for c in msg["text"].replace("'",""))):
+                        if("type" in msg and msg["type"] == "message"and "text" in msg and 
+                            all(c in self.legalChars for c in msg["text"].replace("'",""))):
                             #print(msg)
 
-                            # TODO function
-                            if(msg["text"].lower() == "~addgrouptowhitelist" and msg['channel'] not in self.whitelist):
-                                self.whitelist.append(msg["channel"])
-                                with open("whitelist.txt", "w") as self.whiteWrite:
-                                    self.whiteWrite.write(" ".join(self.whitelist))
+                            if(self.inWhitelist(msg)):
+                                pass # channel added, now can utilize bot
                             elif(msg["channel"] in self.whitelist):
                                 for r in router:
                                     for t in r["text"]:
@@ -141,7 +118,7 @@ class GoTo:
                         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     time.sleep(1)
             else:
-                print("Connection Failed, invalid token?")
+                print("[!!] Connection Failed, invalid token?")
         except AttributeError:
             print("[!!] error - probably in the send")
             traceback.print_exc(file=sys.stdout)
@@ -154,6 +131,14 @@ class GoTo:
             print("[!!] restarting the bot")
             self.sc = SlackClient(self.token)
             self.start()
+
+
+    def inWhitelist(self,msg):
+        if (msg["text"].lower() == "~addgrouptowhitelist" and msg['channel'] not in self.whitelist):
+            self.whitelist.append(msg["channel"])
+            with open("whitelist.txt", "w") as self.whiteWrite:
+                self.whiteWrite.write(" ".join(self.whitelist))
+            return True #this definitely might be implied/0
 
 
     def sendMessage(self,channel, message):
@@ -413,3 +398,10 @@ if __name__ == "__main__":
     }]
     g = GoTo()
     g.start()
+
+#slack json for experimenting
+#[{'type': 'user_typing', 'user': 'U054XSGNL', 'channel': 'D0CK8L0S1'}]
+#[{'text': 'message', 'ts': '1445352439.000002', 'user': 'U054XSGNL', 'team': 'T04QY6Z1G', 'type': 'message', 'channel': 'D0CK8L0S1'}]
+#join message
+#[{'type': 'group_joined', 'channel': {'topic': {'last_set': 0, 'value': '', 'creator': ''}, 'name': 'website', 'last_read': '1445356948.000853', 'creator': 'U051UQDN6', 'is_mpim': False, 'is_archived': False, 'created': 1436198627, 'is_group': True, 'members': ['U051UQDN6', 'U052GCW57', 'U054XSGNL', 'U0665DKSL', 'U09JUD8PN', 'U09JVCNTX', 'U0B20MP8C', 'U0CK96B71'], 'unread_count': 0, 'is_open': True, 'purpose': {'last_set': 1440532002, 'value': 'general p3scan issues, questions, discussions, rants about scala/play problems...', 'creator': 'U054XSGNL'}, 'unread_count_display': 0, 'id': 'G0786E43B', 'latest': {'reactions': [{'count': 1, 'name': '-1', 'users': ['U09JUD8PN']}], 'text': 'Mine still breaks', 'type': 'message', 'user': 'U09JVCNTX', 'ts': '1445356948.000853'}}}]
+#[{'text': '<@U0CK96B71|b0t> has joined the group', 'ts': '1445357442.000855', 'subtype': 'group_join', 'inviter': 'U054XSGNL', 'type': 'message', 'channel': 'G0786E43B', 'user': 'U0CK96B71'}]

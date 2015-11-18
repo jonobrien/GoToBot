@@ -70,3 +70,19 @@ def getMemeInsanity(bot, msg):
     bot.sendMessage(msg["channel"], randomWolf)
 
 
+def distractionChan(bot):
+    bot.messageCount += 1
+    if (bot.messageCount % 20 == 0):
+        print("messageCount: " + bot.messageCount)
+        randomWord = random.choice(bot.words)
+        print("random word: " + randomWord)
+        url = "http://api.giphy.com/v1/gifs/search?q="
+        data = urllib.request.urlopen(url + randomWord +"&api_key=dc6zaTOxFJmzC&limit=1").read().decode("utf-8")#.read())
+        jsonData = json.loads(data)
+        try:
+            wordGif = jsonData["data"][0]["images"]["original"]["url"]
+        except IndexError:
+            wordGif = "random gif not found for " + randomWord
+        bot.sendMessage("G0EFAE1EE", wordGif)
+
+

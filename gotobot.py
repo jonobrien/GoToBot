@@ -35,8 +35,10 @@ class GoTo:
         self.bots = ["U0CK96B71","U0CK96B71","U0ARYU2CT"]
         self.timestamp = queue.Queue()
         self.last_channel = ""
-        #{"@username":"ID","@user2":"ID2"}
+        #{"ID":"@username","ID2":"@username2"}
         self.userDict = {}
+        #{"@username":"ID","@user2":"ID2"}
+        self.idDict = {}
         self.polls = []
         self.messageCount = 0
         self.whiteWrite = open
@@ -67,6 +69,7 @@ class GoTo:
             users = response.body['members']
             for user in users:
                 self.userDict[user["id"]] = user["name"]
+                self.idDict[user["name"]] = user["id"]
             print(datetime.datetime.now())
             #print(self.userDict)
             # g = git.cmd.Git("C:\\Users\\D\\pfpui")
@@ -134,10 +137,11 @@ class GoTo:
 
 
     def inWhitelist(self,msg):
-        if (msg["text"].lower() == "~addgrouptowhitelist" and msg['channel'] not in self.whitelist):
-            self.whitelist.append(msg["channel"])
-            with open("whitelist.txt", "w") as self.whiteWrite:
-                self.whiteWrite.write(" ".join(self.whitelist))
+        if (msg['text'].lower() == '~addgrouptowhitelist' and msg['channel'] not in self.whitelist):
+            self.whitelist.append(msg['channel'])
+            print('whitelist added: ' + msg['channel'])
+            with open('whitelist.txt', 'w') as self.whiteWrite:
+                self.whiteWrite.write(' '.join(self.whitelist))
             return True #this definitely might be implied/0
 
 
@@ -157,20 +161,30 @@ class GoTo:
         self.sc = SlackClient(self.token)
         self.start()
 
-    #~DM,user,msg
+
+    #~DM,user,msg - user has to be the @'user' string
     def sendDM(self,msg):
+        print("\n" + str(msg) + "\n\n")
         self.last_channel = msg["channel"]
         args = msg["text"].split(",")
-        user = args[1]
+        userName = args[1]
         message = args[2]
+        print(args)
         try:
-            sendUser = self.userDict[user]
-            print(self.token)
-            print(sendUser)
-            send = self.sc.api_call("im_open",token=self.token, user=sendUser)
+            recipient = self.idDict[userName]
+            slack = Slacker(self.token)
+            imOpen = slack.im.open(user=recipient) 
+            #send = self.sc.api_call("im_open",token=self.token, user=sendUser)
             print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-            print(send)
-            self.sc.api_call("chat.postMessage", as_user="true", channel=sendUser, text=message)
+            dmChannel = imOpen.body["channel"]["id"]
+            chatPost = slack.chat.post_message(channel=dmChannel, text=message, as_user="true")
+            #whitelist the channel
+            msg = {}
+            msg["text"] = "~addgrouptowhitelist"
+            msg["channel"] = dmChannel
+            self.inWhitelist(msg)
+            #sent = slack.im.post(user)
+            #self.sc.api_call("chat.postMessage", as_user="true", channel=sendUser, text=message)
         except Exception:
             self.sendError()
 
@@ -245,11 +259,10 @@ def quote(bot, msg):
 
 
 
-
+# messages
 def delete(bot, msg):
     # seemed easy to delete messages and test other functions at the same time
     # slack = Slacker(bot.token)
-    # images.blaze(bot)
     # for chan in bot.whitelist:
     #     print("\n\n" + chan + "\n")
     #     print(slack.groups.history(channel='G0EFAE1EE'))
@@ -258,7 +271,7 @@ def delete(bot, msg):
         for w in bot.whitelist:
             bot.sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
 
-
+# lots of messages
 def deleteAll(bot, msg):
     while not bot.timestamp.empty():
         ts = bot.timestamp.get()
@@ -278,9 +291,6 @@ def test(bot, msg):
 def pony(bot, msg):
     #print(dir(p.pony))
     bot.sendMessage(msg["channel"], "```" + p.Pony.getPony() + "```")
-
-
-
 
 
 def randominterns(bot,msg):
@@ -358,6 +368,10 @@ if __name__ == "__main__":
       "text": ["~insanity"],
       "callback":images.getMemeInsanity
     },
+    {
+      "text": ["~dm"],
+      "callback":GoTo.sendDM
+    },
     # {
     #   "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],
     #   "callback": pony
@@ -379,8 +393,11 @@ if __name__ == "__main__":
     g.start()
 
 #slack json for experimenting
-#[{'type': 'user_typing', 'user': 'U054XSGNL', 'channel': 'D0CK8L0S1'}]
-#[{'text': 'message', 'ts': '1445352439.000002', 'user': 'U054XSGNL', 'team': 'T04QY6Z1G', 'type': 'message', 'channel': 'D0CK8L0S1'}]
+# [{'type': 'user_typing', 'user': 'U054XSGNL', 'channel': 'D0CK8L0S1'}]
+# [{'text': 'message', 'ts': '1445352439.000002', 'user': 'U054XSGNL', 'team': 'T04QY6Z1G', 'type': 'message', 'channel': 'D0CK8L0S1'}]
 #join message
-#[{'type': 'group_joined', 'channel': {'topic': {'last_set': 0, 'value': '', 'creator': ''}, 'name': 'website', 'last_read': '1445356948.000853', 'creator': 'U051UQDN6', 'is_mpim': False, 'is_archived': False, 'created': 1436198627, 'is_group': True, 'members': ['U051UQDN6', 'U052GCW57', 'U054XSGNL', 'U0665DKSL', 'U09JUD8PN', 'U09JVCNTX', 'U0B20MP8C', 'U0CK96B71'], 'unread_count': 0, 'is_open': True, 'purpose': {'last_set': 1440532002, 'value': 'general p3scan issues, questions, discussions, rants about scala/play problems...', 'creator': 'U054XSGNL'}, 'unread_count_display': 0, 'id': 'G0786E43B', 'latest': {'reactions': [{'count': 1, 'name': '-1', 'users': ['U09JUD8PN']}], 'text': 'Mine still breaks', 'type': 'message', 'user': 'U09JVCNTX', 'ts': '1445356948.000853'}}}]
-#[{'text': '<@U0CK96B71|b0t> has joined the group', 'ts': '1445357442.000855', 'subtype': 'group_join', 'inviter': 'U054XSGNL', 'type': 'message', 'channel': 'G0786E43B', 'user': 'U0CK96B71'}]
+# [{'type': 'group_joined', 'channel': {'topic': {'last_set': 0, 'value': '', 'creator': ''}, 'name': 'website', 'last_read': '1445356948.000853', 'creator': 'U051UQDN6', 'is_mpim': False, 'is_archived': False, 'created': 1436198627, 'is_group': True, 'members': ['U051UQDN6', 'U052GCW57', 'U054XSGNL', 'U0665DKSL', 'U09JUD8PN', 'U09JVCNTX', 'U0B20MP8C', 'U0CK96B71'], 'unread_count': 0, 'is_open': True, 'purpose': {'last_set': 1440532002, 'value': 'general p3scan issues, questions, discussions, rants about scala/play problems...', 'creator': 'U054XSGNL'}, 'unread_count_display': 0, 'id': 'G0786E43B', 'latest': {'reactions': [{'count': 1, 'name': '-1', 'users': ['U09JUD8PN']}], 'text': 'Mine still breaks', 'type': 'message', 'user': 'U09JVCNTX', 'ts': '1445356948.000853'}}}]
+# [{'text': '<@U0CK96B71|b0t> has joined the group', 'ts': '1445357442.000855', 'subtype': 'group_join', 'inviter': 'U054XSGNL', 'type': 'message', 'channel': 'G0786E43B', 'user': 'U0CK96B71'}]
+#slacker responses
+# imOpen.body = {'no_op': True, 'already_open': True, 'ok': True, 'channel': {'id': 'D0CK8L0S1'}}
+# chatPost.body = {'message': {'text': 'test message', 'type': 'message', 'user': 'U0CK96B71', 'ts': '1447953215.000002'}, 'ok': True, 'ts': '1447953215.000002', 'channel': 'D0CK8L0S1'}

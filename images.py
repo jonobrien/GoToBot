@@ -12,12 +12,14 @@ def catFacts(bot, msg):
 
 
 def getGiphy(bot, msg):
-    url = "http://api.giphy.com/v1/gifs/search?q="
+    urlStart = "http://api.giphy.com/v1/gifs/search?q="
+    urlEnd = "&api_key=dc6zaTOxFJmzC&limit="
+    imageLimit = "1"
     keywords = ",".join(msg["text"].split(",")[1:])
     if("jon" in keywords.lower()):
         keywords = "sloth"
     print(keywords)
-    data = urllib.request.urlopen(url + keywords +"&api_key=dc6zaTOxFJmzC&limit=1").read().decode("utf-8")#.read())
+    data = urllib.request.urlopen(urlStart + keywords +urlEnd + imageLimit).read().decode("utf-8")#.read())
     jsonData = json.loads(data)
     try:
         gif = jsonData["data"][0]["images"]["original"]["url"]
@@ -81,7 +83,7 @@ def getMemeInsanity(bot, msg):
 def distractionChan(bot):
     bot.messageCount += 1
     if (bot.messageCount % 20 == 0):
-        print("messageCount: " + str(bot.messageCount))
+        print("messageCount: " + str(int(bot.messageCount)))
         randomWord = random.choice(bot.words)
         print("random word: " + randomWord)
         url = "http://api.giphy.com/v1/gifs/search?q="

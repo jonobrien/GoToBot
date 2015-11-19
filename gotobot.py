@@ -29,6 +29,7 @@ class GoTo:
                  self.token = tRead.read()
         #global sc
         self.sc = SlackClient(self.token)
+        self.id = 'U0CK96B71'
         self.interns = ["Jon"] + ["Alex"] + (["Yura", "Steven G", "Avik", "Tommy","Yura"]*5)
         self.people = self.interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", 
                 "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"]
@@ -102,7 +103,7 @@ class GoTo:
                         if("type" in msg and msg["type"] == "error"):
                             print("\n[!!] error: \n" + msg)
                             error = "message error - probably no quotes found"
-                            self.sendMessage(self.last_channel, error)
+                            self.sendMessage(self.last_channel, error) # error messages don't have a channel
                             self.sendError()
                         if("type" in msg and msg["type"] == "message"and "text" in msg and 
                                                         all(c in self.legalChars for c in msg["text"].replace("'",""))):
@@ -165,7 +166,6 @@ class GoTo:
     #~DM,user,msg - user has to be the @'user' string
     def sendDM(self,msg):
         print("\n" + str(msg) + "\n\n")
-        self.last_channel = msg["channel"]
         args = msg["text"].split(",")
         userName = args[1]
         message = args[2]
@@ -183,7 +183,6 @@ class GoTo:
             msg["text"] = "~addgrouptowhitelist"
             msg["channel"] = dmChannel
             self.inWhitelist(msg)
-            #sent = slack.im.post(user)
             #self.sc.api_call("chat.postMessage", as_user="true", channel=sendUser, text=message)
         except Exception:
             self.sendError()
@@ -257,30 +256,41 @@ def quote(bot, msg):
         sendError()
 
 
-
-
-# messages
+# messages - needs to be updated
 def delete(bot, msg):
-    # seemed easy to delete messages and test other functions at the same time
-    # slack = Slacker(bot.token)
-    # for chan in bot.whitelist:
-    #     print("\n\n" + chan + "\n")
-    #     print(slack.groups.history(channel='G0EFAE1EE'))
     if(not bot.timestamp.empty()):
         ts = bot.timestamp.get()
         for w in bot.whitelist:
             bot.sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
 
-# lots of messages
+
+# delete every message sent, from last 100
+# needs to have 'has_more' check for > 100
 def deleteAll(bot, msg):
-    while not bot.timestamp.empty():
-        ts = bot.timestamp.get()
-        print(ts)
-        for w in bot.whitelist:
-            bot.sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
+    slack = Slacker(bot.token)
+    print("\ndeleting all messages in private groups")
+    # delete private group messages
+    for chan in slack.groups.list().body['groups']: # for every group the bot has access to
+        print("deleting in: " + str(chan['name']))
+        #print(chan)
+        messages = slack.groups.history(channel=chan['id']).body['messages']
+        #print(messages)
+        for message in messages:
+            if (message['user'] == bot.id and ('subtype' not in message)): #can only delete messages owned by sender
+                    slack.chat.delete(ts=message['ts'], channel=chan['id'])
+                    print('deleted: ' + message['ts'])
 
-
-
+    # delete DMs
+    # for chan in slack.im.list().body['ims']:
+    #     for msg in slack.im.history(channel=chan['id']).body['messages']:
+    #         pass
+    print("done deleting")
+    ### deprecated
+    # while not bot.timestamp.empty():
+    #     ts = bot.timestamp.get()
+    #     print(ts)
+    #     for w in bot.whitelist:
+    #         bot.sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
 
 
 def test(bot, msg):
@@ -368,10 +378,10 @@ if __name__ == "__main__":
       "text": ["~insanity"],
       "callback":images.getMemeInsanity
     },
-    {
-      "text": ["~dm"],
-      "callback":GoTo.sendDM
-    },
+    # {
+    #   "text": ["~dm"],
+    #   "callback":GoTo.sendDM
+    # },
     # {
     #   "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],
     #   "callback": pony

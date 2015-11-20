@@ -23,38 +23,39 @@ class GoTo:
 
 
     def start(self):
-        print("start")
-        self.token = ""
-        with open("token.txt", "r") as tRead:
+        print('start')
+        self.token = ''
+        with open('token.txt', 'r') as tRead:
                  self.token = tRead.read()
         #global sc
-        self.sc = SlackClient(self.token)
-        self.id = 'U0CK96B71'
-        self.interns = ["Jon"] + ["Alex"] + (["Yura", "Steven G", "Avik", "Tommy","Yura"]*5)
-        self.people = self.interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", 
-                "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"]
-        self.bots = ["U0CK96B71","U0CK96B71","U0ARYU2CT"]
-        self.timestamp = queue.Queue()
-        self.last_channel = ""
-        #{"ID":"@username","ID2":"@username2"}
-        self.userDict = {}
-        #{"@username":"ID","@user2":"ID2"}
-        self.idDict = {}
-        self.polls = []
-        self.messageCount = 0
-        self.whiteWrite = open
-        self.whitelist = []
-        self.words = []
-        self.legalChars = string.printable.replace("`", "")
-        with open("whitelist.txt", "r") as self.whiteRead:
-            self.whitelist = self.whiteRead.read().split(" ")
-        with open("EN_dict.txt", "r") as readLines:
-            self.words = readLines.read().split("\n")
-        print("starting bot loop")
+        self.sc             = SlackClient(self.token)
+        self.id             = 'U0CK96B71' # bot ID
+        self.interns        = ['Alex'] + (['Yura', 'Steven G', 'Avik', 'Tommy','Yura']*5) # all the interns separately
+        self.people         = self.interns + ['Omar', 'David', 'Alan', 'Alison', 
+                                'Bulent', 'Carlos', 'Jeff', 'Steven', 'Thurston', 'Linda','Derek', 'Sean'] # everyone in the company
+        self.bots           = ['U0CK96B71','U0CK96B71','U0ARYU2CT'] # list of bots in use
+        self.timestamp      = queue.Queue() # queue for deleting messages
+        self.last_channel   = ''   # last channel message received from
+        self.userDict       = {}   # {'ID':'@username','ID2':'@username2'}
+        self.idDict         = {}   # {'@username':'ID','@user2':'ID2'}
+        self.polls          = []   # list of polls
+        self.messageCount   = 0    # for distractionChannel()
+        self.whiteWrite     = open # fd for whitelist
+        self.whitelist      = []   # list of channels bot can post in
+        self.words          = []   # list of words in dictionary
+        self.legalChars     = string.printable.replace('`', '') # characters that can be manipulated/printed
+        with open('whitelist.txt', 'r') as self.whiteRead:
+            self.whitelist  = self.whiteRead.read().split(' ')
+        with open('EN_dict.txt', 'r') as readLines:
+            self.words      = readLines.read().split('\n')
+        print('starting bot loop')
         self.startBot()
 
+
     def connect(self):
-        print("connect")
+        print('connect')
+
+
     def main(self):
         pass
 
@@ -63,24 +64,24 @@ class GoTo:
 
     def startBot(self):
         try:
-            print("startBot")
+            print('startBot')
             slack = Slacker(self.token)
             #slack.chat.post_message('G0ARYMG3E', 'slacker test')
             response = slack.users.list()
             users = response.body['members']
             for user in users:
-                self.userDict[user["id"]] = user["name"]
-                self.idDict[user["name"]] = user["id"]
+                self.userDict[user['id']] = user['name']
+                self.idDict[user['name']] = user['id']
             print(datetime.datetime.now())
             #print(self.userDict)
-            # g = git.cmd.Git("C:\\Users\\D\\pfpui")
+            # g = git.cmd.Git('C:\\Users\\D\\pfpui')
             #whitelist.remove('')
             # g.pull()
             if self.sc.rtm_connect():
-                print("connected")
+                print('connected')
                 while True:
-                    now = time.strftime("%H:%M:%S")
-                    if (now == "16:20:00" or now == "16:20:30"):
+                    now = time.strftime('%H:%M:%S')
+                    if (now == '16:20:00' or now == '16:20:30'):
                         images.blaze(self)
 
                     msg = self.sc.rtm_read()
@@ -89,50 +90,50 @@ class GoTo:
 
                         images.distractionChan(self)
 
-                        if("subtype" in msg and msg["subtype"] == 'group_join'):
-                            print("remove")
-                            print(self.sc.api_call("groups.kick",channel=msg["channel"], user="U0CNP6WRK"))
-                        if("type" in msg and msg["type"] == "presence_change" and 
-                                                        msg["presence"] == "active" and msg["user"]):
-                            if(msg["user"] not in self.bots):
+                        if('subtype' in msg and msg['subtype'] == 'group_join'):
+                            print('remove')
+                            print(self.sc.api_call('groups.kick',channel=msg['channel'], user='U0CNP6WRK'))
+                        if('type' in msg and msg['type'] == 'presence_change' and 
+                                                        msg['presence'] == 'active' and msg['user']):
+                            if(msg['user'] not in self.bots):
                                 #not b0t, Luna, gotoo
-                                #post to interns-education as "user is active"
-                                message = self.userDict[msg["user"]] + " is active"
-                                #sendMessage("G09LLA9EW",message)
-                                #print("[I] sent: "+message)
-                        if("type" in msg and msg["type"] == "error"):
-                            print("\n[!!] error: \n" + msg)
-                            error = "message error - probably no quotes found"
+                                #post to interns-education as 'user is active'
+                                message = self.userDict[msg['user']] + ' is active'
+                                #sendMessage('G09LLA9EW',message)
+                                #print('[I] sent: '+message)
+                        if('type' in msg and msg['type'] == 'error'):
+                            print('\n[!!] error: \n' + str(msg))
+                            error = 'message error - probably no quotes found'
                             self.sendMessage(self.last_channel, error) # error messages don't have a channel
                             self.sendError()
-                        if("type" in msg and msg["type"] == "message"and "text" in msg and 
-                                                        all(c in self.legalChars for c in msg["text"].replace("'",""))):
+                        if('type' in msg and msg['type'] == 'message'and 'text' in msg and 
+                                                        all(c in self.legalChars for c in msg['text'].replace("'",''))):
                             #print(msg)
                             if(self.inWhitelist(msg)):
                                 pass # channel added, now can utilize bot
-                            elif(msg["channel"] in self.whitelist):
+                            elif(msg['channel'] in self.whitelist):
                                 for r in router:
-                                    for t in r["text"]:
-                                        if(t.lower() in msg["text"].lower()):
-                                            r["callback"](self, msg)
-                        elif("ok" in msg and msg["ok"] == True):
-                            self.timestamp.put({"ts":msg["ts"],"channel":self.last_channel})
+                                    for t in r['text']:
+                                        if(t.lower() in msg['text'].lower()):
+                                            r['callback'](self, msg)
+                        elif('ok' in msg and msg['ok'] == True):
+                            self.timestamp.put({'ts':msg['ts'],'channel':self.last_channel})
                     elif(len(msg) > 1):
                         print(msg)
-                        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
                     time.sleep(1)
             else:
-                print("[!!] Connection Failed, invalid token?")
+                print('[!!] Connection Failed, invalid token?')
         except AttributeError:
-            print("[!!] error - probably in the send")
+            print('[!!] error - probably in the send')
             traceback.print_exc(file=sys.stdout)
-            print("[!!] restarting the bot")
+            print('[!!] restarting the bot')
             self.sc = SlackClient(self.token)
             self.start()
         except Exception:
-            print("[!!] uncaught error")
+            print('[!!] uncaught error')
             traceback.print_exc(file=sys.stdout)
-            print("[!!] restarting the bot")
+            print('[!!] restarting the bot')
             self.sc = SlackClient(self.token)
             self.start()
 
@@ -148,7 +149,8 @@ class GoTo:
 
     def sendMessage(self,channel, message):
         try:
-            self.sc.rtm_send_message(channel, message)
+            #self.sc.rtm_send_message(channel, message)
+            self.sc.api_call('chat.postMessage', channel=channel, text=message, as_user=True, unfurl_media=True)
             self.last_channel = channel
         except Exception:
             exception = traceback.print_exc(file=sys.stdout)
@@ -156,17 +158,17 @@ class GoTo:
 
 
     def sendError(self):
-        print("\n[!!] sending failed")
+        print('\n[!!] sending failed')
         traceback.print_exc(file=sys.stdout)
-        print("\n[!!] restarting the bot\n")
+        print('\n[!!] restarting the bot\n')
         self.sc = SlackClient(self.token)
         self.start()
 
 
     #~DM,user,msg - user has to be the @'user' string
     def sendDM(self,msg):
-        print("\n" + str(msg) + "\n\n")
-        args = msg["text"].split(",")
+        print('\n' + str(msg) + '\n\n')
+        args = msg['text'].split(',')
         userName = args[1]
         message = args[2]
         print(args)
@@ -174,16 +176,16 @@ class GoTo:
             recipient = self.idDict[userName]
             slack = Slacker(self.token)
             imOpen = slack.im.open(user=recipient) 
-            #send = self.sc.api_call("im_open",token=self.token, user=sendUser)
-            print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-            dmChannel = imOpen.body["channel"]["id"]
-            chatPost = slack.chat.post_message(channel=dmChannel, text=message, as_user="true")
+            #send = self.sc.api_call('im_open',token=self.token, user=sendUser)
+            print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+            dmChannel = imOpen.body['channel']['id']
+            chatPost = slack.chat.post_message(channel=dmChannel, text=message, as_user='true')
             #whitelist the channel
             msg = {}
-            msg["text"] = "~addgrouptowhitelist"
-            msg["channel"] = dmChannel
+            msg['text'] = '~addgrouptowhitelist'
+            msg['channel'] = dmChannel
             self.inWhitelist(msg)
-            #self.sc.api_call("chat.postMessage", as_user="true", channel=sendUser, text=message)
+            #self.sc.api_call('chat.postMessage', as_user='true', channel=sendUser, text=message)
         except Exception:
             self.sendError()
 
@@ -192,65 +194,65 @@ class GoTo:
 
 
 def colorCode(bot, msg):
-    print("color")
-    name = msg["text"][1 + msg["text"].find(" "):]
+    print('color')
+    name = msg['text'][1 + msg['text'].find(' '):]
     if(name == msg['text']):
-        message = "invalid arguments"
-        bot.sendMessage(msg["channel"], message)
+        message = 'invalid arguments'
+        bot.sendMessage(msg['channel'], message)
         return
-    # tmp="#"
+    # tmp='#'
     # for ch in name[:3]:
     #     tmp += hex(ord(ch))[2:]
-    if(name.lower() == "jon"):
-        h = "#39FF14"
-    elif(name.lower() == "verbose"):
-        h = "#b00bee"
+    if(name.lower() == 'jon'):
+        h = '#39FF14'
+    elif(name.lower() == 'verbose'):
+        h = '#b00bee'
     else:
-        h = "#" + hex(abs(hash(name)))[2:8]
+        h = '#' + hex(abs(hash(name)))[2:8]
     #print (h)
-    bot.sendMessage(msg["channel"], h)
+    bot.sendMessage(msg['channel'], h)
 
 
 def randomIntern(bot, msg):
     ranIntern = random.choice(bot.interns)
-    if (ranIntern != "Alex"):
-        bot.sendMessage(msg["channel"], ranIntern)
+    if (ranIntern != 'Alex'):
+        bot.sendMessage(msg['channel'], ranIntern)
     else:
-        bot.sendMessage(msg["channel"], "nope")
+        bot.sendMessage(msg['channel'], 'nope')
 
 
 def quote(bot, msg):
     try:
         print(msg)
-        args = msg["text"].split(",")
-        channel = msg["channel"]
-        if (channel != "G0CCGHGKS"):
-            print("quote check")
+        args = msg['text'].split(',')
+        channel = msg['channel']
+        if (channel != 'G0CCGHGKS'):
+            print('quote check')
             return -1
         if(len(args) >= 3):
             if(args[1] in bot.people):
-                fileName = bot.people[bot.people.index(args[1])] + "Quotes.txt"
+                fileName = bot.people[bot.people.index(args[1])] + 'Quotes.txt'
                 #need to get full quote
                 if(os.path.isfile(fileName)):
-                    with open(fileName, "a+") as f:
-                        f.write("," + args[2])
+                    with open(fileName, 'a+') as f:
+                        f.write(',' + args[2])
                 else:
-                    with open(fileName, "a+") as f:
+                    with open(fileName, 'a+') as f:
                         f.write(args[2])
-                bot.sendMessage(channel, "Quote added " + args[2])
+                bot.sendMessage(channel, 'Quote added ' + args[2])
         elif(len(args) == 2):
             quotes = []
             if(args[1] in bot.people):
-                fileName = bot.people[bot.people.index(args[1])] + "Quotes.txt"
+                fileName = bot.people[bot.people.index(args[1])] + 'Quotes.txt'
                 if(os.path.isfile(fileName)):
-                    with open(fileName, "r") as read:
-                        quotes = read.read().split(",")
+                    with open(fileName, 'r') as read:
+                        quotes = read.read().split(',')
                 else:
-                    bot.sendMessage(channel, "no quotes for " + args[1] + " you should add some")
+                    bot.sendMessage(channel, 'no quotes for ' + args[1] + ' you should add some')
                 if(len(quotes) > 0):
                     bot.sendMessage(channel, random.choice(quotes))
         else:
-            print("[!!] not enough args")
+            print('[!!] not enough args')
             return -1
     except Exception:
         sendError()
@@ -261,22 +263,22 @@ def delete(bot, msg):
     if(not bot.timestamp.empty()):
         ts = bot.timestamp.get()
         for w in bot.whitelist:
-            bot.sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
+            bot.sc.api_call('chat.delete',channel=w, ts=str(ts['ts']))
 
 
 # delete every message sent, from last 100
 # needs to have 'has_more' check for > 100
 def deleteAll(bot, msg):
     slack = Slacker(bot.token)
-    print("\ndeleting all messages in private groups")
+    print('\ndeleting all messages in private groups')
     # delete private group messages
     for chan in slack.groups.list().body['groups']: # for every group the bot has access to
-        print("deleting in: " + str(chan['name']))
+        print('deleting in: ' + str(chan['name'] + ' - ' +str(chan['id'])))
         #print(chan)
         messages = slack.groups.history(channel=chan['id']).body['messages']
         #print(messages)
         for message in messages:
-            if (message['user'] == bot.id and ('subtype' not in message)): #can only delete messages owned by sender
+            if ('user' in message and message['user'] == bot.id and ('subtype' not in message)): #can only delete messages owned by sender
                     slack.chat.delete(ts=message['ts'], channel=chan['id'])
                     print('deleted: ' + message['ts'])
 
@@ -284,31 +286,31 @@ def deleteAll(bot, msg):
     # for chan in slack.im.list().body['ims']:
     #     for msg in slack.im.history(channel=chan['id']).body['messages']:
     #         pass
-    print("done deleting")
+    print('done deleting')
     ### deprecated
     # while not bot.timestamp.empty():
     #     ts = bot.timestamp.get()
     #     print(ts)
     #     for w in bot.whitelist:
-    #         bot.sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
+    #         bot.sc.api_call('chat.delete',channel=w, ts=str(ts['ts']))
 
 
 def test(bot, msg):
-    testing = "blackbox whitebox "*random.randrange(5,20)
-    bot.sendMessage(msg["channel"], testing)
+    testing = 'blackbox whitebox '*random.randrange(5,20)
+    bot.sendMessage(msg['channel'], testing)
 
 
 def pony(bot, msg):
     #print(dir(p.pony))
-    bot.sendMessage(msg["channel"], "```" + p.Pony.getPony() + "```")
+    bot.sendMessage(msg['channel'], '```' + p.Pony.getPony() + '```')
 
 
 def randominterns(bot,msg):
-    bot.sendMessage(msg["channel"],"Alex")
+    bot.sendMessage(msg['channel'],'Alex')
 
 
 def luna(bot,msg):
-    bot.sendMessage(msg["channel"], "luna shutdown")
+    bot.sendMessage(msg['channel'], 'luna shutdown')
 
 
 def playGong(bot, msg):
@@ -328,76 +330,76 @@ def playGong(bot, msg):
     p.terminate()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     router = [{
-      "text": ["~colorname", "~color name"],
-      "callback":colorCode
+      'text': ['~colorname', '~color name'],
+      'callback':colorCode
     },{
-      "text": ["~randomintern"],
-      "callback":randomIntern
+      'text': ['~randomintern'],
+      'callback':randomIntern
     },{
-      "text": ["~catfacts", "~cat facts"],
-      "callback":images.catFacts
+      'text': ['~catfacts', '~cat facts'],
+      'callback':images.catFacts
     },{
-      "text": ["~quote"],
-      "callback":quote
+      'text': ['~quote'],
+      'callback':quote
     },{
-      "text": ["~startpoll","~poll","~createpoll","~start poll","~poll","~create poll"],
-      "callback":poll.startPoll
+      'text': ['~startpoll','~poll','~createpoll','~start poll','~poll','~create poll'],
+      'callback':poll.startPoll
     },{
-      "text": ["~stoppoll",'~removepoll',"~stop poll",'~remove poll'],
-      "callback":poll.stopPoll
+      'text': ['~stoppoll','~removepoll','~stop poll','~remove poll'],
+      'callback':poll.stopPoll
     },{
-      "text": ["~vote","~votepoll","~vote poll"],
-      "callback":poll.vote
+      'text': ['~vote','~votepoll','~vote poll'],
+      'callback':poll.vote
     },{
-      "text": ["~addoption"],
-      "callback":poll.addOption
+      'text': ['~addoption'],
+      'callback':poll.addOption
     },{
-      "text": ["~deleteall"],
-      "callback":deleteAll
+      'text': ['~deleteall'],
+      'callback':deleteAll
     },{
-      "text": ["~delete"],
-      "callback":delete
+      'text': ['~delete'],
+      'callback':delete
     },{
-      "text": ["~nye"],
-      "callback":images.nye
+      'text': ['~nye'],
+      'callback':images.nye
     },{
-      "text": ["test"],
-      "callback":test
+      'text': ['test'],
+      'callback':test
     },{
-      "text": ["~meme"],
-      "callback":images.getMeme
+      'text': ['~meme'],
+      'callback':images.getMeme
     },{
-      "text": ["ship it",":shipit:", "shipit"],
-      "callback":images.shipIt
+      'text': ['ship it',':shipit:', 'shipit'],
+      'callback':images.shipIt
     },{
-      "text": ["~gif"],
-      "callback":images.getGiphy
+      'text': ['~gif'],
+      'callback':images.getGiphy
     },{
-      "text": ["~insanity"],
-      "callback":images.getMemeInsanity
+      'text': ['~insanity'],
+      'callback':images.getMemeInsanity
     },
     # {
-    #   "text": ["~dm"],
-    #   "callback":GoTo.sendDM
+    #   'text': ['~dm'],
+    #   'callback':GoTo.sendDM
     # },
     # {
-    #   "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],
-    #   "callback": pony
+    #   'text': ['pony', 'Good morning! Here are the results from last night's nightly test:'],
+    #   'callback': pony
     # },
     {
-      "text": ["~random intern", "~ randomintern"],
-      "callback": randominterns
+      'text': ['~random intern', '~ randomintern'],
+      'callback': randominterns
     },
     # {
-    #   "text": ["Sorry, but you aren't authorized to use this command.", "luna"],
-    #   "callback": luna
+    #   'text': ['Sorry, but you aren't authorized to use this command.', 'luna'],
+    #   'callback': luna
     # }
     {
-      "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", 
-            ":heart_eyes:",":heartbeat:",":heartpulse:",":hearts:"],
-      "callback": playGong
+      'text': ['zach', 'zachisan', '<3', ':heart:',':heart_decoration:', 'zack', 
+            ':heart_eyes:',':heartbeat:',':heartpulse:',':hearts:'],
+      'callback': playGong
     }]
     g = GoTo()
     g.start()

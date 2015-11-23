@@ -15,6 +15,7 @@ import poll
 import wave
 import pyaudio
 import images
+import catFacts
 #import git
 class GoTo:
 
@@ -87,31 +88,36 @@ class GoTo:
                     msg = self.sc.rtm_read()
                     if(len(msg) == 1):
                         msg = msg[0]
-
+                        #print(msg)
                         images.distractionChan(self)
+                        catFacts.subbedToCatFacts(self)
 
-                        if('subtype' in msg and msg['subtype'] == 'group_join'):
-                            print('remove')
-                            print(self.sc.api_call('groups.kick',channel=msg['channel'], user='U0CNP6WRK'))
-                        if('type' in msg and msg['type'] == 'presence_change' and 
-                                                        msg['presence'] == 'active' and msg['user']):
-                            if(msg['user'] not in self.bots):
+                        if("subtype" in msg and msg["subtype"] == 'group_join'):
+                            print("remove")
+                            print(self.sc.api_call("groups.kick",channel=msg["channel"], user="U0CNP6WRK"))
+                        elif("type" in msg and msg["type"] == "presence_change" and 
+                                                        msg["presence"] == "active" and msg["user"]):
+                            if(msg["user"] not in self.bots):
                                 #not b0t, Luna, gotoo
-                                #post to interns-education as 'user is active'
-                                message = self.userDict[msg['user']] + ' is active'
-                                #sendMessage('G09LLA9EW',message)
-                                #print('[I] sent: '+message)
-                        if('type' in msg and msg['type'] == 'error'):
-                            print('\n[!!] error: \n' + str(msg))
-                            error = 'message error - probably no quotes found'
+                                #post to interns-education as "user is active"
+                                message = self.userDict[msg["user"]] + " is active"
+                                #sendMessage("G09LLA9EW",message)
+                                #print("[I] sent: "+message)
+                        elif("type" in msg and msg["type"] == "error"):
+                            print("\n[!!] error: \n" + msg)
+                            error = "message error - probably no quotes found"
                             self.sendMessage(self.last_channel, error) # error messages don't have a channel
                             self.sendError()
-                        if('type' in msg and msg['type'] == 'message'and 'text' in msg and 
-                                                        all(c in self.legalChars for c in msg['text'].replace("'",''))):
+                        elif("type" in msg and msg["type"] == "message"and "text" in msg and 
+                                                        all(c in self.legalChars for c in msg["text"].replace("'",""))):
                             #print(msg)
-                            if(self.inWhitelist(msg)):
-                                pass # channel added, now can utilize bot
-                            elif(msg['channel'] in self.whitelist):
+                            if("user" in msg and msg["user"] == self.idDict["steveng"]):
+                                print("corn")
+                                channel = msg["channel"]
+                                timestamp = msg["ts"]
+                                self.addReaction(channel,timestamp,"corn")
+                            self.inWhitelist(msg)
+                            if(msg["channel"] in self.whitelist):
                                 for r in router:
                                     for t in r['text']:
                                         if(t.lower() in msg['text'].lower()):
@@ -190,6 +196,13 @@ class GoTo:
             self.sendError()
 
 
+    def addReaction(self, channel,timestamp,reaction):
+        slack = Slacker(self.token)
+        try:
+            slack.reactions.add(channel=channel,timestamp=timestamp, name=reaction)
+        except Exception:
+            exception = traceback.print_exc(file=sys.stdout)
+            self.sendError()
 
 
 
@@ -332,74 +345,95 @@ def playGong(bot, msg):
 
 if __name__ == '__main__':
     router = [{
-      'text': ['~colorname', '~color name'],
-      'callback':colorCode
+      "text": ["~colorname", "~color name"],
+      "callback":colorCode,
+      "type": "text"
     },{
-      'text': ['~randomintern'],
-      'callback':randomIntern
+      "text": ["~randomintern"],
+      "callback":randomIntern,
+      "type": "text"
     },{
-      'text': ['~catfacts', '~cat facts'],
-      'callback':images.catFacts
+      "text": ["~catfacts", "~cat facts"],
+      "callback":catFacts.catFacts,
+      "type": "text"
     },{
-      'text': ['~quote'],
-      'callback':quote
+      "text": ["~quote"],
+      "callback":quote,
+      "type": "text"
     },{
-      'text': ['~startpoll','~poll','~createpoll','~start poll','~poll','~create poll'],
-      'callback':poll.startPoll
+      "text": ["~startpoll","~poll","~createpoll","~start poll","~poll","~create poll"],
+      "callback":poll.startPoll,
+      "type": "text"
     },{
-      'text': ['~stoppoll','~removepoll','~stop poll','~remove poll'],
-      'callback':poll.stopPoll
+      "text": ["~stoppoll",'~removepoll',"~stop poll",'~remove poll'],
+      "callback":poll.stopPoll,
+      "type": "text"
     },{
-      'text': ['~vote','~votepoll','~vote poll'],
-      'callback':poll.vote
+      "text": ["~vote","~votepoll","~vote poll"],
+      "callback":poll.vote,
+      "type": "text"
     },{
-      'text': ['~addoption'],
-      'callback':poll.addOption
+      "text": ["~addoption"],
+      "callback":poll.addOption,
+      "type": "text"
     },{
-      'text': ['~deleteall'],
-      'callback':deleteAll
+      "text": ["~deleteall"],
+      "callback":deleteAll,
+      "type": "text"
     },{
-      'text': ['~delete'],
-      'callback':delete
+      "text": ["~delete"],
+      "callback":delete,
+      "type": "text"
     },{
-      'text': ['~nye'],
-      'callback':images.nye
+      "text": ["~nye"],
+      "callback":images.nye,
+      "type": "text"
     },{
-      'text': ['test'],
-      'callback':test
+      "text": ["test"],
+      "callback":test,
+      "type": "text"
     },{
-      'text': ['~meme'],
-      'callback':images.getMeme
+      "text": ["~meme"],
+      "callback":images.getMeme,
+      "type": "text"
     },{
-      'text': ['ship it',':shipit:', 'shipit'],
-      'callback':images.shipIt
+      "text": ["ship it",":shipit:", "shipit"],
+      "callback":images.shipIt,
+      "type": "text"
     },{
-      'text': ['~gif'],
-      'callback':images.getGiphy
+      "text": ["~gif"],
+      "callback":images.getGiphy,
+      "type": "text"
     },{
-      'text': ['~insanity'],
-      'callback':images.getMemeInsanity
+      "text": ["~insanity"],
+      "callback":images.getMemeInsanity,
+      "type": "text"
     },
     # {
-    #   'text': ['~dm'],
-    #   'callback':GoTo.sendDM
+    #   "text": ["~dm"],
+    #   "callback":GoTo.sendDM,
+    #   "type": "text"
     # },
     # {
-    #   'text': ['pony', 'Good morning! Here are the results from last night's nightly test:'],
-    #   'callback': pony
+    #   "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],
+    #   "callback": pony,
+    #   "type": "text"
     # },
     {
-      'text': ['~random intern', '~ randomintern'],
-      'callback': randominterns
+      "text": ["~random intern", "~ randomintern"],
+      "callback": randominterns,
+      "type": "text"
     },
     # {
-    #   'text': ['Sorry, but you aren't authorized to use this command.', 'luna'],
-    #   'callback': luna
+    #   "text": ["Sorry, but you aren't authorized to use this command.", "luna"],
+    #   "callback": luna,
+    #   "type": "text"
     # }
     {
-      'text': ['zach', 'zachisan', '<3', ':heart:',':heart_decoration:', 'zack', 
-            ':heart_eyes:',':heartbeat:',':heartpulse:',':hearts:'],
-      'callback': playGong
+      "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", 
+            ":heart_eyes:",":heartbeat:",":heartpulse:",":hearts:"],
+      "callback": playGong,
+      "type": "text"
     }]
     g = GoTo()
     g.start()

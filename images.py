@@ -6,11 +6,6 @@ def nye(bot, msg):
     nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
     bot.sendMessage(msg["channel"], nyeMlg)
 
-def catFacts(bot, msg):
-    request = str(urllib.request.urlopen("http://catfacts-api.appspot.com/api/facts?number=1").read())
-    bot.sendMessage(msg["channel"], request[request.find('[') + 2:request.find(']') - 1])
-
-
 def getGiphy(bot, msg):
     urlStart = "http://api.giphy.com/v1/gifs/search?q="
     urlEnd = "&api_key=dc6zaTOxFJmzC&limit="
@@ -32,9 +27,6 @@ def getGiphy(bot, msg):
     ###for i in jsonData["data"][0].keys():
     ###    print (jsonData["data"][0][i])
     ###print(jsonData["data"][0]["images"]["original"]["url"]
-
-
-
 
 
 # sends a 420 giphy at 16:20:00 and 16:20:30

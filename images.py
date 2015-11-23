@@ -59,14 +59,17 @@ def getMeme(bot, msg):
     bot.sendMessage(msg["channel"],meme)
 
 
-
-
 def getMemeInsanity(bot, msg):
     url = "http://version1.api.memegenerator.net/Instances_Select_ByNew?languageCode=en&pageIndex=0&pageSize=12&urlName=Insanity-Wolf"
     data = urllib.request.urlopen(url).read().decode("utf-8")#.read())
     jsonData = json.loads(data)
     try:
+        # url string
         randomWolf = jsonData["result"][random.randrange(0,len(jsonData["result"]))]["instanceImageUrl"]
+        # data = {}
+        # data['text'] = randomWolf
+        # data['unfurl_url'] = True
+        # randomWolf = json.dumps(data)
     except IndexError:
         randomWolf = "wolf not found"
     bot.sendMessage(msg["channel"], randomWolf)

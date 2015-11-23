@@ -5,7 +5,6 @@ def findName(bot, ds, nam):
                 return d
     return None
 
-
 def startPoll(bot, msg):
     args = msg["text"].split(",")
     if(len(args) > 2):

@@ -15,6 +15,7 @@ import poll
 import wave
 import pyaudio
 import images
+import catFacts
 #import git
 class GoTo:
 
@@ -30,7 +31,8 @@ class GoTo:
         #global sc
         self.sc = SlackClient(self.token)
         self.id = 'U0CK96B71'
-        self.interns = ["Jon"] + ["Alex"] + (["Yura", "Steven G", "Avik", "Tommy","Yura"]*5)
+        self.interns = ["Jon","Yura", "Steven G", "Avik", "Tommy"]
+        self.slackers = ["jono","steveng","yurak","alexb", "tommyf", "derek","avikd"]
         self.people = self.interns + ["Omar", "David", "Alan", "Alison", "Bulent", "Carlos", 
                 "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"]
         self.bots = ["U0CK96B71","U0CK96B71","U0ARYU2CT"]
@@ -86,13 +88,14 @@ class GoTo:
                     msg = self.sc.rtm_read()
                     if(len(msg) == 1):
                         msg = msg[0]
-
+                        #print(msg)
                         images.distractionChan(self)
+                        catFacts.subbedToCatFacts(self)
 
                         if("subtype" in msg and msg["subtype"] == 'group_join'):
                             print("remove")
                             print(self.sc.api_call("groups.kick",channel=msg["channel"], user="U0CNP6WRK"))
-                        if("type" in msg and msg["type"] == "presence_change" and 
+                        elif("type" in msg and msg["type"] == "presence_change" and 
                                                         msg["presence"] == "active" and msg["user"]):
                             if(msg["user"] not in self.bots):
                                 #not b0t, Luna, gotoo
@@ -100,17 +103,21 @@ class GoTo:
                                 message = self.userDict[msg["user"]] + " is active"
                                 #sendMessage("G09LLA9EW",message)
                                 #print("[I] sent: "+message)
-                        if("type" in msg and msg["type"] == "error"):
+                        elif("type" in msg and msg["type"] == "error"):
                             print("\n[!!] error: \n" + msg)
                             error = "message error - probably no quotes found"
                             self.sendMessage(self.last_channel, error) # error messages don't have a channel
                             self.sendError()
-                        if("type" in msg and msg["type"] == "message"and "text" in msg and 
+                        elif("type" in msg and msg["type"] == "message"and "text" in msg and 
                                                         all(c in self.legalChars for c in msg["text"].replace("'",""))):
                             #print(msg)
-                            if(self.inWhitelist(msg)):
-                                pass # channel added, now can utilize bot
-                            elif(msg["channel"] in self.whitelist):
+                            if("user" in msg and msg["user"] == self.idDict["steveng"]):
+                                print("corn")
+                                channel = msg["channel"]
+                                timestamp = msg["ts"]
+                                self.addReaction(channel,timestamp,"corn")
+                            self.inWhitelist(msg)
+                            if(msg["channel"] in self.whitelist):
                                 for r in router:
                                     for t in r["text"]:
                                         if(t.lower() in msg["text"].lower()):
@@ -188,6 +195,13 @@ class GoTo:
             self.sendError()
 
 
+    def addReaction(self, channel,timestamp,reaction):
+        slack = Slacker(self.token)
+        try:
+            slack.reactions.add(channel=channel,timestamp=timestamp, name=reaction)
+        except Exception:
+            exception = traceback.print_exc(file=sys.stdout)
+            self.sendError()
 
 
 
@@ -331,73 +345,94 @@ def playGong(bot, msg):
 if __name__ == "__main__":
     router = [{
       "text": ["~colorname", "~color name"],
-      "callback":colorCode
+      "callback":colorCode,
+      "type": "text"
     },{
       "text": ["~randomintern"],
-      "callback":randomIntern
+      "callback":randomIntern,
+      "type": "text"
     },{
       "text": ["~catfacts", "~cat facts"],
-      "callback":images.catFacts
+      "callback":catFacts.catFacts,
+      "type": "text"
     },{
       "text": ["~quote"],
-      "callback":quote
+      "callback":quote,
+      "type": "text"
     },{
       "text": ["~startpoll","~poll","~createpoll","~start poll","~poll","~create poll"],
-      "callback":poll.startPoll
+      "callback":poll.startPoll,
+      "type": "text"
     },{
       "text": ["~stoppoll",'~removepoll',"~stop poll",'~remove poll'],
-      "callback":poll.stopPoll
+      "callback":poll.stopPoll,
+      "type": "text"
     },{
       "text": ["~vote","~votepoll","~vote poll"],
-      "callback":poll.vote
+      "callback":poll.vote,
+      "type": "text"
     },{
       "text": ["~addoption"],
-      "callback":poll.addOption
+      "callback":poll.addOption,
+      "type": "text"
     },{
       "text": ["~deleteall"],
-      "callback":deleteAll
+      "callback":deleteAll,
+      "type": "text"
     },{
       "text": ["~delete"],
-      "callback":delete
+      "callback":delete,
+      "type": "text"
     },{
       "text": ["~nye"],
-      "callback":images.nye
+      "callback":images.nye,
+      "type": "text"
     },{
       "text": ["test"],
-      "callback":test
+      "callback":test,
+      "type": "text"
     },{
       "text": ["~meme"],
-      "callback":images.getMeme
+      "callback":images.getMeme,
+      "type": "text"
     },{
       "text": ["ship it",":shipit:", "shipit"],
-      "callback":images.shipIt
+      "callback":images.shipIt,
+      "type": "text"
     },{
       "text": ["~gif"],
-      "callback":images.getGiphy
+      "callback":images.getGiphy,
+      "type": "text"
     },{
       "text": ["~insanity"],
-      "callback":images.getMemeInsanity
+      "callback":images.getMemeInsanity,
+      "type": "text"
     },
     # {
     #   "text": ["~dm"],
-    #   "callback":GoTo.sendDM
+    #   "callback":GoTo.sendDM,
+    #   "type": "text"
     # },
     # {
     #   "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],
-    #   "callback": pony
+    #   "callback": pony,
+    #   "type": "text"
     # },
     {
       "text": ["~random intern", "~ randomintern"],
-      "callback": randominterns
+      "callback": randominterns,
+      "type": "text"
     },
     # {
     #   "text": ["Sorry, but you aren't authorized to use this command.", "luna"],
-    #   "callback": luna
+    #   "callback": luna,
+    #   "type": "text"
     # }
     {
       "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", 
             ":heart_eyes:",":heartbeat:",":heartpulse:",":hearts:"],
-      "callback": playGong
+      "callback": playGong,
+      "type": "text"
     }]
     g = GoTo()
     g.start()

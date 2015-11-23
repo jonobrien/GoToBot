@@ -105,6 +105,7 @@ class GoTo:
                                 #print("[I] sent: "+message)
                         elif("type" in msg and msg["type"] == "error"):
                             print("\n[!!] error: \n" + msg)
+                            # user_is_bot errors because bot cannot use that api function
                             error = "message error - probably no quotes found"
                             self.sendMessage(self.last_channel, error) # error messages don't have a channel
                             self.sendError()
@@ -127,6 +128,11 @@ class GoTo:
                                     channel = msg["channel"]
                                     timestamp = msg["ts"]
                                     self.addReaction(channel,timestamp,"partyparrot")
+                            elif("user" in msg and msg["user"] == self.idDict["derek"]):
+                                print("derek")
+                                channel = msg["channel"]
+                                timestamp = msg["ts"]
+                                self.addReaction(channel,timestamp,"derek")
                             if(msg["channel"] in self.whitelist):
                                 for r in router:
                                     for t in r['text']:
@@ -292,18 +298,34 @@ def delete(bot, msg):
 # delete every message sent, from last 100
 # needs to have 'has_more' check for > 100
 def deleteAll(bot, msg):
-    slack = Slacker(bot.token)
     print('\ndeleting all messages in private groups')
     # delete private group messages
-    for chan in slack.groups.list().body['groups']: # for every group the bot has access to
-        print('deleting in: ' + str(chan['name'] + ' - ' +str(chan['id'])))
-        #print(chan)
-        messages = slack.groups.history(channel=chan['id']).body['messages']
-        #print(messages)
-        for message in messages:
+
+    ###############################################################
+    #### python-slackclient implementation:     ###################
+    grpResponse = bot.sc.api_call('groups.list', token=bot.token)
+    grpJson = json.loads(grpResponse.decode('utf-8'))
+    for chan in grpJson['groups']:
+        print('deleting in: ' + str(chan['name']) + ' + ' + str(chan['id']))
+        msgResponse = bot.sc.api_call('groups.history', token=bot.token, channel=chan['id'])
+        msgJson = json.loads(msgResponse.decode('utf-8'))
+        for message in msgJson['messages']:
             if ('user' in message and message['user'] == bot.id and ('subtype' not in message)): #can only delete messages owned by sender
-                    slack.chat.delete(ts=message['ts'], channel=chan['id'])
-                    print('deleted: ' + message['ts'])
+                bot.sc.api_call('chat.delete',token=bot.token,ts=message['ts'], channel=chan['id'])
+                print('deleted: ' + message['ts'])
+
+    ###############################################################
+    ####slacker implementation:    ################################
+    #slack = Slacker(bot.token)
+    # for chan in slack.groups.list().body['groups']: # for every group the bot has access to
+    #     print('deleting in: ' + str(chan['name']) + ' - ' +str(chan['id']))
+    #     #print(chan)
+    #     messages = slack.groups.history(channel=chan['id']).body['messages']
+    #     #print(messages)
+    #     for message in messages:
+    #         if ('user' in message and message['user'] == bot.id and ('subtype' not in message)): #can only delete messages owned by sender
+    #                 slack.chat.delete(ts=message['ts'], channel=chan['id'])
+    #                 print('deleted: ' + message['ts'])
 
     # delete DMs
     # for chan in slack.im.list().body['ims']:

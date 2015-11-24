@@ -74,10 +74,7 @@ class GoTo:
                 self.userDict[user['id']] = user['name']
                 self.idDict[user['name']] = user['id']
             print(datetime.datetime.now())
-            #print(self.userDict)
-            # g = git.cmd.Git('C:\\Users\\D\\pfpui')
-            #whitelist.remove('')
-            # g.pull()
+            print(self.userDict)
             if self.sc.rtm_connect():
                 print('connected')
                 while True:
@@ -85,9 +82,8 @@ class GoTo:
                     if (now == '16:20:00' or now == '16:20:30'):
                         images.blaze(self)
 
-                    msg = self.sc.rtm_read()
-                    if(len(msg) == 1):
-                        msg = msg[0]
+                    msgs = self.sc.rtm_read()
+                    for msg in msgs:
                         #print(msg)
                         images.distractionChan(self)
                         catFacts.subbedToCatFacts(self)
@@ -140,10 +136,7 @@ class GoTo:
                                             r['callback'](self, msg)
                         elif('ok' in msg and msg['ok'] == True):
                             self.timestamp.put({'ts':msg['ts'],'channel':self.last_channel})
-                    elif(len(msg) > 1):
-                        print(msg)
-                        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-                    time.sleep(1)
+                    time.sleep(2)
             else:
                 print('[!!] Connection Failed, invalid token?')
         except AttributeError:

@@ -149,6 +149,7 @@ class GoTo:
             print('[!!] uncaught error')
             traceback.print_exc(file=sys.stdout)
             print('[!!] restarting the bot')
+            time.sleep(5)
             self.sc = SlackClient(self.token)
             self.start()
 

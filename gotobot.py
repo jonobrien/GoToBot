@@ -452,11 +452,11 @@ if __name__ == '__main__':
       "callback":images.getMemeInsanity,
       "type": "text"
     },
-    {
-      "text": ["~dm"],
-      "callback":GoTo.sendDM,
-      "type": "text"
-    },
+    # {
+    #   "text": ["~dm"],
+    #   "callback":GoTo.sendDM,
+    #   "type": "text"
+    # },
     # {
     #   "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],
     #   "callback": pony,

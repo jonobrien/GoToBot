@@ -116,12 +116,27 @@ class GoTo:
                         elif("type" in msg and msg["type"] == "message"and "text" in msg and 
                                                         all(c in self.legalChars for c in msg["text"].replace("'",""))):
                             #print(msg)
-                            if("user" in msg and msg["user"] == self.idDict["derek"]):
+                            self.inWhitelist(msg)
+                            if("user" in msg and msg["user"] == self.idDict["steveng"]):
+                                print("corn")
+                                channel = msg["channel"]
+                                timestamp = msg["ts"]
+                                self.addReaction(channel,timestamp,"corn")
+                            elif("user" in msg and msg["user"] == self.idDict["jono"]):
+                                print("hancock")
+                                channel = msg["channel"]
+                                timestamp = msg["ts"]
+                                self.addReaction(channel,timestamp,"hancock")
+                            elif("user" in msg and msg["user"] == self.idDict["osardar"]):
+                                    print("hancock")
+                                    channel = msg["channel"]
+                                    timestamp = msg["ts"]
+                                    self.addReaction(channel,timestamp,"partyparrot")
+                            elif("user" in msg and msg["user"] == self.idDict["derek"]):
                                 print("derek")
                                 channel = msg["channel"]
                                 timestamp = msg["ts"]
                                 self.addReaction(channel,timestamp,"derek")
-                            self.inWhitelist(msg)
                             if(msg["channel"] in self.whitelist):
                                 for r in router:
                                     for t in r['text']:

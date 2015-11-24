@@ -7,7 +7,7 @@ import os.path
 import datetime
 import queue
 from slackclient import SlackClient
-from slacker import Slacker
+###################################################### from slacker import Slacker # <--- deprecated
 import sys, traceback
 import json
 #import pony as p
@@ -66,10 +66,14 @@ class GoTo:
     def startBot(self):
         try:
             print('startBot')
-            slack = Slacker(self.token)
-            #slack.chat.post_message('G0ARYMG3E', 'slacker test')
-            response = slack.users.list()
-            users = response.body['members']
+            usrResponse = self.sc.api_call('users.list', token=self.token)
+            usrJson = json.loads(usrResponse.decode('utf-8'))
+            users = usrJson['members']
+            ##############################
+            ### slacker implementation ###
+            # slack = Slacker(self.token)
+            # response = slack.users.list()
+            # users = response.body['members']
             for user in users:
                 self.userDict[user['id']] = user['name']
                 self.idDict[user['name']] = user['id']
@@ -190,30 +194,37 @@ class GoTo:
         print(args)
         try:
             recipient = self.idDict[userName]
-            slack = Slacker(self.token)
-            imOpen = slack.im.open(user=recipient) 
-            #send = self.sc.api_call('im_open',token=self.token, user=sendUser)
-            print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
-            dmChannel = imOpen.body['channel']['id']
-            chatPost = slack.chat.post_message(channel=dmChannel, text=message, as_user='true')
+            imOpen = self.sc.api_call('im.open', token=self.token, user=recipient)
+            imJson = json.loads(imOpen.decode('utf-8'))
+            dmChannel = imJson['channel']['id']
+            chatPost = self.sc.api_call('chat.postMessage',token=self.token, channel=dmChannel, text=message, as_user='true')
+
+
+            # slack = Slacker(self.token)
+            # imOpen = slack.im.open(user=recipient) 
+            # print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+            # dmChannel = imOpen.body['channel']['id']
+            # chatPost = slack.chat.post_message(channel=dmChannel, text=message, as_user='true')
             #whitelist the channel
-            msg = {}
-            msg['text'] = '~addgrouptowhitelist'
-            msg['channel'] = dmChannel
             self.inWhitelist(msg)
-            #self.sc.api_call('chat.postMessage', as_user='true', channel=sendUser, text=message)
         except Exception:
             self.sendError()
 
 
     def addReaction(self, channel,timestamp,reaction):
-        slack = Slacker(self.token)
         try:
-            slack.reactions.add(channel=channel,timestamp=timestamp, name=reaction)
+            self.sc.api_call('reactions.add', token=self.token, name=reaction, channel=channel, timestamp=timestamp)
         except Exception:
-            exception = traceback.print_exc(file=sys.stdout)
             self.sendError()
 
+        ########################################
+        ### slacker implementation:   ##########
+        # slack = Slacker(self.token)
+        # try:
+        #     slack.reactions.add(channel=channel,timestamp=timestamp, name=reaction)
+        # except Exception:
+        #     exception = traceback.print_exc(file=sys.stdout)
+        #     self.sendError()
 
 
 def colorCode(bot, msg):
@@ -435,11 +446,11 @@ if __name__ == '__main__':
       "callback":images.getMemeInsanity,
       "type": "text"
     },
-    # {
-    #   "text": ["~dm"],
-    #   "callback":GoTo.sendDM,
-    #   "type": "text"
-    # },
+    {
+      "text": ["~dm"],
+      "callback":GoTo.sendDM,
+      "type": "text"
+    },
     # {
     #   "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],
     #   "callback": pony,

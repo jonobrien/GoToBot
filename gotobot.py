@@ -31,6 +31,7 @@ class GoTo:
         #global sc
         self.sc             = SlackClient(self.token)
         self.id             = 'U0CK96B71' # bot ID
+        self.distrChan      = 'G0EFAE1EE'
         self.interns        = ['Alex'] + (['Yura', 'Steven G', 'Avik', 'Tommy','Yura']*5) # all the interns separately
         self.people         = self.interns + ['Omar', 'David', 'Alan', 'Alison', 
                                 'Bulent', 'Carlos', 'Jeff', 'Steven', 'Thurston', 'Linda','Derek', 'Sean'] # everyone in the company
@@ -113,26 +114,31 @@ class GoTo:
                                                         all(c in self.legalChars for c in msg["text"].replace("'",""))):
                             #print(msg)
                             self.inWhitelist(msg)
-                            if("user" in msg and msg["user"] == self.idDict["steveng"]):
-                                print("corn")
-                                channel = msg["channel"]
-                                timestamp = msg["ts"]
-                                self.addReaction(channel,timestamp,"corn")
-                            elif("user" in msg and msg["user"] == self.idDict["jono"]):
-                                print("hancock")
-                                channel = msg["channel"]
-                                timestamp = msg["ts"]
-                                self.addReaction(channel,timestamp,"hancock")
-                            elif("user" in msg and msg["user"] == self.idDict["osardar"]):
-                                    print("hancock")
-                                    channel = msg["channel"]
-                                    timestamp = msg["ts"]
-                                    self.addReaction(channel,timestamp,"partyparrot")
-                            elif("user" in msg and msg["user"] == self.idDict["derek"]):
-                                print("derek")
-                                channel = msg["channel"]
-                                timestamp = msg["ts"]
-                                self.addReaction(channel,timestamp,"derek")
+
+
+                            ### the reactions are unwanted double spacing ######
+
+                            # if("user" in msg and msg["user"] == self.idDict["steveng"]):
+                            #     print("corn")
+                            #     channel = msg["channel"]
+                            #     timestamp = msg["ts"]
+                            #     self.addReaction(channel,timestamp,"corn")
+                            # elif("user" in msg and msg["user"] == self.idDict["jono"]):
+                            #     print("hancock")
+                            #     channel = msg["channel"]
+                            #     timestamp = msg["ts"]
+                            #     self.addReaction(channel,timestamp,"hancock")
+                            # elif("user" in msg and msg["user"] == self.idDict["osardar"]):
+                            #         print("hancock")
+                            #         channel = msg["channel"]
+                            #         timestamp = msg["ts"]
+                            #         self.addReaction(channel,timestamp,"partyparrot")
+                            # elif("user" in msg and msg["user"] == self.idDict["derek"]):
+                            #     print("derek")
+                            #     channel = msg["channel"]
+                            #     timestamp = msg["ts"]
+                            #     self.addReaction(channel,timestamp,"derek")
+
                             if(msg["channel"] in self.whitelist):
                                 for r in router:
                                     for t in r['text']:
@@ -200,6 +206,8 @@ class GoTo:
             chatPost = self.sc.api_call('chat.postMessage',token=self.token, channel=dmChannel, text=message, as_user='true')
 
 
+            ########################################
+            ### slacker implementation:   ##########
             # slack = Slacker(self.token)
             # imOpen = slack.im.open(user=recipient) 
             # print('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
@@ -446,11 +454,11 @@ if __name__ == '__main__':
       "callback":images.getMemeInsanity,
       "type": "text"
     },
-    {
-      "text": ["~dm"],
-      "callback":GoTo.sendDM,
-      "type": "text"
-    },
+    # {
+    #   "text": ["~dm"],
+    #   "callback":GoTo.sendDM,
+    #   "type": "text"
+    # },
     # {
     #   "text": ["pony", "Good morning! Here are the results from last night's nightly test:"],
     #   "callback": pony,

@@ -77,7 +77,7 @@ def getMemeInsanity(bot, msg):
 
 def distractionChan(bot):
     bot.messageCount += 1
-    if (bot.messageCount % 20 == 0):
+    if (bot.messageCount % 50 == 0):
         print("messageCount: " + str(int(bot.messageCount)))
         randomWord = random.choice(bot.words)
         print("random word: " + randomWord)
@@ -88,7 +88,8 @@ def distractionChan(bot):
             wordGif = jsonData["data"][0]["images"]["original"]["url"]
         except IndexError:
             wordGif = "random gif not found for " + randomWord
-        bot.sendMessage("G0EFAE1EE", wordGif)
+        bot.sendMessage(bot.distrChan, wordGif)
+        bot.sendMessage(bot.distrChan, randomWord)
 
 
 def shipIt(bot, msg):

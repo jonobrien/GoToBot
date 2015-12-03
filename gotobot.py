@@ -70,6 +70,8 @@ class GoTo:
             usrResponse = self.sc.api_call('users.list', token=self.token)
             usrJson = json.loads(usrResponse.decode('utf-8'))
             users = usrJson['members']
+
+
             ##############################
             ### slacker implementation ###
             # slack = Slacker(self.token)
@@ -79,7 +81,7 @@ class GoTo:
                 self.userDict[user['id']] = user['name']
                 self.idDict[user['name']] = user['id']
             print(datetime.datetime.now())
-            print(self.userDict)
+            #print(self.userDict)
             if self.sc.rtm_connect():
                 print('connected')
                 while True:
@@ -183,6 +185,8 @@ class GoTo:
             self.sendError()
 
 
+    # need to figure out how to clean the stack
+    # for a fresh restart on errors
     def sendError(self):
         print('\n[!!] sending failed')
         traceback.print_exc(file=sys.stdout)

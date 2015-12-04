@@ -118,7 +118,7 @@ class GoTo:
                         #        # print("[I] sent: "+message)
                         ###############################################################################
 
-                        elif("type" in msg and msg["type"] == "error"):
+                        if("type" in msg and msg["type"] == "error"):
                             print("\n[!!] error: \n" + msg)
                             # user_is_bot errors because bot cannot use that api function
                             error = "message error - probably no quotes found"

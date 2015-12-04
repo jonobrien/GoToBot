@@ -44,38 +44,27 @@ def blaze(bot):
     bot.sendMessage("G09LLA9EW", gif)
 
 
-
 # get a meme of keyword passed in
 # used memeGenerator API to query for memes
+# ~insanity
+# ~meme,keyword
 def getMeme(bot, msg):
-    keyword = msg["text"].split(",")[1]
-    url = "http://version1.api.memegenerator.net/Instances_Select_ByNew?languageCode=en&pageIndex=0&pageSize=12&urlName="
-    data = urllib.request.urlopen(url+keyword).read().decode("utf-8")
-    jsonData = json.loads(data)
     try:
-        meme = jsonData["result"][random.randrange(0,len(jsonData["result"]))]["instanceImageUrl"]
-    except:
-        meme = "nope.jpg"
-    bot.sendMessage(msg["channel"],meme)
-
-
-def getMemeInsanity(bot, msg):
-    try:
-        url = "http://version1.api.memegenerator.net/Instances_Select_ByNew?languageCode=en&pageIndex=0&pageSize=12&urlName=Insanity-Wolf"
-        data = urllib.request.urlopen(url).read().decode("utf-8")#.read())
+        if ("~insanity" in msg["text"]):
+            url = "http://version1.api.memegenerator.net/Instances_Select_ByNew?languageCode=en&pageIndex=0&pageSize=12&urlName=Insanity-Wolf"
+            data = urllib.request.urlopen(url).read().decode("utf-8")#.read())
+        else:
+            keyword = msg["text"].split(",")[1]
+            url = "http://version1.api.memegenerator.net/Instances_Select_ByNew?languageCode=en&pageIndex=0&pageSize=12&urlName="
+            data = urllib.request.urlopen(url+keyword).read().decode("utf-8")
         jsonData = json.loads(data)
-        # url string
-        randomWolf = jsonData["result"][random.randrange(0,len(jsonData["result"]))]["instanceImageUrl"]
-        # data = {}
-        # data["text"] = randomWolf
-        # data["unfurl_url"] = True
-        # randomWolf = json.dumps(data)
+        meme = jsonData["result"][random.randrange(0,len(jsonData["result"]))]["instanceImageUrl"]
     except IndexError:
-        randomWolf = "wolf not found"
+        meme = "wolf not found"
     except Exception as e:
-        randomWolf = "wolf error"
-        print("[!!] wolf error: " + e)
-    bot.sendMessage(msg["channel"], randomWolf)
+        meme = "nope.jpg"
+        print("exception " + str(e))
+    bot.sendMessage(msg["channel"],meme)
 
 
 def distractionChan(bot):

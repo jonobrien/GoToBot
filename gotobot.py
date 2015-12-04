@@ -15,6 +15,7 @@ import wave
 import pyaudio
 import images
 import catFacts
+import re
 #import git
 class GoTo:
 
@@ -154,9 +155,13 @@ class GoTo:
                             ###########################################################################
 
                             if(msg["channel"] in self.whitelist):
+                                m = msg["text"]
+                                m = re.sub(r'&lt;(.*?)&gt;', '', m)
+                                m = re.sub(r'\`(.*?)\`', '', m)
+                                msg["santized"] = m
                                 for r in router:
                                     for t in r["text"]:
-                                        if(t.lower() in msg["text"].lower()):
+                                        if(t.lower() in m.lower()):
                                             r["callback"](self, msg)
                         elif("ok" in msg and msg["ok"] == True):
                             self.timestamp.put({"ts":msg["ts"],"channel":self.last_channel})
@@ -236,6 +241,11 @@ class GoTo:
                             channel=channel, timestamp=timestamp)
         except Exception:
             self.sendError()
+    def removeComments(s):
+        while(s.contains("<") and s.contains(">")):
+            left = s.indexOf("<")
+            right = s.indexOf(">")
+            s = s.substring(0, left)
 
 
 def colorCode(bot, msg):

@@ -7,7 +7,6 @@ import os.path
 import datetime
 import queue
 from slackclient import SlackClient
-###################################################### from slacker import Slacker # <--- deprecated
 import sys, traceback
 import json
 #import pony as p
@@ -83,12 +82,6 @@ class GoTo:
             usrJson = json.loads(usrResponse.decode("utf-8"))
             users = usrJson["members"]
 
-
-            ##############################
-            ### slacker implementation ###
-            # slack = Slacker(self.token)
-            # response = slack.users.list()
-            # users = response.body["members"]
             for user in users:
                 self.userDict[user["id"]] = user["name"]
                 self.idDict[user["name"]] = user["id"]
@@ -107,17 +100,24 @@ class GoTo:
                         images.distractionChan(self)
                         catFacts.subbedToCatFacts(self)
 
-                        if("subtype" in msg and msg["subtype"] == "group_join"):
-                            print("remove")
-                            print(self.sc.api_call("groups.kick",channel=msg["channel"], user="U0CNP6WRK"))##bots can't kick, use your user api key not bot key to have bot kick users
-                        elif("type" in msg and msg["type"] == "presence_change" and 
-                                                        msg["presence"] == "active" and msg["user"]):
-                            if(msg["user"] not in self.bots):
-                                #not b0t, Luna, gotoo
-                                #post to interns-education as "user is active"
-                                message = self.userDict[msg["user"]] + " is active"
-                                #sendMessage("G09LLA9EW",message)
-                                #print("[I] sent: "+message)
+                        #### kick a user when they join a channel #####################################
+                        #
+                        # if("subtype" in msg and msg["subtype"] == "group_join"):
+                        #     print("remove")
+                        #     print(self.sc.api_call("groups.kick",channel=msg["channel"], user="U0CNP6WRK"))##bots can't kick, use your user api key not bot key to have bot kick users
+                        #
+                        ##### send message everytime a user becomes active ############################
+                        #
+                        #elif("type" in msg and msg["type"] == "presence_change" and 
+                        #                                msg["presence"] == "active" and msg["user"]):
+                        #    # if(msg["user"] not in self.bots):
+                        #        # not b0t, Luna, gotoo
+                        #        # post to interns-education as "user is active"
+                        #        # message = self.userDict[msg["user"]] + " is active"
+                        #        # sendMessage("G09LLA9EW",message)
+                        #        # print("[I] sent: "+message)
+                        ###############################################################################
+
                         elif("type" in msg and msg["type"] == "error"):
                             print("\n[!!] error: \n" + msg)
                             # user_is_bot errors because bot cannot use that api function
@@ -125,13 +125,11 @@ class GoTo:
                             self.sendMessage(self.last_channel, error) # error messages don"t have a channel
                             self.sendError()
                         elif("type" in msg and msg["type"] == "message"and "text" in msg and 
-                                                        all(c in self.legalChars for c in msg["text"].replace("'",""))):
+                                            all(c in self.legalChars for c in msg["text"].replace("'",""))):
                             #print(msg)
                             self.inWhitelist(msg)
-
-
-                            ### the reactions are unwanted double spacing ######
-
+                            ### the reactions are unwanted double spacing #############################
+                            #
                             # if("user" in msg and msg["user"] == self.idDict["steveng"]):
                             #     print("corn")
                             #     channel = msg["channel"]
@@ -143,15 +141,16 @@ class GoTo:
                             #     timestamp = msg["ts"]
                             #     self.addReaction(channel,timestamp,"hancock")
                             # elif("user" in msg and msg["user"] == self.idDict["osardar"]):
-                            #         print("hancock")
-                            #         channel = msg["channel"]
-                            #         timestamp = msg["ts"]
-                            #         self.addReaction(channel,timestamp,"partyparrot")
+                            #      print("hancock")
+                            #      channel = msg["channel"]
+                            #      timestamp = msg["ts"]
+                            #      self.addReaction(channel,timestamp,"partyparrot")
                             # elif("user" in msg and msg["user"] == self.idDict["derek"]):
                             #     print("derek")
                             #     channel = msg["channel"]
                             #     timestamp = msg["ts"]
                             #     self.addReaction(channel,timestamp,"derek")
+                            ###########################################################################
 
                             if(msg["channel"] in self.whitelist):
                                 for r in router:
@@ -190,7 +189,8 @@ class GoTo:
     def sendMessage(self,channel, message):
         try:
             #self.sc.rtm_send_message(channel, message)
-            self.sc.api_call("chat.postMessage", channel=channel, text=message, as_user=True, unfurl_media=True)
+            self.sc.api_call("chat.postMessage", channel=channel, 
+                        text=message, as_user=True, unfurl_media=True)
             self.last_channel = channel
         except Exception:
             exception = traceback.print_exc(file=sys.stdout)
@@ -199,6 +199,8 @@ class GoTo:
 
     # need to figure out how to clean the stack
     # for a fresh restart on errors
+    # traces seem to just get huge due to all except handling
+    # should just try and fix some looping of excepts
     def sendError(self):
         print("\n[!!] sending failed")
         traceback.print_exc(file=sys.stdout)
@@ -219,16 +221,8 @@ class GoTo:
             imOpen = self.sc.api_call("im.open", token=self.token, user=recipient)
             imJson = json.loads(imOpen.decode("utf-8"))
             dmChannel = imJson["channel"]["id"]
-            chatPost = self.sc.api_call("chat.postMessage",token=self.token, channel=dmChannel, text=message, as_user="true")
-
-
-            ########################################
-            ### slacker implementation:   ##########
-            # slack = Slacker(self.token)
-            # imOpen = slack.im.open(user=recipient) 
-            # print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-            # dmChannel = imOpen.body["channel"]["id"]
-            # chatPost = slack.chat.post_message(channel=dmChannel, text=message, as_user="true")
+            chatPost = self.sc.api_call("chat.postMessage",token=self.token, 
+                            channel=dmChannel, text=message, as_user="true")
             #whitelist the channel
             self.inWhitelist(msg)
         except Exception:
@@ -237,18 +231,10 @@ class GoTo:
 
     def addReaction(self, channel,timestamp,reaction):
         try:
-            self.sc.api_call("reactions.add", token=self.token, name=reaction, channel=channel, timestamp=timestamp)
+            self.sc.api_call("reactions.add", token=self.token, name=reaction, 
+                            channel=channel, timestamp=timestamp)
         except Exception:
             self.sendError()
-
-        ########################################
-        ### slacker implementation:   ##########
-        # slack = Slacker(self.token)
-        # try:
-        #     slack.reactions.add(channel=channel,timestamp=timestamp, name=reaction)
-        # except Exception:
-        #     exception = traceback.print_exc(file=sys.stdout)
-        #     self.sendError()
 
 
 def colorCode(bot, msg):
@@ -287,6 +273,7 @@ def quote(bot, msg):
         if (channel != "G0CCGHGKS"):
             print("quote check")
             return -1
+        #  new quote
         if(len(args) >= 3):
             if(args[1] in bot.people):
                 fileName = bot.people[bot.people.index(args[1])] + "Quotes.txt"
@@ -298,6 +285,7 @@ def quote(bot, msg):
                     with open(fileName, "a+") as f:
                         f.write(args[2])
                 bot.sendMessage(channel, "Quote added " + args[2])
+        # user requested quote from saved files
         elif(len(args) == 2):
             quotes = []
             if(args[1] in bot.people):
@@ -326,13 +314,9 @@ def delete(bot, msg):
 
 # delete every message sent, from last 100
 # needs to have "has_more" check for > 100
-# TODO -- DMs as well using 'python-slackclient'
+# TODO -- delete DMs as well using 'python-slackclient'
 def deleteAll(bot, msg):
     print("\ndeleting all messages in private groups")
-    # delete private group messages
-
-    ###############################################################
-    #### python-slackclient implementation:     ###################
     grpResponse = bot.sc.api_call("groups.list", token=bot.token)
     grpJson = json.loads(grpResponse.decode("utf-8"))
     for chan in grpJson["groups"]:
@@ -340,27 +324,10 @@ def deleteAll(bot, msg):
         msgResponse = bot.sc.api_call("groups.history", token=bot.token, channel=chan["id"])
         msgJson = json.loads(msgResponse.decode("utf-8"))
         for message in msgJson["messages"]:
-            if ("user" in message and message["user"] == bot.id and ("subtype" not in message)): #can only delete messages owned by sender
+            # can only delete messages owned by sender
+            if ("user" in message and message["user"] == bot.id and ("subtype" not in message)):
                 bot.sc.api_call("chat.delete",token=bot.token,ts=message["ts"], channel=chan["id"])
                 print("deleted: " + message["ts"])
-
-    ###############################################################
-    ####slacker implementation:    ################################
-    #slack = Slacker(bot.token)
-    # for chan in slack.groups.list().body["groups"]: # for every group the bot has access to
-    #     print("deleting in: " + str(chan["name"]) + " - " +str(chan["id"]))
-    #     #print(chan)
-    #     messages = slack.groups.history(channel=chan["id"]).body["messages"]
-    #     #print(messages)
-    #     for message in messages:
-    #         if ("user" in message and message["user"] == bot.id and ("subtype" not in message)): #can only delete messages owned by sender
-    #                 slack.chat.delete(ts=message["ts"], channel=chan["id"])
-    #                 print("deleted: " + message["ts"])
-
-    # delete DMs - untested
-    # for chan in slack.im.list().body["ims"]:
-    #     for msg in slack.im.history(channel=chan["id"]).body["messages"]:
-    #         pass
     print("done deleting")
 
 
@@ -370,7 +337,6 @@ def test(bot, msg):
 
 
 def pony(bot, msg):
-    #print(dir(p.pony))
     bot.sendMessage(msg["channel"], "```" + p.Pony.getPony() + "```")
 
 
@@ -496,19 +462,3 @@ if __name__ == "__main__":
     }]
     g = GoTo()
     g.start()
-
-
-
-
-
-
-#slack json for experimenting
-
-# [{"type": "user_typing", "user": "U054XSGNL", "channel": "D0CK8L0S1"}]
-# [{"text": "message", "ts": "1445352439.000002", "user": "U054XSGNL", "team": "T04QY6Z1G", "type": "message", "channel": "D0CK8L0S1"}]
-#join message
-# [{"type": "group_joined", "channel": {"topic": {"last_set": 0, "value": "", "creator": ""}, "name": "website", "last_read": "1445356948.000853", "creator": "U051UQDN6", "is_mpim": False, "is_archived": False, "created": 1436198627, "is_group": True, "members": ["U051UQDN6", "U052GCW57", "U054XSGNL", "U0665DKSL", "U09JUD8PN", "U09JVCNTX", "U0B20MP8C", "U0CK96B71"], "unread_count": 0, "is_open": True, "purpose": {"last_set": 1440532002, "value": "general p3scan issues, questions, discussions, rants about scala/play problems...", "creator": "U054XSGNL"}, "unread_count_display": 0, "id": "G0786E43B", "latest": {"reactions": [{"count": 1, "name": "-1", "users": ["U09JUD8PN"]}], "text": "Mine still breaks", "type": "message", "user": "U09JVCNTX", "ts": "1445356948.000853"}}}]
-# [{"text": "<@U0CK96B71|b0t> has joined the group", "ts": "1445357442.000855", "subtype": "group_join", "inviter": "U054XSGNL", "type": "message", "channel": "G0786E43B", "user": "U0CK96B71"}]
-#slacker responses
-# imOpen.body = {"no_op": True, "already_open": True, "ok": True, "channel": {"id": "D0CK8L0S1"}}
-# chatPost.body = {"message": {"text": "test message", "type": "message", "user": "U0CK96B71", "ts": "1447953215.000002"}, "ok": True, "ts": "1447953215.000002", "channel": "D0CK8L0S1"}

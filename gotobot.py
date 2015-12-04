@@ -29,7 +29,7 @@ class GoTo:
                  self.token = tRead.read()
         #global sc
         self.sc             = SlackClient(self.token)
-        self.id             = "U0CK96B71" # bot ID
+        self.id             = json.loads(self.sc.api_call("auth.test", token=self.token).decode("utf-8"))["user_id"]
         self.distrChan      = "G0EFAE1EE"
         self.interns        = ["Alex","Yura", "Steven G", "Avik", "Tommy","Jon"] # all the interns separately
         self.people         = self.interns + ["Omar", "David", "Alan", "Alison", 
@@ -43,7 +43,7 @@ class GoTo:
         self.messageCount   = 0    # for distractionChannel()
         self.whiteWrite     = open # fd for whitelist
         self.whitelist      = []   # list of channels bot can post in
-        self.words          = []   # list of words in dictionary
+        self.words          = []   # list of words in eng. dictionary
         self.legalChars     = string.printable.replace("`", "") # characters that can be manipulated/printed
         with open("whitelist.txt", "r") as self.whiteRead:
             self.whitelist  = self.whiteRead.read().split(" ")
@@ -56,9 +56,11 @@ class GoTo:
     def help(self, msg):
         info = "```\n"
         info += "A Python Slack API bot:\n\n"
-        info += "hosted on github:\n"
-        info +=     "https://github.com/Omodi/GoToBot\nhttps://github.com/jonobrien/GoToBot\nhttps://github.com/ThomasFoertmeyer/GoToBot\n\n"
-        info += "Available Commands (all begin with '~':\n"
+        info += "hosted on Github:\n"
+        info += "https://github.com/Omodi/GoToBot\n"
+        info += "https://github.com/jonobrien/GoToBot\n"
+        info += "https://github.com/ThomasFoertmeyer/GoToBot\n\n"
+        info += "Available Commands:\n"
         for command in router:
             if "help" in command and len(command["help"]) > 0:
                 info += command["help"] if command["help"][-1] == "\n" else command["help"] + "\n"
@@ -69,7 +71,6 @@ class GoTo:
     def connect(self):
         print("connect")
 
-
     def main(self):
         pass
 
@@ -79,10 +80,7 @@ class GoTo:
     def startBot(self):
         try:
             print("startBot")
-            usrResponse = self.sc.api_call("users.list", token=self.token)
-            usrJson = json.loads(usrResponse.decode("utf-8"))
-            users = usrJson["members"]
-
+            users = json.loads(self.sc.api_call("users.list", token=self.token).decode("utf-8"))["members"]
             for user in users:
                 self.userDict[user["id"]] = user["name"]
                 self.idDict[user["name"]] = user["id"]
@@ -93,6 +91,7 @@ class GoTo:
                 while True:
                     now = time.strftime("%H:%M:%S")
                     if (now == "16:20:00" or now == "16:20:30"):
+                        print("420 time")
                         images.blaze(self)
 
                     msgs = self.sc.rtm_read()
@@ -184,7 +183,7 @@ class GoTo:
             print("whitelist added: " + msg["channel"])
             with open("whitelist.txt", "w") as self.whiteWrite:
                 self.whiteWrite.write(" ".join(self.whitelist))
-            return True #this definitely might be implied/0
+            return True
 
 
     def sendMessage(self,channel, message):
@@ -365,18 +364,18 @@ def playGong(bot, msg):
     stream.close()
     p.terminate()
 
-
+'                '
 if __name__ == "__main__":
     router = [{
       "text": ["~colorname", "~color name"],
       "callback":colorCode,
       "type": "text",
-      "help": "`~colorname (string)` space is nessary.  Returns a hex color code derived from the string"
+      "help": "`~colorname (string)`   - the space is necessary.  Returns a hex color code derived from input"
     },{
       "text": ["~randomintern"],
       "callback":randomIntern,
       "type": "text",
-      "help": "`~randomintern` - select a random intern to give all the work to."
+      "help": "`~randomintern`         - select a random intern to give a task to"
     },{  "text": ["~help"],
       "callback":GoTo.help,
       "type": "text"
@@ -384,7 +383,7 @@ if __name__ == "__main__":
       "text": ["~catfacts", "~cat facts"],
       "callback":catFacts.catFacts,
       "type": "text",
-      "help": "`~catfacts` Returns a random catfact"
+      "help": "`~catfacts`             - Returns a random catfact"
     },{
       "text": ["~quote"],
       "callback":quote,
@@ -394,62 +393,62 @@ if __name__ == "__main__":
       "text": ["~startpoll","~poll","~createpoll","~start poll","~poll","~create poll"],
       "callback":poll.startPoll,
       "type": "text",
-      "help": "`~startpoll,(nameOfPoll),(option1),(option2),...(optionX)` Creates a poll that can be voted on, closed or have an option added to the poll"
+      "help": "`~startpoll,(nameOfPoll),(option1),(option2),...(optionX)`\n                        - Creates a poll that can be voted on, closed or have an option added to the poll"
     },{
       "text": ["~stoppoll","~removepoll","~stop poll","~remove poll"],
       "callback":poll.stopPoll,
       "type": "text",
-      "help": "`~stoppoll,(pollName)` Ends the voting for a poll and displays outcome"
+      "help": "`~stoppoll,(pollName)`  - Ends the poll and displays results"
     },{
       "text": ["~vote","~votepoll","~vote poll"],
       "callback":poll.vote,
       "type": "text",
-      "help": "`~vote,(pollName),(option)` Votes for option.  If you have aready voted it removes your old vote"
+      "help": "`~vote,(pollName),(option)`\n                        - Votes for (option). If you have aready voted it removes your old vote"
     },{
       "text": ["~addoption"],
       "callback":poll.addOption,
       "type": "text",
-      "help": "`~addoption,(pollName),(newOption)` Creates a new option for a poll"
-    },{
-      "text": ["~deleteall"],
-      "callback":deleteAll,
-      "type": "text",
-      "help": "`~deleteall` Deletes all messages sent by the bot.(still in development)"
-    },{
-      "text": ["~delete"],
-      "callback":delete,
-      "type": "text",
-      "help": "`~delete` Deletes the last message sent by bot. Group agnostic"
-    },{
-      "text": ["~nye"],
-      "callback":images.nye,
-      "type": "text",
-      "help": ""
-    },{
-      "text": ["test"],
-      "callback":test,
-      "type": "text",
-      "help": ""
-    },{
-      "text": ["~meme"],
-      "callback":images.getMeme,
-      "type": "text",
-      "help": "`~meme,(keyword)` Gets a meme with given keyword.  Returns nope.jps if no meme found"
+      "help": "`~addoption,(pollName),(newOption)`\n                        - Creates a new option for a poll"
     },{
       "text": ["ship it",":shipit:", "shipit"],
       "callback":images.shipIt,
       "type": "text",
-      "help": "`ship it` Returns ship it squirrel image"
+      "help": "`ship it`               - Returns ship it squirrel image"
+    },{
+      "text": ["~deleteall"],
+      "callback":deleteAll,
+      "type": "text",
+      "help": "`~deleteall`            - Deletes all private group messages sent by the bot. (under development for DMs)"
+    },{
+      "text": ["~delete"],
+      "callback":delete,
+      "type": "text",
+      "help": "`~delete`               - Deletes the last message sent by bot. Group agnostic"
+    },{
+      "text": ["~nye"],
+      "callback":images.nye,
+      "type": "text",
+      "help": "`~nye`                  - Returns a bill nye gif"
+    },{
+      "text": ["test"],
+      "callback":test,
+      "type": "text",
+      "help": "`test` `testing`        - any appearance of the string `test` there will be a response posted"
+    },{
+      "text": ["~meme"],
+      "callback":images.getMeme,
+      "type": "text",
+      "help": "`~meme,(keyword)`       - Gets a meme with given keyword.  Returns nope.jpg if no meme found"
     },{
       "text": ["~gif"],
       "callback":images.getGiphy,
       "type": "text",
-      "help": "`~gif,(keyword)` Returns a gif with the given keyword"
+      "help": "`~gif,(keyword)`        - Returns a gif with the given keyword"
     },{
       "text": ["~insanity"],
       "callback":images.getMeme,
       "type": "text",
-      "help": "`~insanity` Returns a shitty insanity wolf meme that repeats 90% of the time"
+      "help": "`~insanity`             - Returns an insanity wolf meme"
     },
     # {
     #   "text": ["~dm"],

@@ -31,7 +31,7 @@ class GoTo:
         self.sc             = SlackClient(self.token)
         self.id             = "U0CK96B71" # bot ID
         self.distrChan      = "G0EFAE1EE"
-        self.interns        = ["Alex"] + (["Yura", "Steven G", "Avik", "Tommy","Yura"]*5) # all the interns separately
+        self.interns        = ["Alex","Yura", "Steven G", "Avik", "Tommy","Jon"] # all the interns separately
         self.people         = self.interns + ["Omar", "David", "Alan", "Alison", 
                                 "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"] # everyone in the company
         self.bots           = ["U0CK96B71","U0CK96B71","U0ARYU2CT"] # list of bots in use
@@ -59,9 +59,10 @@ class GoTo:
         info += "hosted on github:\n"
         info +=     "https://github.com/Omodi/GoToBot\nhttps://github.com/jonobrien/GoToBot\nhttps://github.com/ThomasFoertmeyer/GoToBot\n\n"
         info += "Available Commands (all begin with '~':\n"
-        info +=     "`randomintern` - select a random intern to give all the work to.\n"
-        info +=     "`colorname <string>` - returns the hex value of the string entered"
-        info +="\n```"
+        for command in router:
+            if "help" in command and len(command["help"]) > 0:
+                info += command["help"] if command["help"][-1] == "\n" else command["help"] + "\n"
+        info +="```"
         self.sendMessage(msg["channel"], info)
 
 
@@ -118,7 +119,7 @@ class GoTo:
                         #        # print("[I] sent: "+message)
                         ###############################################################################
 
-                        elif("type" in msg and msg["type"] == "error"):
+                        if("type" in msg and msg["type"] == "error"):
                             print("\n[!!] error: \n" + msg)
                             # user_is_bot errors because bot cannot use that api function
                             error = "message error - probably no quotes found"
@@ -172,7 +173,7 @@ class GoTo:
             print("[!!] uncaught error")
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
-            time.sleep(5)
+            time.sleep(1)
             self.sc = SlackClient(self.token)
             self.start()
 
@@ -369,70 +370,86 @@ if __name__ == "__main__":
     router = [{
       "text": ["~colorname", "~color name"],
       "callback":colorCode,
-      "type": "text"
+      "type": "text",
+      "help": "`~colorname (string)` space is nessary.  Returns a hex color code derived from the string"
     },{
       "text": ["~randomintern"],
       "callback":randomIntern,
-      "type": "text"
+      "type": "text",
+      "help": "`~randomintern` - select a random intern to give all the work to."
     },{  "text": ["~help"],
-      "callback":help,
+      "callback":GoTo.help,
       "type": "text"
     },{
       "text": ["~catfacts", "~cat facts"],
       "callback":catFacts.catFacts,
-      "type": "text"
+      "type": "text",
+      "help": "`~catfacts` Returns a random catfact"
     },{
       "text": ["~quote"],
       "callback":quote,
-      "type": "text"
+      "type": "text",
+      "help": ""
     },{
       "text": ["~startpoll","~poll","~createpoll","~start poll","~poll","~create poll"],
       "callback":poll.startPoll,
-      "type": "text"
+      "type": "text",
+      "help": "`~startpoll,(nameOfPoll),(option1),(option2),...(optionX)` Creates a poll that can be voted on, closed or have an option added to the poll"
     },{
       "text": ["~stoppoll","~removepoll","~stop poll","~remove poll"],
       "callback":poll.stopPoll,
-      "type": "text"
+      "type": "text",
+      "help": "`~stoppoll,(pollName)` Ends the voting for a poll and displays outcome"
     },{
       "text": ["~vote","~votepoll","~vote poll"],
       "callback":poll.vote,
-      "type": "text"
+      "type": "text",
+      "help": "`~vote,(pollName),(option)` Votes for option.  If you have aready voted it removes your old vote"
     },{
       "text": ["~addoption"],
       "callback":poll.addOption,
-      "type": "text"
+      "type": "text",
+      "help": "`~addoption,(pollName),(newOption)` Creates a new option for a poll"
     },{
       "text": ["~deleteall"],
       "callback":deleteAll,
-      "type": "text"
+      "type": "text",
+      "help": "`~deleteall` Deletes all messages sent by the bot.(still in development)"
     },{
       "text": ["~delete"],
       "callback":delete,
-      "type": "text"
+      "type": "text",
+      "help": "`~delete` Deletes the last message sent by bot. Group agnostic"
     },{
       "text": ["~nye"],
       "callback":images.nye,
-      "type": "text"
+      "type": "text",
+      "help": ""
     },{
       "text": ["test"],
       "callback":test,
-      "type": "text"
+      "type": "text",
+      "help": ""
     },{
       "text": ["~meme"],
       "callback":images.getMeme,
-      "type": "text"
+      "type": "text",
+      "help": "`~meme,(keyword)` Gets a meme with given keyword.  Returns nope.jps if no meme found"
     },{
       "text": ["ship it",":shipit:", "shipit"],
       "callback":images.shipIt,
-      "type": "text"
+      "type": "text",
+      "help": "`ship it` Returns ship it squirrel image"
     },{
       "text": ["~gif"],
       "callback":images.getGiphy,
-      "type": "text"
+      "type": "text",
+      "help": "`~gif,(keyword)` Returns a gif with the given keyword"
     },{
       "text": ["~insanity"],
       "callback":images.getMeme,
-      "type": "text"
+      "type": "text",
+      "help": "`~insanity` Returns a shitty insanity wolf meme that repeats 90% of the time"
     },
     # {
     #   "text": ["~dm"],
@@ -447,7 +464,8 @@ if __name__ == "__main__":
     {
       "text": ["~random intern", "~ randomintern"],
       "callback": randominterns,
-      "type": "text"
+      "type": "text",
+      "help": ""
     },
     # {
     #   "text": ["Sorry, but you aren"t authorized to use this command.", "luna"],
@@ -458,7 +476,8 @@ if __name__ == "__main__":
       "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", 
             ":heart_eyes:",":heartbeat:",":heartpulse:",":hearts:"],
       "callback": playGong,
-      "type": "text"
+      "type": "text",
+      "help": ""
     }]
     g = GoTo()
     g.start()

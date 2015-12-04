@@ -157,7 +157,6 @@ class GoTo:
                             if(msg["channel"] in self.whitelist):
                                 m = msg["text"]
                                 m = re.sub(r'&lt;(.*?)&gt;', '', m)
-                                m = re.sub(r'\`(.*?)\`', '', m)
                                 msg["santized"] = m
                                 for r in router:
                                     for t in r["text"]:
@@ -165,7 +164,7 @@ class GoTo:
                                             r["callback"](self, msg)
                         elif("ok" in msg and msg["ok"] == True):
                             self.timestamp.put({"ts":msg["ts"],"channel":self.last_channel})
-                    time.sleep(2)
+                    time.sleep(1)
             else:
                 print("[!!] Connection Failed, invalid token?")
         except AttributeError:
@@ -178,7 +177,7 @@ class GoTo:
             print("[!!] uncaught error")
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
-            time.sleep(1)
+            time.sleep(5)
             self.sc = SlackClient(self.token)
             self.start()
 

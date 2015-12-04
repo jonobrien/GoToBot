@@ -54,6 +54,18 @@ class GoTo:
         self.startBot()
 
 
+    def help(self, msg):
+        info = "```\n"
+        info += "A Python Slack API bot:\n\n"
+        info += "hosted on github:\n"
+        info +=     "https://github.com/Omodi/GoToBot\nhttps://github.com/jonobrien/GoToBot\nhttps://github.com/ThomasFoertmeyer/GoToBot\n\n"
+        info += "Available Commands (all begin with '~':\n"
+        info +=     "`randomintern` - select a random intern to give all the work to.\n"
+        info +=     "`colorname <string>` - returns the hex value of the string entered"
+        info +="\n```"
+        self.sendMessage(msg["channel"], info)
+
+
     def connect(self):
         print("connect")
 
@@ -82,7 +94,7 @@ class GoTo:
                 self.idDict[user["name"]] = user["id"]
             print(datetime.datetime.now())
             #print(self.userDict)
-            if self.sc.rtm_connect():
+            if self.sc.rtm_connect(): # connected to slack real-time messaging api
                 print("connected")
                 while True:
                     now = time.strftime("%H:%M:%S")
@@ -97,7 +109,7 @@ class GoTo:
 
                         if("subtype" in msg and msg["subtype"] == "group_join"):
                             print("remove")
-                            print(self.sc.api_call("groups.kick",channel=msg["channel"], user="U0CNP6WRK"))
+                            print(self.sc.api_call("groups.kick",channel=msg["channel"], user="U0CNP6WRK"))##bots can't kick, use your user api key not bot key to have bot kick users
                         elif("type" in msg and msg["type"] == "presence_change" and 
                                                         msg["presence"] == "active" and msg["user"]):
                             if(msg["user"] not in self.bots):
@@ -314,6 +326,7 @@ def delete(bot, msg):
 
 # delete every message sent, from last 100
 # needs to have "has_more" check for > 100
+# TODO -- DMs as well using 'python-slackclient'
 def deleteAll(bot, msg):
     print("\ndeleting all messages in private groups")
     # delete private group messages
@@ -344,17 +357,11 @@ def deleteAll(bot, msg):
     #                 slack.chat.delete(ts=message["ts"], channel=chan["id"])
     #                 print("deleted: " + message["ts"])
 
-    # delete DMs
+    # delete DMs - untested
     # for chan in slack.im.list().body["ims"]:
     #     for msg in slack.im.history(channel=chan["id"]).body["messages"]:
     #         pass
     print("done deleting")
-    ### deprecated
-    # while not bot.timestamp.empty():
-    #     ts = bot.timestamp.get()
-    #     print(ts)
-    #     for w in bot.whitelist:
-    #         bot.sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
 
 
 def test(bot, msg):
@@ -400,6 +407,9 @@ if __name__ == "__main__":
     },{
       "text": ["~randomintern"],
       "callback":randomIntern,
+      "type": "text"
+    },{  "text": ["~help"],
+      "callback":help,
       "type": "text"
     },{
       "text": ["~catfacts", "~cat facts"],
@@ -455,7 +465,7 @@ if __name__ == "__main__":
       "type": "text"
     },{
       "text": ["~insanity"],
-      "callback":images.getMemeInsanity,
+      "callback":images.getMeme,
       "type": "text"
     },
     # {
@@ -487,7 +497,13 @@ if __name__ == "__main__":
     g = GoTo()
     g.start()
 
+
+
+
+
+
 #slack json for experimenting
+
 # [{"type": "user_typing", "user": "U054XSGNL", "channel": "D0CK8L0S1"}]
 # [{"text": "message", "ts": "1445352439.000002", "user": "U054XSGNL", "team": "T04QY6Z1G", "type": "message", "channel": "D0CK8L0S1"}]
 #join message

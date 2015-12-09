@@ -1,6 +1,8 @@
 import urllib.request
 import json
 import random
+import sys, traceback
+
 
 def nye(bot, msg):
     nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
@@ -63,7 +65,9 @@ def getMeme(bot, msg):
         meme = "wolf not found"
     except Exception as e:
         meme = "nope.jpg"
-        print("exception " + str(e))
+        print("exception getMeme " + str(e))
+        print()
+        traceback.print_exc(file=sys.stdout)
     bot.sendMessage(msg["channel"],meme)
 
 

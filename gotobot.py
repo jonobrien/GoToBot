@@ -284,28 +284,35 @@ def quote(bot, msg):
             return -1
         #  new quote
         if(len(args) >= 3):
-            if(args[1] in bot.people):
-                fileName = bot.people[bot.people.index(args[1])] + "Quotes.txt"
+            person = args[1]
+            quoteMsg = args[2]
+            if(person in bot.people):
+                fileName = bot.people[bot.people.index(person)] + "Quotes.txt"
                 #need to get full quote
                 if(os.path.isfile(fileName)):
                     with open(fileName, "a+") as f:
-                        f.write("," + args[2])
+                        f.write("," + quoteMsg)
                 else:
                     with open(fileName, "a+") as f:
-                        f.write(args[2])
-                bot.sendMessage(channel, "Quote added " + args[2])
+                        f.write(quoteMsg)
+                bot.sendMessage(channel, "Quote added " + quoteMsg)
         # user requested quote from saved files
         elif(len(args) == 2):
             quotes = []
-            if(args[1] in bot.people):
-                fileName = bot.people[bot.people.index(args[1])] + "Quotes.txt"
+            person = args[1]
+            if(person in bot.people):
+                fileName = bot.people[bot.people.index(person)] + "Quotes.txt"
                 if(os.path.isfile(fileName)):
                     with open(fileName, "r") as read:
                         quotes = read.read().split(",")
                 else:
-                    bot.sendMessage(channel, "no quotes for " + args[1] + " you should add some")
+                    bot.sendMessage(channel, "no quotes for " + person + " you should add some")
                 if(len(quotes) > 0):
-                    bot.sendMessage(channel, random.choice(quotes))
+                    quote = random.choice(quotes)
+                    if (person == "Alex"):
+                        pleo = " Pleonasms"*random.randrange(1,3)
+                        quote =  pleo + "\n" + quote + "\n" + pleo
+                    bot.sendMessage(channel, quote)
         else:
             print("[!!] not enough args")
             return -1

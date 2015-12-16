@@ -278,28 +278,27 @@ def quote(bot, msg):
     try:
         print(msg)
         args = msg["text"].split(",")
+        # pad with None values if nothing there on split
+        # protects against empty strings as well
+        cmd,person,text = ([x for x in msg["text"].split(",") if x != ""] + [None]*3)[:3]
         channel = msg["channel"]
         if (channel != "G0CCGHGKS"):
             print("quote check")
             return -1
         #  new quote
-        if(len(args) >= 3):
-            person = args[1]
-            quoteMsg = args[2]
+        if (cmd and person and text):
             if(person in bot.people):
                 fileName = bot.people[bot.people.index(person)] + "Quotes.txt"
-                #need to get full quote
                 if(os.path.isfile(fileName)):
                     with open(fileName, "a+") as f:
-                        f.write("," + quoteMsg)
+                        f.write("," + text)
                 else:
                     with open(fileName, "a+") as f:
-                        f.write(quoteMsg)
-                bot.sendMessage(channel, "Quote added " + quoteMsg)
+                        f.write(text)
+                bot.sendMessage(channel, "Quote added " + text)
         # user requested quote from saved files
-        elif(len(args) == 2):
+        elif(cmd and person):
             quotes = []
-            person = args[1]
             if(person in bot.people):
                 fileName = bot.people[bot.people.index(person)] + "Quotes.txt"
                 if(os.path.isfile(fileName)):
@@ -307,17 +306,19 @@ def quote(bot, msg):
                         quotes = read.read().split(",")
                 else:
                     bot.sendMessage(channel, "no quotes for " + person + " you should add some")
-                if(len(quotes) > 0):
+                if(quotes):
                     quote = random.choice(quotes)
-                    if (person == "Alex"):
-                        pleo = " Pleonasms"*random.randrange(1,3)
-                        quote =  pleo + "\n" + quote + "\n" + pleo
+                    ### Alex pleonasm feature #############################
+                    # if (person == "Alex"):
+                    #     pleo1 = " Pleonasms"*random.randrange(1,3)
+                    #     pleo2 = " Pleonasms"*random.randrange(2,5)
+                    #     quote =  pleo1 + "\n" + quote + "\n" + pleo2
                     bot.sendMessage(channel, quote)
         else:
             print("[!!] not enough args")
             return -1
     except Exception:
-        sendError()
+        bot.sendError()
 
 
 # messages - needs to be updated
@@ -380,7 +381,7 @@ def playGong(bot, msg):
     stream.close()
     p.terminate()
 
-'                '
+
 if __name__ == "__main__":
     router = [{
       "text": ["~colorname", "~color name"],

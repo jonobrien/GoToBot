@@ -36,7 +36,6 @@ class GoTo:
         self.people         = self.interns + ["Omar", "David", "Alan", "Alison", 
                                 "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"] # everyone in the company
         self.bots           = ["U0CK96B71","U0CK96B71","U0ARYU2CT"] # list of bots in use
-        self.timestamp      = queue.Queue() # queue for deleting messages
         self.last_channel   = ""   # last channel message received from
         self.userDict       = {}   # {"ID":"@username","ID2":"@username2"}
         self.idDict         = {}   # {"@username":"ID","@user2":"ID2"}
@@ -85,6 +84,7 @@ class GoTo:
             for user in users:
                 self.userDict[user["id"]] = user["name"]
                 self.idDict[user["name"]] = user["id"]
+            print(self.idDict)
             print(datetime.datetime.now())
             #print(self.userDict)
             if self.sc.rtm_connect(): # connected to slack real-time messaging api
@@ -161,8 +161,6 @@ class GoTo:
                                     for t in r["text"]:
                                         if(t.lower() in m.lower()):
                                             r["callback"](self, msg)
-                        elif("ok" in msg and msg["ok"] == True):
-                            self.timestamp.put({"ts":msg["ts"],"channel":self.last_channel})
                     time.sleep(1)
             else:
                 print("[!!] Connection Failed, invalid token?")
@@ -341,7 +339,7 @@ def deleteAll(bot, msg):
 
 
 def test(bot, msg):
-    testing = "blackbox whitebox "*random.randrange(5,20)
+    testing = "celestia addmusic https://www.youtube.com/watch?v=" + "blackboxwhitebox"*random.randrange(5,20)
     bot.sendMessage(msg["channel"], testing)
 
 

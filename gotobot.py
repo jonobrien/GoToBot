@@ -276,39 +276,47 @@ def quote(bot, msg):
     try:
         print(msg)
         args = msg["text"].split(",")
+        # pad with None values if nothing there on split
+        # protects against empty strings as well
+        cmd,person,text = ([x for x in msg["text"].split(",") if x != ""] + [None]*3)[:3]
         channel = msg["channel"]
         if (channel != "G0CCGHGKS"):
             print("quote check")
             return -1
         #  new quote
-        if(len(args) >= 3):
-            if(args[1] in bot.people):
-                fileName = bot.people[bot.people.index(args[1])] + "Quotes.txt"
-                #need to get full quote
+        if (cmd and person and text):
+            if(person in bot.people):
+                fileName = bot.people[bot.people.index(person)] + "Quotes.txt"
                 if(os.path.isfile(fileName)):
                     with open(fileName, "a+") as f:
-                        f.write("," + args[2])
+                        f.write("," + text)
                 else:
                     with open(fileName, "a+") as f:
-                        f.write(args[2])
-                bot.sendMessage(channel, "Quote added " + args[2])
+                        f.write(text)
+                bot.sendMessage(channel, "Quote added " + text)
         # user requested quote from saved files
-        elif(len(args) == 2):
+        elif(cmd and person):
             quotes = []
-            if(args[1] in bot.people):
-                fileName = bot.people[bot.people.index(args[1])] + "Quotes.txt"
+            if(person in bot.people):
+                fileName = bot.people[bot.people.index(person)] + "Quotes.txt"
                 if(os.path.isfile(fileName)):
                     with open(fileName, "r") as read:
                         quotes = read.read().split(",")
                 else:
-                    bot.sendMessage(channel, "no quotes for " + args[1] + " you should add some")
-                if(len(quotes) > 0):
-                    bot.sendMessage(channel, random.choice(quotes))
+                    bot.sendMessage(channel, "no quotes for " + person + " you should add some")
+                if(quotes):
+                    quote = random.choice(quotes)
+                    ### Alex pleonasm feature #############################
+                    # if (person == "Alex"):
+                    #     pleo1 = " Pleonasms"*random.randrange(1,3)
+                    #     pleo2 = " Pleonasms"*random.randrange(2,5)
+                    #     quote =  pleo1 + "\n" + quote + "\n" + pleo2
+                    bot.sendMessage(channel, quote)
         else:
             print("[!!] not enough args")
             return -1
     except Exception:
-        sendError()
+        bot.sendError()
 
 
 # messages - needs to be updated
@@ -371,7 +379,7 @@ def playGong(bot, msg):
     stream.close()
     p.terminate()
 
-'                '
+
 if __name__ == "__main__":
     router = [{
       "text": ["~colorname", "~color name"],

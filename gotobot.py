@@ -32,6 +32,7 @@ class GoTo:
         self.sc             = SlackClient(self.token)
         self.id             = json.loads(self.sc.api_call("auth.test", token=self.token).decode("utf-8"))["user_id"]
         self.distrChan      = "G0EFAE1EE"
+        self.quoteChan      = "G0CCGHGKS"
         self.interns        = ["Alex","Yura", "Steven G", "Avik", "Tommy","Jon"] # all the interns separately
         self.people         = self.interns + ["Omar", "David", "Alan", "Alison", 
                                 "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"] # everyone in the company
@@ -211,24 +212,23 @@ class GoTo:
         self.start()
 
 
-    #~DM,user,msg - user has to be the @"user" string
+    # ~dm,user,msg - user has to be the @"user" string
+    # ex: @jono would be `~dm,jono,message text here`
     def sendDM(self,msg):
         print("\n" + str(msg) + "\n\n")
-        args = msg["text"].split(",")
-        userName = args[1]
-        message = args[2]
-        print(args)
-        try:
-            recipient = self.idDict[userName]
-            imOpen = self.sc.api_call("im.open", token=self.token, user=recipient)
-            imJson = json.loads(imOpen.decode("utf-8"))
-            dmChannel = imJson["channel"]["id"]
-            chatPost = self.sc.api_call("chat.postMessage",token=self.token, 
-                            channel=dmChannel, text=message, as_user="true")
-            #whitelist the channel
-            self.inWhitelist(msg)
-        except Exception:
-            self.sendError()
+        cmd,userName,message = ([x for x in msg["text"].split(",") if x != ""] + [None]*3)[:3]
+        if (userName and message):
+            try:
+                recipient = self.idDict[userName]
+                imOpen = self.sc.api_call("im.open", token=self.token, user=recipient)
+                imJson = json.loads(imOpen.decode("utf-8"))
+                dmChannel = imJson["channel"]["id"]
+                chatPost = self.sc.api_call("chat.postMessage",token=self.token, 
+                                channel=dmChannel, text=message, as_user="true")
+                #whitelist the channel
+                self.inWhitelist(msg)
+            except Exception:
+                self.sendError()
 
 
     def addReaction(self, channel,timestamp,reaction):
@@ -237,6 +237,8 @@ class GoTo:
                             channel=channel, timestamp=timestamp)
         except Exception:
             self.sendError()
+
+
     def removeComments(s):
         while(s.contains("<") and s.contains(">")):
             left = s.indexOf("<")
@@ -275,18 +277,17 @@ def randomIntern(bot, msg):
 def quote(bot, msg):
     try:
         print(msg)
-        args = msg["text"].split(",")
         # pad with None values if nothing there on split
         # protects against empty strings as well
         cmd,person,text = ([x for x in msg["text"].split(",") if x != ""] + [None]*3)[:3]
         channel = msg["channel"]
-        if (channel != "G0CCGHGKS"):
+        if (channel != bot.quoteChan):
             print("quote check")
             return -1
         #  new quote
         if (cmd and person and text):
-            if(person in bot.people):
-                fileName = bot.people[bot.people.index(person)] + "Quotes.txt"
+            if(person in bot.idDict):             # bot.people):
+                fileName = person + "Quotes.txt"  # bot.people[bot.people.index(person)] + "Quotes.txt"
                 if(os.path.isfile(fileName)):
                     with open(fileName, "a+") as f:
                         f.write("," + text)
@@ -297,8 +298,8 @@ def quote(bot, msg):
         # user requested quote from saved files
         elif(cmd and person):
             quotes = []
-            if(person in bot.people):
-                fileName = bot.people[bot.people.index(person)] + "Quotes.txt"
+            if(person in bot.idDict):              # bot.people):
+                fileName = person + "Quotes.txt"   # bot.people[bot.people.index(person)] + "Quotes.txt"
                 if(os.path.isfile(fileName)):
                     with open(fileName, "r") as read:
                         quotes = read.read().split(",")
@@ -313,9 +314,14 @@ def quote(bot, msg):
                     #     quote =  pleo1 + "\n" + quote + "\n" + pleo2
                     bot.sendMessage(channel, quote)
         else:
-            print("[!!] not enough args")
+            print("[!!] not enough args (cmd, person, text): ")
+            print(cmd)
+            print(person)
+            print(text)
+            print()
             return -1
     except Exception:
+        print("[!!!] error in quote")
         bot.sendError()
 
 
@@ -381,6 +387,7 @@ def playGong(bot, msg):
 
 
 if __name__ == "__main__":
+    # TODO -- move out of this file
     router = [{
       "text": ["~colorname", "~color name"],
       "callback":colorCode,
@@ -468,12 +475,14 @@ if __name__ == "__main__":
     # {
     #   "text": ["~dm"],
     #   "callback":GoTo.sendDM,
-    #   "type": "text"
+    #   "type": "text",
+    #   "help": ""
     # },
     # {
     #   "text": ["pony", "Good morning! Here are the results from last night"s nightly test:"],
     #   "callback": pony,
-    #   "type": "text"
+    #   "type": "text",
+    #   "help": ""
     # },
     {
       "text": ["~random intern", "~ randomintern"],
@@ -484,7 +493,8 @@ if __name__ == "__main__":
     # {
     #   "text": ["Sorry, but you aren"t authorized to use this command.", "luna"],
     #   "callback": luna,
-    #   "type": "text"
+    #   "type": "text",
+    #   "help": ""
     # }
     {
       "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", 

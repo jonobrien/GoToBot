@@ -4,7 +4,6 @@ import string
 import random
 import urllib.request
 import os.path
-import datetime
 import queue
 from slackclient import SlackClient
 import sys, traceback
@@ -85,30 +84,38 @@ class GoTo:
             for user in users:
                 self.userDict[user["id"]] = user["name"]
                 self.idDict[user["name"]] = user["id"]
-            print(self.idDict)
+            # print(self.idDict)
             print(datetime.datetime.now())
             #print(self.userDict)
             if self.sc.rtm_connect(): # connected to slack real-time messaging api
                 print("connected")
                 while True:
-                    now = time.strftime("%H:%M:%S")
-                    if (now == "16:20:00" or now == "16:20:30"):
-                        print("420 time")
-                        images.blaze(self)
+                    
+                    ###### time-sensitive giphy feature ###############
+                    #
+                    # now = time.strftime("%H:%M:%S")
+                    # if (now == "16:20:00" or now == "16:20:30"):
+                    #     print("420 time")
+                    #     images.blaze(self)
+                    #
+                    ###################################################
 
                     msgs = self.sc.rtm_read()
                     for msg in msgs:
-                        #print(msg)
+                        print(msg)
                         images.distractionChan(self)
                         catFacts.subbedToCatFacts(self)
 
                         #### kick a user when they join a channel #####################################
+                        #      (need user api key, not bot key)
+                        #
                         #
                         # if("subtype" in msg and msg["subtype"] == "group_join"):
                         #     print("remove")
                         #     print(self.sc.api_call("groups.kick",channel=msg["channel"], user="U0CNP6WRK"))##bots can't kick, use your user api key not bot key to have bot kick users
                         #
-                        ##### send message everytime a user becomes active ############################
+                        #
+                        ##### send message every time a user becomes active ###########################
                         #
                         #elif("type" in msg and msg["type"] == "presence_change" and 
                         #                                msg["presence"] == "active" and msg["user"]):
@@ -156,6 +163,8 @@ class GoTo:
 
                             if(msg["channel"] in self.whitelist):
                                 m = msg["text"]
+                                #  cuts text contained between <> ex: <test>
+                                # to allow for future ~help,<~function> to only display the help message
                                 m = re.sub(r'&lt;(.*?)&gt;', '', m)
                                 msg["santized"] = m
                                 for r in router:

@@ -294,7 +294,7 @@ def quote(bot, msg):
         cmd,person,text = ([x for x in msg["text"].split(",") if x != ""] + [None]*3)[:3]
         channel = msg["channel"]
         if(person is not None):
-            person = person.lower()
+            person = person.lower().replace("@","")
         if (channel != bot.quoteChan):
             print("quote check")
             return -1

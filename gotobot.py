@@ -4,7 +4,6 @@ import string
 import random
 import urllib.request
 import os.path
-import datetime
 import queue
 from slackclient import SlackClient
 import sys, traceback
@@ -81,34 +80,45 @@ class GoTo:
     def startBot(self):
         try:
             print("startBot")
+            # need groups.list api call for the dict of private group info dict by id key
+            # make it once at startup, save it for later
             users = json.loads(self.sc.api_call("users.list", token=self.token).decode("utf-8"))["members"]
             for user in users:
                 self.userDict[user["id"]] = user["name"]
                 self.idDict[user["name"]] = user["id"]
-            print(self.idDict)
+            # print(self.idDict)
+
             print(datetime.datetime.now())
             #print(self.userDict)
             if self.sc.rtm_connect(): # connected to slack real-time messaging api
                 print("connected")
                 while True:
-                    now = time.strftime("%H:%M:%S")
-                    if (now == "16:20:00" or now == "16:20:30"):
-                        print("420 time")
-                        images.blaze(self)
+                    
+                    ###### time-sensitive giphy feature ###############
+                    #
+                    # now = time.strftime("%H:%M:%S")
+                    # if (now == "16:20:00" or now == "16:20:30"):
+                    #     print("420 time")
+                    #     images.blaze(self)
+                    #
+                    ###################################################
 
                     msgs = self.sc.rtm_read()
                     for msg in msgs:
-                        #print(msg)
+                        print(msg)
                         images.distractionChan(self)
                         catFacts.subbedToCatFacts(self)
 
                         #### kick a user when they join a channel #####################################
+                        #      (need user api key, not bot key)
+                        #
                         #
                         # if("subtype" in msg and msg["subtype"] == "group_join"):
                         #     print("remove")
                         #     print(self.sc.api_call("groups.kick",channel=msg["channel"], user="U0CNP6WRK"))##bots can't kick, use your user api key not bot key to have bot kick users
                         #
-                        ##### send message everytime a user becomes active ############################
+                        #
+                        ##### send message every time a user becomes active ###########################
                         #
                         #elif("type" in msg and msg["type"] == "presence_change" and 
                         #                                msg["presence"] == "active" and msg["user"]):
@@ -156,6 +166,8 @@ class GoTo:
 
                             if(msg["channel"] in self.whitelist):
                                 m = msg["text"]
+                                #  cuts text contained between <> ex: <test>
+                                # to allow for future ~help,<~function> to only display the help message
                                 m = re.sub(r'&lt;(.*?)&gt;', '', m)
                                 msg["santized"] = m
                                 for r in router:
@@ -281,6 +293,8 @@ def quote(bot, msg):
         # protects against empty strings as well
         cmd,person,text = ([x for x in msg["text"].split(",") if x != ""] + [None]*3)[:3]
         channel = msg["channel"]
+        if(person is not None):
+            person = person.lower().replace("@","")
         if (channel != bot.quoteChan):
             print("quote check")
             return -1
@@ -314,23 +328,27 @@ def quote(bot, msg):
                     #     quote =  pleo1 + "\n" + quote + "\n" + pleo2
                     bot.sendMessage(channel, quote)
         else:
-            print("[!!] not enough args (cmd, person, text): ")
-            print(cmd)
-            print(person)
-            print(text)
-            print()
+            bot.sendMessage(channel, "not enough args for ~quote,person,text or ~quote,person (actual input is -> " +cmd+"," + str(person) + ", " + str(text) + ")")
+
             return -1
     except Exception:
         print("[!!!] error in quote")
         bot.sendError()
 
 
-# messages - needs to be updated
+# delete the last message posted by the bot in the channel requested
+# tried doing it based off the message json but `key errors` happened
 def delete(bot, msg):
-    if(not bot.timestamp.empty()):
-        ts = bot.timestamp.get()
-        for w in bot.whitelist:
-            bot.sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
+    print("\ndeleting last message in specified channel: " + str(msg["channel"]))
+    msgResponse = bot.sc.api_call("groups.history", token=bot.token, channel=msg["channel"])
+    msgJson = json.loads(msgResponse.decode("utf-8"))
+    for message in msgJson["messages"]:
+        # can only delete messages owned by sender
+        if ("user" in message and message["user"] == bot.id and ("subtype" not in message)):
+            bot.sc.api_call("chat.delete", token=bot.token, ts=message["ts"], channel=msg["channel"])
+            print("deleted: " + message["ts"])
+            break
+    print("done deleting\n")
 
 
 # delete every message sent, from last 100
@@ -340,6 +358,7 @@ def deleteAll(bot, msg):
     print("\ndeleting all messages in private groups")
     grpResponse = bot.sc.api_call("groups.list", token=bot.token)
     grpJson = json.loads(grpResponse.decode("utf-8"))
+    print(grpJson)
     for chan in grpJson["groups"]:
         print("deleting in: " + str(chan["name"]) + " + " + str(chan["id"]))
         msgResponse = bot.sc.api_call("groups.history", token=bot.token, channel=chan["id"])
@@ -347,9 +366,9 @@ def deleteAll(bot, msg):
         for message in msgJson["messages"]:
             # can only delete messages owned by sender
             if ("user" in message and message["user"] == bot.id and ("subtype" not in message)):
-                bot.sc.api_call("chat.delete",token=bot.token,ts=message["ts"], channel=chan["id"])
+                bot.sc.api_call("chat.delete", token=bot.token, ts=message["ts"], channel=chan["id"])
                 print("deleted: " + message["ts"])
-    print("done deleting")
+    print("done deleting\n")
 
 
 def test(bot, msg):
@@ -445,7 +464,7 @@ if __name__ == "__main__":
       "text": ["~delete"],
       "callback":delete,
       "type": "text",
-      "help": "`~delete`               - Deletes the last message sent by bot. Group agnostic"
+      "help": "`~delete`               - Deletes the last message sent by bot in the specified channel."
     },{
       "text": ["~nye"],
       "callback":images.nye,

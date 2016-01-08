@@ -4,19 +4,19 @@ import string
 import random
 import urllib.request
 import os.path
-import datetime
 import queue
 from slackclient import SlackClient
 import sys, traceback
 import json
-#import pony as p
+import re
+
+import pony as p
 import poll
-import wave
-import pyaudio
 import images
 import catFacts
-import re
-#import git
+
+
+
 class GoTo:
 
     def __init__(self):
@@ -26,12 +26,13 @@ class GoTo:
     def start(self):
         print("start")
         self.token = ""
-        with open("tokenYura.txt", "r") as tRead:
+        with open("token.txt", "r") as tRead:
                  self.token = tRead.read()
-        #global sc
+
         self.sc             = SlackClient(self.token)
         self.id             = json.loads(self.sc.api_call("auth.test", token=self.token).decode("utf-8"))["user_id"]
         self.distrChan      = "G0EFAE1EE"
+        self.quoteChan      = "G0CCGHGKS"
         self.interns        = ["Alex","Yura", "Steven G", "Avik", "Tommy","Jon"] # all the interns separately
         self.people         = self.interns + ["Omar", "David", "Alan", "Alison", 
                                 "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"] # everyone in the company
@@ -39,16 +40,20 @@ class GoTo:
         self.last_channel   = ""   # last channel message received from
         self.userDict       = {}   # {"ID":"@username","ID2":"@username2"}
         self.idDict         = {}   # {"@username":"ID","@user2":"ID2"}
+        self.groupDict      = {}   # {"ID":"channel info...", ... }
         self.polls          = []   # list of polls
         self.messageCount   = 0    # for distractionChannel()
         self.whiteWrite     = open # fd for whitelist
         self.whitelist      = []   # list of channels bot can post in
-        self.words          = []   # list of words in eng. dictionary
+        self.words          = ["words", "here"]   # list of words in eng. dictionary
         self.legalChars     = string.printable.replace("`", "") # characters that can be manipulated/printed
         with open("whitelist.txt", "r") as self.whiteRead:
             self.whitelist  = self.whiteRead.read().split(" ")
         with open("EN_dict.txt", "r") as readLines:
             self.words      = readLines.read().split("\n")
+
+
+
         print("starting bot loop")
         self.startBot()
 
@@ -74,39 +79,57 @@ class GoTo:
     def main(self):
         pass
 
-    def getSC(self):
-        return sc
+
 
     def startBot(self):
         try:
             print("startBot")
+            # need groups.list api call for the dict of private group info dict by id key
+            # make it once at startup, save it for later
             users = json.loads(self.sc.api_call("users.list", token=self.token).decode("utf-8"))["members"]
+            groups = json.loads(self.sc.api_call("groups.list", token=self.token).decode("utf-8"))["groups"]
+            ims = json.loads(self.sc.api_call("im.list", token=self.token).decode("utf-8"))["ims"]
             for user in users:
                 self.userDict[user["id"]] = user["name"]
                 self.idDict[user["name"]] = user["id"]
+            # setup the groupDict used for private group/im info and id reference
+            # contains all meta data about those channels and can be used later
+            # get it once, so every delete call doesn't repeat them
+            for group in groups:
+                self.groupDict[group['id']] = group
+            for im in ims:
+                self.groupDict[im['id']] = im
             print(datetime.datetime.now())
-            #print(self.userDict)
+
             if self.sc.rtm_connect(): # connected to slack real-time messaging api
                 print("connected")
                 while True:
+
                     msgs = self.sc.rtm_read()
                     for msg in msgs:
-                        #print(msg)
+
+                        images.distractionChan(self)
+                        catFacts.subbedToCatFacts(self)
+
                         if("type" in msg and msg["type"] == "error"):
                             print("\n[!!] error: \n" + msg)
-                            # user_is_bot errors because bot cannot use that api function
                             error = "message error - probably no quotes found"
-                            self.sendMessage(self.last_channel, error) # error messages don"t have a channel
+                            self.sendMessage(self.last_channel, error) # error messages don"t have a ['channel']
                             self.sendError()
-                        elif("type" in msg and msg["type"] == "presence_change" and 
-                                                       msg["presence"] == "active" and msg["user"]):
-                            print(msg)
-                            if(msg["user"] =="U0665DKSL"):
-                               #post to interns-education as "user is active"
-                               #message = self.userDict[msg["user"]] + " is active"
-                               message = "Yura is the fake one"
-                               self.sendMessage("G09LLA9EW",message)
-                               print("[I] sent: "+message)
+                        elif("type" in msg and msg["type"] == "message"and "text" in msg and 
+                            all(c in self.legalChars for c in msg["text"].replace("'",""))):
+
+                            self.inWhitelist(msg)
+
+                            if(msg["channel"] in self.whitelist):
+                                m = msg["text"]
+                                #  cuts text contained between <> ex: <test>
+                                m = re.sub(r'&lt;(.*?)&gt;', '', m)
+                                msg["santized"] = m
+                                for r in router:
+                                    for t in r["text"]:
+                                        if(t.lower() in m.lower()):
+                                            r["callback"](self, msg)
                     time.sleep(1)
             else:
                 print("[!!] Connection Failed, invalid token?")
@@ -123,6 +146,16 @@ class GoTo:
             time.sleep(5)
             self.sc = SlackClient(self.token)
             self.start()
+
+
+    def inWhitelist(self,msg):
+        if (msg["text"].lower() == "~addgrouptowhitelist" and msg["channel"] not in self.whitelist):
+            self.whitelist.append(msg["channel"])
+            print("whitelist added: " + msg["channel"])
+            with open("whitelist.txt", "w") as self.whiteWrite:
+                self.whiteWrite.write(" ".join(self.whitelist))
+            return True
+
 
     def sendMessage(self,channel, message):
         try:
@@ -147,50 +180,250 @@ class GoTo:
         self.start()
 
 
-    #~DM,user,msg - user has to be the @"user" string
+    # ~dm,user,msg - user has to be the @"user" string
+    # ex: @jono would be `~dm,jono,message text here`
     def sendDM(self,msg):
         print("\n" + str(msg) + "\n\n")
-        args = msg["text"].split(",")
-        userName = args[1]
-        message = args[2]
-        print(args)
+        cmd,userName,message = ([x for x in msg["text"].split(",") if x != ""] + [None]*3)[:3]
+        if (userName and message):
+            try:
+                recipient = self.idDict[userName]
+                imOpen = self.sc.api_call("im.open", token=self.token, user=recipient)
+                imJson = json.loads(imOpen.decode("utf-8"))
+                dmChannel = imJson["channel"]["id"]
+                chatPost = self.sc.api_call("chat.postMessage",token=self.token, 
+                                channel=dmChannel, text=message, as_user="true")
+                #whitelist the channel
+                self.inWhitelist(msg)
+            except Exception:
+                self.sendError()
+
+
+    def addReaction(self, channel,timestamp,reaction):
         try:
-            recipient = self.idDict[userName]
-            imOpen = self.sc.api_call("im.open", token=self.token, user=recipient)
-            imJson = json.loads(imOpen.decode("utf-8"))
-            dmChannel = imJson["channel"]["id"]
-            chatPost = self.sc.api_call("chat.postMessage",token=self.token, 
-                            channel=dmChannel, text=message, as_user="true")
-            #whitelist the channel
-            self.inWhitelist(msg)
+            self.sc.api_call("reactions.add", token=self.token, name=reaction, 
+                            channel=channel, timestamp=timestamp)
         except Exception:
             self.sendError()
 
-# messages - needs to be updated
+
+    def removeComments(s):
+        while(s.contains("<") and s.contains(">")):
+            left = s.indexOf("<")
+            right = s.indexOf(">")
+            s = s.substring(0, left)
+
+
+def colorCode(bot, msg):
+    print("color")
+    name = msg["text"][1 + msg["text"].find(" "):]
+    if(name == msg["text"]):
+        message = "invalid arguments"
+        bot.sendMessage(msg["channel"], message)
+        return
+    # tmp="#"
+    # for ch in name[:3]:
+    #     tmp += hex(ord(ch))[2:]
+    if(name.lower() == "jon"):
+        h = "#39FF14"
+    elif(name.lower() == "verbose"):
+        h = "#b00bee"
+    else:
+        h = "#" + hex(abs(hash(name)))[2:8]
+    #print (h)
+    bot.sendMessage(msg["channel"], h)
+
+
+def randomIntern(bot, msg):
+    ranIntern = random.choice(bot.interns)
+    if (ranIntern != "Alex"):
+        bot.sendMessage(msg["channel"], ranIntern)
+    else:
+        bot.sendMessage(msg["channel"], "nope")
+
+
+def quote(bot, msg):
+    try:
+        print(msg)
+        # pad with None values if nothing there on split
+        # protects against empty strings as well
+        cmd,person,text = ([x for x in msg["text"].split(",") if x != ""] + [None]*3)[:3]
+        channel = msg["channel"]
+        if(person is not None):
+            # can handle all cases and forms of the '@uSerName' 'username' etc
+            person = person.lower().replace("@","")
+        if (channel != bot.quoteChan):
+            print("quote check")
+            return -1
+        #  new quote
+        if (cmd and person and text):
+            if(person in bot.idDict):
+                fileName = person + "Quotes.txt"  
+                if(os.path.isfile(fileName)):
+                    with open(fileName, "a+") as f:
+                        f.write("," + text)
+                else:
+                    with open(fileName, "a+") as f:
+                        f.write(text)
+                bot.sendMessage(channel, "Quote added " + text)
+        # user requested quote from saved files
+        elif(cmd and person):
+            quotes = []
+            if(person in bot.idDict):
+                fileName = person + "Quotes.txt"
+                if(os.path.isfile(fileName)):
+                    with open(fileName, "r") as read:
+                        quotes = read.read().split(",")
+                else:
+                    bot.sendMessage(channel, "no quotes for " + person + " you should add some")
+                if(quotes):
+                    quote = random.choice(quotes)
+                    bot.sendMessage(channel, quote)
+        else:
+            bot.sendMessage(channel, "not enough args for ~quote,person,text or ~quote,person (actual input is -> " +cmd+"," + str(person) + ", " + str(text) + ")")
+
+            return -1
+    except Exception:
+        print("[!!!] error in quote")
+        bot.sendError()
+
+
+# delete the last message posted by the bot in the channel requested
+# tried doing it based off the message json but `key errors` happened
 def delete(bot, msg):
-    if(not bot.timestamp.empty()):
-        ts = bot.timestamp.get()
-        for w in bot.whitelist:
-            bot.sc.api_call("chat.delete",channel=w, ts=str(ts["ts"]))
-
-
-# delete every message sent, from last 100
-# needs to have "has_more" check for > 100
-# TODO -- delete DMs as well using 'python-slackclient'
-def deleteAll(bot, msg):
-    print("\ndeleting all messages in private groups")
-    grpResponse = bot.sc.api_call("groups.list", token=bot.token)
-    grpJson = json.loads(grpResponse.decode("utf-8"))
-    for chan in grpJson["groups"]:
-        print("deleting in: " + str(chan["name"]) + " + " + str(chan["id"]))
-        msgResponse = bot.sc.api_call("groups.history", token=bot.token, channel=chan["id"])
-        msgJson = json.loads(msgResponse.decode("utf-8"))
+    print("\ndeleting last message in specified channel: " + str(msg["channel"]))
+    msgResponse = bot.sc.api_call("groups.history", token=bot.token, channel=msg["channel"])
+    msgJson = json.loads(msgResponse.decode("utf-8"))
+    if("messages" in msgJson):
         for message in msgJson["messages"]:
             # can only delete messages owned by sender
             if ("user" in message and message["user"] == bot.id and ("subtype" not in message)):
-                bot.sc.api_call("chat.delete",token=bot.token,ts=message["ts"], channel=chan["id"])
+                bot.sc.api_call("chat.delete", token=bot.token, ts=message["ts"], channel=msg["channel"])
                 print("deleted: " + message["ts"])
-    print("done deleting")
+                break
+    else:
+        bot.sendMessage(msg['channel'], "no bot messages in channel")
+    print("done deleting\n")
 
-g = GoTo()
-g.start()
+
+# delete every message sent, from last 100, in private groups and ims
+# TODO -- needs to have "has_more" check for > 100
+def deleteAll(bot, msg):
+    print("\ndeleting all messages in private groups and ims")
+    for chan in bot.groupDict:
+        if(chan.startswith("D")):
+            print("deleting ims for: " + chan + " -> " +  str(bot.userDict[bot.groupDict[chan]['user']]))
+            msgResponse = bot.sc.api_call("im.history", token=bot.token, channel=bot.groupDict[chan]["id"])
+            msgJson = json.loads(msgResponse.decode("utf-8"))
+        elif (chan.startswith("G")):
+            print("deleting group messages in: " + chan + " -> " +  str(bot.groupDict[chan]['name']))
+            msgResponse = bot.sc.api_call("groups.history", token=bot.token, channel=bot.groupDict[chan]["id"])
+            msgJson = json.loads(msgResponse.decode("utf-8"))
+        for message in msgJson["messages"]:
+            # can only delete messages owned by sender
+            if ("user" in message and message["user"] == bot.id and ("subtype" not in message)):
+                bot.sc.api_call("chat.delete", token=bot.token, ts=message["ts"], channel=bot.groupDict[chan]["id"])
+                print("deleted: " + message["ts"])
+    print("done deleting\n")
+
+
+def pony(bot, msg):
+    bot.sendMessage(msg["channel"], "```" + p.Pony.getPony() + "```")
+
+
+if __name__ == "__main__":
+    # TODO -- move out of this file
+    router = [{
+      "text": ["~colorname", "~color name"],
+      "callback":colorCode,
+      "type": "text",
+      "help": "`~colorname (string)`   - the space is necessary.  Returns a hex color code derived from input"
+    },{
+      "text": ["~randomintern"],
+      "callback":randomIntern,
+      "type": "text",
+      "help": "`~randomintern`         - select a random intern to give a task to"
+    },{  "text": ["~help"],
+      "callback":GoTo.help,
+      "type": "text"
+    },{
+      "text": ["~catfacts", "~cat facts"],
+      "callback":catFacts.catFacts,
+      "type": "text",
+      "help": "`~catfacts`             - Returns a random catfact"
+    },{
+      "text": ["~quote"],
+      "callback":quote,
+      "type": "text",
+      "help": ""
+    },{
+      "text": ["~startpoll","~poll","~createpoll","~start poll","~poll","~create poll"],
+      "callback":poll.startPoll,
+      "type": "text",
+      "help": "`~startpoll,(nameOfPoll),(option1),(option2),...(optionX)`\n                        - Creates a poll that can be voted on, closed or have an option added to the poll"
+    },{
+      "text": ["~stoppoll","~removepoll","~stop poll","~remove poll"],
+      "callback":poll.stopPoll,
+      "type": "text",
+      "help": "`~stoppoll,(pollName)`  - Ends the poll and displays results"
+    },{
+      "text": ["~vote","~votepoll","~vote poll"],
+      "callback":poll.vote,
+      "type": "text",
+      "help": "`~vote,(pollName),(option)`\n                        - Votes for (option). If you have aready voted it removes your old vote"
+    },{
+      "text": ["~addoption"],
+      "callback":poll.addOption,
+      "type": "text",
+      "help": "`~addoption,(pollName),(newOption)`\n                        - Creates a new option for a poll"
+    },{
+      "text": ["ship it",":shipit:", "shipit"],
+      "callback":images.shipIt,
+      "type": "text",
+      "help": "`ship it`               - Returns ship it squirrel image"
+    },{
+      "text": ["~deleteall"],
+      "callback":deleteAll,
+      "type": "text",
+      "help": "`~deleteall`            - Deletes all private group/dm messages sent by the bot."
+    },{
+      "text": ["~delete"],
+      "callback":delete,
+      "type": "text",
+      "help": "`~delete`               - Deletes the last message sent by bot in the specified channel."
+    },{
+      "text": ["~nye"],
+      "callback":images.nye,
+      "type": "text",
+      "help": "`~nye`                  - Returns a bill nye gif"
+    },{
+      "text": ["~meme"],
+      "callback":images.getMeme,
+      "type": "text",
+      "help": "`~meme,(keyword)`       - Gets a meme with given keyword.  Returns nope.jpg if no meme found"
+    },{
+      "text": ["~gif"],
+      "callback":images.getGiphy,
+      "type": "text",
+      "help": "`~gif,(keyword)`        - Returns a gif with the given keyword"
+    },{
+      "text": ["~insanity"],
+      "callback":images.getMeme,
+      "type": "text",
+      "help": "`~insanity`             - Returns an insanity wolf meme"
+    },
+    {
+      "text": ["~dm"],
+      "callback":GoTo.sendDM,
+      "type": "text",
+      "help": ""
+    },
+    # {
+    #   "text": ["Sorry, but you aren"t authorized to use this command.", "luna"],
+    #   "callback": luna,
+    #   "type": "text",
+    #   "help": ""
+    # }
+    ]
+    g = GoTo()
+    g.start()

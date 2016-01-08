@@ -8,6 +8,7 @@ def nye(bot, msg):
     nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
     bot.sendMessage(msg["channel"], nyeMlg)
 
+
 def getGiphy(bot, msg):
     urlStart = "http://api.giphy.com/v1/gifs/search?q="
     urlEnd = "&api_key=dc6zaTOxFJmzC&limit="

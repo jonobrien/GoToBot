@@ -8,7 +8,7 @@ import queue
 from slackclient import SlackClient
 import sys, traceback
 import json
-#import pony as p
+import pony as p
 import poll
 import wave
 import pyaudio
@@ -39,6 +39,7 @@ class GoTo:
         self.last_channel   = ""   # last channel message received from
         self.userDict       = {}   # {"ID":"@username","ID2":"@username2"}
         self.idDict         = {}   # {"@username":"ID","@user2":"ID2"}
+        self.groupDict      = {}   # {"ID":"channel info...", ... }
         self.polls          = []   # list of polls
         self.messageCount   = 0    # for distractionChannel()
         self.whiteWrite     = open # fd for whitelist
@@ -74,8 +75,7 @@ class GoTo:
     def main(self):
         pass
 
-    def getSC(self):
-        return sc
+
 
     def startBot(self):
         try:
@@ -83,13 +83,20 @@ class GoTo:
             # need groups.list api call for the dict of private group info dict by id key
             # make it once at startup, save it for later
             users = json.loads(self.sc.api_call("users.list", token=self.token).decode("utf-8"))["members"]
+            groups = json.loads(self.sc.api_call("groups.list", token=self.token).decode("utf-8"))["groups"]
+            ims = json.loads(self.sc.api_call("im.list", token=self.token).decode("utf-8"))["ims"]
             for user in users:
                 self.userDict[user["id"]] = user["name"]
                 self.idDict[user["name"]] = user["id"]
-            # print(self.idDict)
-
+            # setup the groupDict used for private group/im info and id reference
+            # contains all meta data about those channels and can be used later
+            # get it once, so every delete call doesn't repeat them
+            for group in groups:
+                self.groupDict[group['id']] = group
+            for im in ims:
+                self.groupDict[im['id']] = im
+            #print(self.groupDict)
             print(datetime.datetime.now())
-            #print(self.userDict)
             if self.sc.rtm_connect(): # connected to slack real-time messaging api
                 print("connected")
                 while True:
@@ -167,6 +174,7 @@ class GoTo:
                             if(msg["channel"] in self.whitelist):
                                 m = msg["text"]
                                 #  cuts text contained between <> ex: <test>
+                                # TODO -- more detailed usage info for specific commands
                                 # to allow for future ~help,<~function> to only display the help message
                                 m = re.sub(r'&lt;(.*?)&gt;', '', m)
                                 msg["santized"] = m
@@ -294,14 +302,15 @@ def quote(bot, msg):
         cmd,person,text = ([x for x in msg["text"].split(",") if x != ""] + [None]*3)[:3]
         channel = msg["channel"]
         if(person is not None):
+            # can handle all cases and forms of the '@uSerName' 'username' etc
             person = person.lower().replace("@","")
         if (channel != bot.quoteChan):
             print("quote check")
             return -1
         #  new quote
         if (cmd and person and text):
-            if(person in bot.idDict):             # bot.people):
-                fileName = person + "Quotes.txt"  # bot.people[bot.people.index(person)] + "Quotes.txt"
+            if(person in bot.idDict):
+                fileName = person + "Quotes.txt"  
                 if(os.path.isfile(fileName)):
                     with open(fileName, "a+") as f:
                         f.write("," + text)
@@ -351,22 +360,23 @@ def delete(bot, msg):
     print("done deleting\n")
 
 
-# delete every message sent, from last 100
-# needs to have "has_more" check for > 100
-# TODO -- delete DMs as well using 'python-slackclient'
+# delete every message sent, from last 100, in private groups and ims
+# TODO -- needs to have "has_more" check for > 100
 def deleteAll(bot, msg):
-    print("\ndeleting all messages in private groups")
-    grpResponse = bot.sc.api_call("groups.list", token=bot.token)
-    grpJson = json.loads(grpResponse.decode("utf-8"))
-    print(grpJson)
-    for chan in grpJson["groups"]:
-        print("deleting in: " + str(chan["name"]) + " + " + str(chan["id"]))
-        msgResponse = bot.sc.api_call("groups.history", token=bot.token, channel=chan["id"])
-        msgJson = json.loads(msgResponse.decode("utf-8"))
+    print("\ndeleting all messages in private groups and ims")
+    for chan in bot.groupDict:
+        if(chan.startswith("D")):
+            print("deleting ims for: " + chan + " -> " +  str(bot.userDict[bot.groupDict[chan]['user']]))
+            msgResponse = bot.sc.api_call("im.history", token=bot.token, channel=bot.groupDict[chan]["id"])
+            msgJson = json.loads(msgResponse.decode("utf-8"))
+        elif (chan.startswith("G")):
+            print("deleting group messages in: " + chan + " -> " +  str(bot.groupDict[chan]['name']))
+            msgResponse = bot.sc.api_call("groups.history", token=bot.token, channel=bot.groupDict[chan]["id"])
+            msgJson = json.loads(msgResponse.decode("utf-8"))
         for message in msgJson["messages"]:
             # can only delete messages owned by sender
             if ("user" in message and message["user"] == bot.id and ("subtype" not in message)):
-                bot.sc.api_call("chat.delete", token=bot.token, ts=message["ts"], channel=chan["id"])
+                bot.sc.api_call("chat.delete", token=bot.token, ts=message["ts"], channel=bot.groupDict[chan]["id"])
                 print("deleted: " + message["ts"])
     print("done deleting\n")
 
@@ -459,7 +469,7 @@ if __name__ == "__main__":
       "text": ["~deleteall"],
       "callback":deleteAll,
       "type": "text",
-      "help": "`~deleteall`            - Deletes all private group messages sent by the bot. (under development for DMs)"
+      "help": "`~deleteall`            - Deletes all private group/dm messages sent by the bot."
     },{
       "text": ["~delete"],
       "callback":delete,
@@ -498,10 +508,10 @@ if __name__ == "__main__":
     #   "help": ""
     # },
     # {
-    #   "text": ["pony", "Good morning! Here are the results from last night"s nightly test:"],
+    #   "text": ["~pony"],
     #   "callback": pony,
     #   "type": "text",
-    #   "help": ""
+    #   "help": "sends ascii art"
     # },
     {
       "text": ["~random intern", "~ randomintern"],

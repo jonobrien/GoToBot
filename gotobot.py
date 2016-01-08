@@ -44,12 +44,15 @@ class GoTo:
         self.messageCount   = 0    # for distractionChannel()
         self.whiteWrite     = open # fd for whitelist
         self.whitelist      = []   # list of channels bot can post in
-        self.words          = []   # list of words in eng. dictionary
+        self.words          = ["words", "here"]   # list of words in eng. dictionary
         self.legalChars     = string.printable.replace("`", "") # characters that can be manipulated/printed
         with open("whitelist.txt", "r") as self.whiteRead:
             self.whitelist  = self.whiteRead.read().split(" ")
         with open("EN_dict.txt", "r") as readLines:
             self.words      = readLines.read().split("\n")
+
+
+
         print("starting bot loop")
         self.startBot()
 
@@ -147,29 +150,6 @@ class GoTo:
                                             all(c in self.legalChars for c in msg["text"].replace("'",""))):
                             #print(msg)
                             self.inWhitelist(msg)
-                            ### the reactions are unwanted double spacing #############################
-                            #
-                            # if("user" in msg and msg["user"] == self.idDict["steveng"]):
-                            #     print("corn")
-                            #     channel = msg["channel"]
-                            #     timestamp = msg["ts"]
-                            #     self.addReaction(channel,timestamp,"corn")
-                            # elif("user" in msg and msg["user"] == self.idDict["jono"]):
-                            #     print("hancock")
-                            #     channel = msg["channel"]
-                            #     timestamp = msg["ts"]
-                            #     self.addReaction(channel,timestamp,"hancock")
-                            # elif("user" in msg and msg["user"] == self.idDict["osardar"]):
-                            #      print("hancock")
-                            #      channel = msg["channel"]
-                            #      timestamp = msg["ts"]
-                            #      self.addReaction(channel,timestamp,"partyparrot")
-                            # elif("user" in msg and msg["user"] == self.idDict["derek"]):
-                            #     print("derek")
-                            #     channel = msg["channel"]
-                            #     timestamp = msg["ts"]
-                            #     self.addReaction(channel,timestamp,"derek")
-                            ###########################################################################
 
                             if(msg["channel"] in self.whitelist):
                                 m = msg["text"]
@@ -351,12 +331,15 @@ def delete(bot, msg):
     print("\ndeleting last message in specified channel: " + str(msg["channel"]))
     msgResponse = bot.sc.api_call("groups.history", token=bot.token, channel=msg["channel"])
     msgJson = json.loads(msgResponse.decode("utf-8"))
-    for message in msgJson["messages"]:
-        # can only delete messages owned by sender
-        if ("user" in message and message["user"] == bot.id and ("subtype" not in message)):
-            bot.sc.api_call("chat.delete", token=bot.token, ts=message["ts"], channel=msg["channel"])
-            print("deleted: " + message["ts"])
-            break
+    if("messages" in msgJson):
+        for message in msgJson["messages"]:
+            # can only delete messages owned by sender
+            if ("user" in message and message["user"] == bot.id and ("subtype" not in message)):
+                bot.sc.api_call("chat.delete", token=bot.token, ts=message["ts"], channel=msg["channel"])
+                print("deleted: " + message["ts"])
+                break
+    else:
+        bot.sendMessage(msg['channel'], "no bot messages in channel")
     print("done deleting\n")
 
 

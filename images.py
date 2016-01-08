@@ -24,27 +24,6 @@ def getGiphy(bot, msg):
     except IndexError:
         gif = "gif not found"
     bot.sendMessage(msg["channel"], gif)
-    #print (jsonData)#(json.dumps(data, sort_keys=True, indent=4))
-    #print()
-    #print(jsonData["data"])
-    ###for i in jsonData["data"][0].keys():
-    ###    print (jsonData["data"][0][i])
-    ###print(jsonData["data"][0]["images"]["original"]["url"]
-
-
-# sends a 420 giphy at 16:20:00 and 16:20:30
-def blaze(bot):
-    url = "http://api.giphy.com/v1/gifs/search?q="
-    keywords = "420"
-    print(keywords)
-    data = urllib.request.urlopen(url + keywords +"&api_key=dc6zaTOxFJmzC&limit=4").read().decode("utf-8")#.read())
-    jsonData = json.loads(data)
-    try:
-        jsonData = random.choice(jsonData["data"]) # take a random gif from the array of returned images
-        gif = jsonData["images"]["original"]["url"]#jsonData["data"][0]["images"]["original"]["url"]
-    except IndexError:
-        gif = "cannot blaze it"
-    bot.sendMessage("G09LLA9EW", gif)
 
 
 # get a meme of keyword passed in
@@ -74,6 +53,7 @@ def getMeme(bot, msg):
 
 def distractionChan(bot):
     bot.messageCount += 1
+    # send a message every 50 messages
     if (bot.messageCount % 50 == 0):
         print("messageCount: " + str(int(bot.messageCount)))
         randomWord = random.choice(bot.words)

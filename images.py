@@ -37,15 +37,18 @@ def getMeme(bot, msg):
             data = urllib.request.urlopen(url).read().decode("utf-8")#.read())
         else:
             keyword = msg["text"].split(",")[1]
+            print(keyword)
             url = "http://version1.api.memegenerator.net/Instances_Select_ByNew?languageCode=en&pageIndex=0&pageSize=12&urlName="
             data = urllib.request.urlopen(url+keyword).read().decode("utf-8")
         jsonData = json.loads(data)
         meme = jsonData["result"][random.randrange(0,len(jsonData["result"]))]["instanceImageUrl"]
     except IndexError:
         meme = "wolf not found"
+    except ValueError:
+        meme = "invalid search term: " + keyword
     except Exception as e:
         meme = "nope.jpg"
-        print("exception getMeme " + str(e))
+        print("\nexception getMeme " + str(e))
         print()
         traceback.print_exc(file=sys.stdout)
     bot.sendMessage(msg["channel"],meme)

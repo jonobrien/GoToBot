@@ -410,7 +410,8 @@ if __name__ == "__main__":
       "callback":randomIntern,
       "type": "text",
       "help": "`~randomintern`         - select a random intern to give a task to"
-    },{  "text": ["~help"],
+    },{  
+      "text": ["~help"],
       "callback":GoTo.help,
       "type": "text"
     },{
@@ -453,22 +454,26 @@ if __name__ == "__main__":
       "callback":deleteAll,
       "type": "text",
       "help": "`~deleteall`            - Deletes all private group/dm messages sent by the bot."
-    },{
-      "text": ["~delete"],
-      "callback":delete,
-      "type": "text",
-      "help": "`~delete`               - Deletes the last message sent by bot in the specified channel."
-    },{
+    }
+    # ,{
+    #   "text": ["~delete"],
+    #   "callback":delete,
+    #   "type": "text",
+    #   "help": "`~delete`               - Deletes the last message sent by bot in the specified channel."
+    # }
+    ,{
       "text": ["~nye"],
       "callback":images.nye,
       "type": "text",
       "help": "`~nye`                  - Returns a bill nye gif"
-    },{
-      "text": ["test"],
-      "callback":test,
-      "type": "text",
-      "help": "`test` `testing`        - any appearance of the string `test` there will be a response posted"
-    },{
+    }
+    # ,{
+    #   "text": ["test"],
+    #   "callback":test,
+    #   "type": "text",
+    #   "help": "`test` `testing`        - any appearance of the string `test` there will be a response posted"
+    # }
+    ,{
       "text": ["~meme"],
       "callback":images.getMeme,
       "type": "text",
@@ -514,6 +519,7 @@ if __name__ == "__main__":
       "callback": playGong,
       "type": "text",
       "help": ""
-    }]
+    }
+    ]
     g = GoTo()
     g.start()

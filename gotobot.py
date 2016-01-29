@@ -23,7 +23,7 @@ class GoTo:
 
 
     def start(self):
-        print("start")
+        print("initializing bot...")
         self.token = ""
         with open("token.txt", "r") as tRead:
                  self.token = tRead.read()
@@ -44,16 +44,16 @@ class GoTo:
         self.messageCount   = 0    # for distractionChannel()
         self.whiteWrite     = open # fd for whitelist
         self.whitelist      = []   # list of channels bot can post in
-        self.words          = ["words", "here"]   # list of words in eng. dictionary
+        self.words          = ["pizza", "cat"]   # list of words in eng. dictionary
         self.legalChars     = string.printable.replace("`", "") # characters that can be manipulated/printed
+        # need to make these files initially, otherwise FNF Error
         with open("whitelist.txt", "r") as self.whiteRead:
             self.whitelist  = self.whiteRead.read().split(" ")
         with open("EN_dict.txt", "r") as readLines:
             self.words      = readLines.read().split("\n")
 
 
-
-        print("starting bot loop")
+        print("bot initialized, starting...")
         self.startBot()
 
 
@@ -82,7 +82,7 @@ class GoTo:
 
     def startBot(self):
         try:
-            print("startBot")
+            print("startBot() id: " + self.id)
             # need groups.list api call for the dict of private group info dict by id key
             # make it once at startup, save it for later
             users = json.loads(self.sc.api_call("users.list", token=self.token).decode("utf-8"))["members"]
@@ -103,19 +103,12 @@ class GoTo:
             if self.sc.rtm_connect(): # connected to slack real-time messaging api
                 print("connected")
                 while True:
-                    
-                    ###### time-sensitive giphy feature ###############
-                    #
-                    # now = time.strftime("%H:%M:%S")
-                    # if (now == "16:20:00" or now == "16:20:30"):
-                    #     print("420 time")
-                    #     images.blaze(self)
-                    #
-                    ###################################################
 
                     msgs = self.sc.rtm_read()
                     for msg in msgs:
-                        print(msg)
+                        # debug messages
+                        ##if ("subtype" not in msg):
+                        ##    print(msg)
                         images.distractionChan(self)
                         catFacts.subbedToCatFacts(self)
 
@@ -281,6 +274,9 @@ def quote(bot, msg):
         # protects against empty strings as well
         cmd,person,text = ([x for x in msg["text"].split(",") if x != ""] + [None]*3)[:3]
         channel = msg["channel"]
+        if("~quote,person" in msg["text"]):
+            print('inf loop check')
+            return -1
         if(person is not None):
             # can handle all cases and forms of the '@uSerName' 'username' etc
             person = person.lower().replace("@","")
@@ -298,11 +294,15 @@ def quote(bot, msg):
                     with open(fileName, "a+") as f:
                         f.write(text)
                 bot.sendMessage(channel, "Quote added " + text)
+            else:
+                #print('[!!] cmd person text else\n')
+                bot.sendMessage(channel, "incorrect args for ~quote,person,text (actual input is -> " +cmd+"," + str(person) + ", " + str(text) + ")")
+                return -1
         # user requested quote from saved files
         elif(cmd and person):
             quotes = []
-            if(person in bot.idDict):              # bot.people):
-                fileName = person + "Quotes.txt"   # bot.people[bot.people.index(person)] + "Quotes.txt"
+            if(person in bot.idDict):
+                fileName = person + "Quotes.txt"
                 if(os.path.isfile(fileName)):
                     with open(fileName, "r") as read:
                         quotes = read.read().split(",")
@@ -310,15 +310,14 @@ def quote(bot, msg):
                     bot.sendMessage(channel, "no quotes for " + person + " you should add some")
                 if(quotes):
                     quote = random.choice(quotes)
-                    ### Alex pleonasm feature #############################
-                    # if (person == "Alex"):
-                    #     pleo1 = " Pleonasms"*random.randrange(1,3)
-                    #     pleo2 = " Pleonasms"*random.randrange(2,5)
-                    #     quote =  pleo1 + "\n" + quote + "\n" + pleo2
                     bot.sendMessage(channel, quote)
+            else:
+                #print('[!!] cmd person else\n')
+                bot.sendMessage(channel, "incorrect args for ~quote,person (actual input is -> " +cmd+"," + str(person) + ")")
+                return -1
         else:
+            #print('[!!] outer else\n')
             bot.sendMessage(channel, "not enough args for ~quote,person,text or ~quote,person (actual input is -> " +cmd+"," + str(person) + ", " + str(text) + ")")
-
             return -1
     except Exception:
         print("[!!!] error in quote")
@@ -365,7 +364,7 @@ def deleteAll(bot, msg):
 
 
 def test(bot, msg):
-    testing = "celestia addmusic https://www.youtube.com/watch?v=" + "blackboxwhitebox"*random.randrange(5,20)
+    testing = "blackboxwhitebox"*random.randrange(5,20)
     bot.sendMessage(msg["channel"], testing)
 
 

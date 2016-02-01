@@ -9,8 +9,8 @@ import sys, traceback
 import json
 import pony as p
 import poll
-import wave
-import pyaudio
+# import wave
+# import pyaudio
 import images
 import catFacts
 import re

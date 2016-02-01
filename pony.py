@@ -366,4 +366,3 @@ class Pony:
 
     def getPony():
       return random.choice(ponyArt)
-

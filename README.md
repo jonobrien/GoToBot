@@ -28,5 +28,3 @@ Using a mapping dictionary with callbacks to function calls:
 # Docs and API Wrappers
 - [python-slackclient](https://github.com/slackhq/python-slackclient)
 - [Slack API](https://api.slack.com/)
-
-- [Slacker](https://github.com/os/slacker)

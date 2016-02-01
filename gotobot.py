@@ -1,5 +1,4 @@
 import time
-import datetime
 import string
 import random
 import urllib.request
@@ -10,8 +9,8 @@ import sys, traceback
 import json
 import pony as p
 import poll
-import wave
-import pyaudio
+# import wave
+# import pyaudio
 import images
 import catFacts
 import re
@@ -99,7 +98,6 @@ class GoTo:
             for im in ims:
                 self.groupDict[im['id']] = im
             #print(self.groupDict)
-            print(datetime.datetime.now())
             if self.sc.rtm_connect(): # connected to slack real-time messaging api
                 print("connected")
                 while True:
@@ -262,9 +260,9 @@ def colorCode(bot, msg):
 def randomIntern(bot, msg):
     ranIntern = random.choice(bot.interns)
     if (ranIntern != "Alex"):
-        bot.sendMessage(msg["channel"], ranIntern)
+        bot.sendMessage(msg["channel"], "Yura")
     else:
-        bot.sendMessage(msg["channel"], "nope")
+        bot.sendMessage(msg["channel"], "Yura")
 
 
 def quote(bot, msg):
@@ -380,21 +378,21 @@ def luna(bot,msg):
     bot.sendMessage(msg["channel"], "luna shutdown")
 
 
-def playGong(bot, msg):
-    CHUNK = 1024
-    wf = wave.open("gong.wav", "rb")
-    p = pyaudio.PyAudio()
-    stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
-                    channels=wf.getnchannels(),
-                    rate=wf.getframerate(),
-                    output=True)
-    data = wf.readframes(CHUNK)
-    while data != "":
-        stream.write(data)
-        data = wf.readframes(CHUNK)
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
+# def playGong(bot, msg):
+#     CHUNK = 1024
+#     wf = wave.open("gong.wav", "rb")
+#     p = pyaudio.PyAudio()
+#     stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+#                     channels=wf.getnchannels(),
+#                     rate=wf.getframerate(),
+#                     output=True)
+#     data = wf.readframes(CHUNK)
+#     while data != "":
+#         stream.write(data)
+#         data = wf.readframes(CHUNK)
+#     stream.stop_stream()
+#     stream.close()
+#     p.terminate()
 
 
 if __name__ == "__main__":
@@ -505,20 +503,14 @@ if __name__ == "__main__":
       "callback": randominterns,
       "type": "text",
       "help": ""
-    },
+    }
     # {
-    #   "text": ["Sorry, but you aren"t authorized to use this command.", "luna"],
-    #   "callback": luna,
+    #   "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", 
+    #         ":heart_eyes:",":heartbeat:",":heartpulse:",":hearts:"],
+    #   "callback": playGong,
     #   "type": "text",
     #   "help": ""
     # }
-    {
-      "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", 
-            ":heart_eyes:",":heartbeat:",":heartpulse:",":hearts:"],
-      "callback": playGong,
-      "type": "text",
-      "help": ""
-    }
     ]
     g = GoTo()
     g.start()

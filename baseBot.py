@@ -10,12 +10,8 @@ from slackclient import SlackClient
 import sys, traceback
 import json
 import re
-
-import pony as p
+# add more features
 import poll
-import images
-import catFacts
-
 
 
 class GoTo:
@@ -32,28 +28,17 @@ class GoTo:
 
         self.sc             = SlackClient(self.token)
         self.id             = json.loads(self.sc.api_call("auth.test", token=self.token).decode("utf-8"))["user_id"]
-        self.distrChan      = "G0EFAE1EE"
         self.quoteChan      = "G0CCGHGKS"
-        self.interns        = ["Alex","Yura", "Steven G", "Avik", "Tommy","Jon"] # all the interns separately
-        self.people         = self.interns + ["Omar", "David", "Alan", "Alison", 
-                                "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"] # everyone in the company
-        self.bots           = ["U0CK96B71","U0CK96B71","U0ARYU2CT"] # list of bots in use
-        self.last_channel   = ""   # last channel message received from
         self.userDict       = {}   # {"ID":"@username","ID2":"@username2"}
         self.idDict         = {}   # {"@username":"ID","@user2":"ID2"}
-        self.groupDict      = {}   # {"ID":"channel info...", ... }
+        self.groupDict      = {}   # {"ID":"channel info...", ... } metadata about channels
         self.polls          = []   # list of polls
         self.messageCount   = 0    # for distractionChannel()
         self.whiteWrite     = open # fd for whitelist
         self.whitelist      = []   # list of channels bot can post in
-        self.words          = ["words", "here"]   # list of words in eng. dictionary
         self.legalChars     = string.printable.replace("`", "") # characters that can be manipulated/printed
         with open("whitelist.txt", "r") as self.whiteRead:
             self.whitelist  = self.whiteRead.read().split(" ")
-        with open("EN_dict.txt", "r") as readLines:
-            self.words      = readLines.read().split("\n")
-
-
 
         print("starting bot loop")
         self.startBot()
@@ -74,14 +59,6 @@ class GoTo:
         self.sendMessage(msg["channel"], info)
 
 
-    def connect(self):
-        print("connect")
-
-    def main(self):
-        pass
-
-
-
     def startBot(self):
         try:
             print("startBot")
@@ -100,22 +77,21 @@ class GoTo:
                 self.groupDict[group['id']] = group
             for im in ims:
                 self.groupDict[im['id']] = im
+
             print(datetime.datetime.now())
 
-            if self.sc.rtm_connect(): # connected to slack real-time messaging api
+
+
+
+            if self.sc.rtm_connect():
                 print("connected")
                 while True:
 
                     msgs = self.sc.rtm_read()
                     for msg in msgs:
 
-                        images.distractionChan(self)
-                        catFacts.subbedToCatFacts(self)
-
                         if("type" in msg and msg["type"] == "error"):
-                            print("\n[!!] error: \n" + msg)
-                            error = "message error - probably no quotes found"
-                            self.sendMessage(self.last_channel, error) # error messages don"t have a ['channel']
+                            print("\n[!!] error: \n" + msg + "\n")
                             self.sendError()
                         elif("type" in msg and msg["type"] == "message"and "text" in msg and 
                             all(c in self.legalChars for c in msg["text"].replace("'",""))):
@@ -134,6 +110,10 @@ class GoTo:
                     time.sleep(1)
             else:
                 print("[!!] Connection Failed, invalid token?")
+
+
+
+
         except AttributeError:
             print("[!!] error - probably in the send")
             traceback.print_exc(file=sys.stdout)
@@ -200,47 +180,11 @@ class GoTo:
                 self.sendError()
 
 
-    def addReaction(self, channel,timestamp,reaction):
-        try:
-            self.sc.api_call("reactions.add", token=self.token, name=reaction, 
-                            channel=channel, timestamp=timestamp)
-        except Exception:
-            self.sendError()
-
-
     def removeComments(s):
         while(s.contains("<") and s.contains(">")):
             left = s.indexOf("<")
             right = s.indexOf(">")
             s = s.substring(0, left)
-
-
-def colorCode(bot, msg):
-    print("color")
-    name = msg["text"][1 + msg["text"].find(" "):]
-    if(name == msg["text"]):
-        message = "invalid arguments"
-        bot.sendMessage(msg["channel"], message)
-        return
-    # tmp="#"
-    # for ch in name[:3]:
-    #     tmp += hex(ord(ch))[2:]
-    if(name.lower() == "jon"):
-        h = "#39FF14"
-    elif(name.lower() == "verbose"):
-        h = "#b00bee"
-    else:
-        h = "#" + hex(abs(hash(name)))[2:8]
-    #print (h)
-    bot.sendMessage(msg["channel"], h)
-
-
-def randomIntern(bot, msg):
-    ranIntern = random.choice(bot.interns)
-    if (ranIntern != "Alex"):
-        bot.sendMessage(msg["channel"], ranIntern)
-    else:
-        bot.sendMessage(msg["channel"], "nope")
 
 
 def quote(bot, msg):
@@ -285,7 +229,7 @@ def quote(bot, msg):
 
             return -1
     except Exception:
-        print("[!!!] error in quote")
+        print("[!!] error in quote")
         bot.sendError()
 
 
@@ -328,30 +272,11 @@ def deleteAll(bot, msg):
     print("done deleting\n")
 
 
-def pony(bot, msg):
-    bot.sendMessage(msg["channel"], "```" + p.Pony.getPony() + "```")
-
-
 if __name__ == "__main__":
     # TODO -- move out of this file
-    router = [{
-      "text": ["~colorname", "~color name"],
-      "callback":colorCode,
-      "type": "text",
-      "help": "`~colorname (string)`   - the space is necessary.  Returns a hex color code derived from input"
-    },{
-      "text": ["~randomintern"],
-      "callback":randomIntern,
-      "type": "text",
-      "help": "`~randomintern`         - select a random intern to give a task to"
-    },{  "text": ["~help"],
+    router = [{  "text": ["~help"],
       "callback":GoTo.help,
       "type": "text"
-    },{
-      "text": ["~catfacts", "~cat facts"],
-      "callback":catFacts.catFacts,
-      "type": "text",
-      "help": "`~catfacts`             - Returns a random catfact"
     },{
       "text": ["~quote"],
       "callback":quote,
@@ -378,11 +303,6 @@ if __name__ == "__main__":
       "type": "text",
       "help": "`~addoption,(pollName),(newOption)`\n                        - Creates a new option for a poll"
     },{
-      "text": ["ship it",":shipit:", "shipit"],
-      "callback":images.shipIt,
-      "type": "text",
-      "help": "`ship it`               - Returns ship it squirrel image"
-    },{
       "text": ["~deleteall"],
       "callback":deleteAll,
       "type": "text",
@@ -393,27 +313,6 @@ if __name__ == "__main__":
       "type": "text",
       "help": "`~delete`               - Deletes the last message sent by bot in the specified channel."
     },{
-      "text": ["~nye"],
-      "callback":images.nye,
-      "type": "text",
-      "help": "`~nye`                  - Returns a bill nye gif"
-    },{
-      "text": ["~meme"],
-      "callback":images.getMeme,
-      "type": "text",
-      "help": "`~meme,(keyword)`       - Gets a meme with given keyword.  Returns nope.jpg if no meme found"
-    },{
-      "text": ["~gif"],
-      "callback":images.getGiphy,
-      "type": "text",
-      "help": "`~gif,(keyword)`        - Returns a gif with the given keyword"
-    },{
-      "text": ["~insanity"],
-      "callback":images.getMeme,
-      "type": "text",
-      "help": "`~insanity`             - Returns an insanity wolf meme"
-    },
-    {
       "text": ["~dm"],
       "callback":GoTo.sendDM,
       "type": "text",

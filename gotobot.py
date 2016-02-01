@@ -503,20 +503,14 @@ if __name__ == "__main__":
       "callback": randominterns,
       "type": "text",
       "help": ""
-    },
+    }
     # {
-    #   "text": ["Sorry, but you aren"t authorized to use this command.", "luna"],
-    #   "callback": luna,
+    #   "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", 
+    #         ":heart_eyes:",":heartbeat:",":heartpulse:",":hearts:"],
+    #   "callback": playGong,
     #   "type": "text",
     #   "help": ""
     # }
-    {
-      "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", 
-            ":heart_eyes:",":heartbeat:",":heartpulse:",":hearts:"],
-      "callback": playGong,
-      "type": "text",
-      "help": ""
-    }
     ]
     g = GoTo()
     g.start()

@@ -1,0 +1,3 @@
+# Quote files, etc
+*.txt
+__pycache__

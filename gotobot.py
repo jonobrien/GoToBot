@@ -1,5 +1,4 @@
 import time
-import datetime
 import string
 import random
 import urllib.request
@@ -99,7 +98,6 @@ class GoTo:
             for im in ims:
                 self.groupDict[im['id']] = im
             #print(self.groupDict)
-            print(datetime.datetime.now())
             if self.sc.rtm_connect(): # connected to slack real-time messaging api
                 print("connected")
                 while True:
@@ -269,9 +267,9 @@ def colorCode(bot, msg):
 def randomIntern(bot, msg):
     ranIntern = random.choice(bot.interns)
     if (ranIntern != "Alex"):
-        bot.sendMessage(msg["channel"], ranIntern)
+        bot.sendMessage(msg["channel"], "Yura")
     else:
-        bot.sendMessage(msg["channel"], "nope")
+        bot.sendMessage(msg["channel"], "Yura")
 
 
 def quote(bot, msg):

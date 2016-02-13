@@ -29,7 +29,7 @@ class GoTo:
         #global sc
         self.sc             = SlackClient(self.token)
         self.id             = json.loads(self.sc.api_call("auth.test", token=self.token).decode("utf-8"))["user_id"]
-        self.distrChan      = "G0EFAE1EE"
+        #self.distrChan      = "G0EFAE1EE"
         self.quoteChan      = "G0CCGHGKS"
         self.interns        = ["Alex","Yura", "Steven G", "Avik", "Tommy","Jon"] # all the interns separately
         self.people         = self.interns + ["Omar", "David", "Alan", "Alison", 
@@ -107,7 +107,9 @@ class GoTo:
                         # debug messages
                         ##if ("subtype" not in msg):
                         ##    print(msg)
-                        images.distractionChan(self)
+                        
+                        #images.distractionChan(self)
+                        
                         catFacts.subbedToCatFacts(self)
 
                         #### kick a user when they join a channel #####################################

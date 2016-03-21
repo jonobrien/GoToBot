@@ -23,8 +23,6 @@ Using a mapping dictionary with callbacks to function calls:
 2. make a file in the same directory as the bot file called `token.txt` and put your slack api key inside
 3. run with `python3 baseBot.py`
 
-
-
 # Docs and API Wrappers
 - [python-slackclient](https://github.com/slackhq/python-slackclient)
 - [Slack API](https://api.slack.com/)

@@ -133,6 +133,9 @@ class GoTo:
                         #        # print("[I] sent: "+message)
                         ###############################################################################
 
+                        ## check for edited messages with subtype of 'message_changed'
+
+                        # catch errors from API calls, etc.
                         if("type" in msg and msg["type"] == "error"):
                             print("\n[!!] error: \n" + msg)
                             # user_is_bot errors because bot cannot use that api function
@@ -399,6 +402,8 @@ def luna(bot,msg):
 
 if __name__ == "__main__":
     # TODO -- move out of this file
+
+    # dispatch table
     router = [{
       "text": ["~colorname", "~color name"],
       "callback":colorCode,

@@ -273,6 +273,8 @@ def deleteAll(bot, msg):
 
 if __name__ == "__main__":
     # TODO -- move out of this file
+
+    # dispatch table
     router = [{  "text": ["~help"],
       "callback":GoTo.help,
       "type": "text"

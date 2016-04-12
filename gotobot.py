@@ -14,6 +14,7 @@ import poll
 import images
 import catFacts
 import re
+import partyparrot.partyparrot as pp
 #import git
 class GoTo:
 
@@ -378,6 +379,9 @@ def randominterns(bot,msg):
 
 def luna(bot,msg):
     bot.sendMessage(msg["channel"], "luna shutdown")
+    
+def partyParrotMsg(bot,msg):
+    bot.sendMessage(msg["channel"], pp.convert_str_to_emoji(msg["text"]))
 
 
 # def playGong(bot, msg):
@@ -505,6 +509,12 @@ if __name__ == "__main__":
       "callback": randominterns,
       "type": "text",
       "help": ""
+    },
+    {
+      "text":["~party", ~"parrot", "~partyparrot"],
+      "callback": partyParrotMsg,
+      "type": "text",
+      "help": "Converts text to party parrot"
     }
     # {
     #   "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", 

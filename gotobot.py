@@ -14,6 +14,8 @@ import poll
 import images
 import catFacts
 import re
+import partyparrot.partyparrot as pp
+import partyparrot.alphabet as al
 #import git
 class GoTo:
 
@@ -28,7 +30,7 @@ class GoTo:
                  self.token = tRead.read()
         #global sc
         self.sc             = SlackClient(self.token)
-        self.id             = json.loads(self.sc.api_call("auth.test", token=self.token).decode("utf-8"))["user_id"]
+        self.id             = self.sc.api_call("auth.test", token=self.token)["user_id"]
         #self.distrChan      = "G0EFAE1EE"
         self.quoteChan      = "G0CCGHGKS"
         self.interns        = ["Alex","Yura", "Steven G", "Avik", "Tommy","Jon"] # all the interns separately
@@ -84,9 +86,9 @@ class GoTo:
             print("startBot() id: " + self.id)
             # need groups.list api call for the dict of private group info dict by id key
             # make it once at startup, save it for later
-            users = json.loads(self.sc.api_call("users.list", token=self.token).decode("utf-8"))["members"]
-            groups = json.loads(self.sc.api_call("groups.list", token=self.token).decode("utf-8"))["groups"]
-            ims = json.loads(self.sc.api_call("im.list", token=self.token).decode("utf-8"))["ims"]
+            users = (self.sc.api_call("users.list", token=self.token))["members"]
+            groups = (self.sc.api_call("groups.list", token=self.token))["groups"]
+            ims = (self.sc.api_call("im.list", token=self.token))["ims"]
             for user in users:
                 self.userDict[user["id"]] = user["name"]
                 self.idDict[user["name"]] = user["id"]
@@ -163,6 +165,7 @@ class GoTo:
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
             self.sc = SlackClient(self.token)
+            time.sleep(5)
             self.start()
         except Exception:
             print("[!!] uncaught error")
@@ -214,7 +217,7 @@ class GoTo:
             try:
                 recipient = self.idDict[userName]
                 imOpen = self.sc.api_call("im.open", token=self.token, user=recipient)
-                imJson = json.loads(imOpen.decode("utf-8"))
+                imJson = imOpen
                 dmChannel = imJson["channel"]["id"]
                 chatPost = self.sc.api_call("chat.postMessage",token=self.token, 
                                 channel=dmChannel, text=message, as_user="true")
@@ -329,7 +332,7 @@ def quote(bot, msg):
 def delete(bot, msg):
     print("\ndeleting last message in specified channel: " + str(msg["channel"]))
     msgResponse = bot.sc.api_call("groups.history", token=bot.token, channel=msg["channel"])
-    msgJson = json.loads(msgResponse.decode("utf-8"))
+    msgJson =msgResponse
     if("messages" in msgJson):
         for message in msgJson["messages"]:
             # can only delete messages owned by sender
@@ -350,11 +353,11 @@ def deleteAll(bot, msg):
         if(chan.startswith("D")):
             print("deleting ims for: " + chan + " -> " +  str(bot.userDict[bot.groupDict[chan]['user']]))
             msgResponse = bot.sc.api_call("im.history", token=bot.token, channel=bot.groupDict[chan]["id"])
-            msgJson = json.loads(msgResponse.decode("utf-8"))
+            msgJson = msgResponse
         elif (chan.startswith("G")):
             print("deleting group messages in: " + chan + " -> " +  str(bot.groupDict[chan]['name']))
             msgResponse = bot.sc.api_call("groups.history", token=bot.token, channel=bot.groupDict[chan]["id"])
-            msgJson = json.loads(msgResponse.decode("utf-8"))
+            msgJson = msgResponse
         for message in msgJson["messages"]:
             # can only delete messages owned by sender
             if ("user" in message and message["user"] == bot.id and ("subtype" not in message)):
@@ -378,6 +381,14 @@ def randominterns(bot,msg):
 
 def luna(bot,msg):
     bot.sendMessage(msg["channel"], "luna shutdown")
+    
+def partyParrotMsg(bot,msg):
+    txt = msg['text'].lower()
+    txt = txt[12: len(txt)].strip()
+    txt = ''.join(ch for ch in txt if ch in al.ALPHABET)
+    print(txt)
+    print(pp.convert_str_to_emoji(txt))
+    bot.sendMessage(msg["channel"], pp.convert_str_to_emoji(txt, space="           "))
 
 
 # def playGong(bot, msg):
@@ -505,6 +516,12 @@ if __name__ == "__main__":
       "callback": randominterns,
       "type": "text",
       "help": ""
+    },
+    {
+      "text":["~partyparrot"],
+      "callback": partyParrotMsg,
+      "type": "text",
+      "help": "`~partyparrot` Converts text to party parrot"
     }
     # {
     #   "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", 
@@ -516,3 +533,4 @@ if __name__ == "__main__":
     ]
     g = GoTo()
     g.start()
+>>>>>>> 3bf749146064ffe3c3f17029e3cda16afa0f9092

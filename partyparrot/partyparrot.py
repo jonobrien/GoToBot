@@ -3,7 +3,7 @@ import requests
 import argparse
 import itertools
 import os
-from alphabet import ALPHABET
+from partyparrot.alphabet import ALPHABET
 
 PARTY_PARROTS = [
     ':partyparrot:',

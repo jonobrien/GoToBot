@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 # GoToBot
 A Slack bot written in Python 3.
 Requires Python 3.X

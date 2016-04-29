@@ -30,7 +30,10 @@ class GoTo:
                  self.token = tRead.read()
         #global sc
         self.sc             = SlackClient(self.token)
-        self.id             = self.sc.api_call("auth.test", token=self.token)["user_id"]
+        authTestResult = self.sc.api_call("auth.test", token=self.token)
+        if "error" in authTestResult:
+            raise ValueError("Invalid Token")
+        self.id             = authTestResult["user_id"]
         #self.distrChan      = "G0EFAE1EE"
         self.quoteChan      = "G0CCGHGKS"
         self.interns        = ["Alex","Yura", "Steven G", "Avik", "Tommy","Jon"] # all the interns separately

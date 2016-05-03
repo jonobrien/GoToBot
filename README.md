@@ -18,7 +18,7 @@ Using a mapping dictionary with callbacks to function calls:
 3. click `bots` and choose a username, click `add bot integration`
 4. make a file called `token.txt` in the same directory as the bot file and put the bot slack api key inside
 5. make a newline delimited text file called 'EN_dict.txt' and put it into the root dir, such as one from: [here](https://github.com/dwyl/english-words)
-4. run with `python3 gotobot.py`
+6. run with `python3 gotobot.py`
 
 # Setup for baseBot.py
 1. clone the repo

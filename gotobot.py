@@ -524,7 +524,7 @@ if __name__ == "__main__":
       "text":["~partyparrot"],
       "callback": partyParrotMsg,
       "type": "text",
-      "help": "`~partyparrot` Converts text to party parrot"
+      "help": "`~partyparrot (string)` - Converts text to party parrot"
     }
     # {
     #   "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", 

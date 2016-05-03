@@ -182,7 +182,7 @@ class GoTo:
     def inWhitelist(self,msg):
         if (msg["text"].lower() == "~addgrouptowhitelist" and msg["channel"] not in self.whitelist):
             self.whitelist.append(msg["channel"])
-            print("whitelist added: " + msg["channel"])
+            self.sendMessage(msg["channel"], "channel whitelisted")
             with open("whitelist.txt", "w") as self.whiteWrite:
                 self.whiteWrite.write(" ".join(self.whitelist))
             return True

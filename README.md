@@ -14,14 +14,18 @@ Using a mapping dictionary with callbacks to function calls:
 
 # Setup for gotobot.py
 1. clone the repo
-2. make a file called token.txt and put your slack api key inside
-3. make a newline delimited text file called 'EN_dict.txt' and put it into the root dir, such as one from: [here](https://github.com/dwyl/english-words)
-4. run with `python3 gotobot.py`
+2. login to slack and go to `https://<TEAMNAME>.slack.com/apps/build/custom-integration`
+3. click `bots` and choose a username, click `add bot integration`
+4. make a file called `token.txt` in the same directory as the bot file and put the bot slack api key inside
+5. make a newline delimited text file called 'EN_dict.txt' and put it into the root dir, such as one from: [here](https://github.com/dwyl/english-words)
+6. run with `python3 gotobot.py`
 
 # Setup for baseBot.py
 1. clone the repo
-2. make a file in the same directory as the bot file called `token.txt` and put your slack api key inside
-3. run with `python3 baseBot.py`
+2. login to slack and go to `https://<TEAMNAME>.slack.com/apps/build/custom-integration`
+3. click `bots` and choose a username, click `add bot integration`
+4. make a file called `token.txt` in the same directory as the bot file and put the bot slack api key inside
+5. run with `python3 baseBot.py`
 
 # Docs and API Wrappers
 - [python-slackclient](https://github.com/slackhq/python-slackclient)

@@ -36,7 +36,7 @@ class GoTo:
         self.id             = authTestResult["user_id"]
         #self.distrChan      = "G0EFAE1EE"
         self.quoteChan      = "G0CCGHGKS"
-        self.interns        = ["Steven G", "Micheal", "Tommy"] # all the interns separately
+        self.interns        = ["Steven G", "Micheal", "Tommy", "Yura"] # all the interns separately
         self.people         = self.interns + ["Zach", "David", "Alan", "Alison", 
                                 "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"] # everyone in the company
         self.bots           = ["U0CK96B71","U0CK96B71","U0ARYU2CT"] # list of bots in use
@@ -267,6 +267,8 @@ def colorCode(bot, msg):
 
 def randomIntern(bot, msg):
     ranIntern = random.choice(bot.interns)
+    if ranIntern == "Steven G":
+        ranIntern = ":tubieg: :steveng: :partyg: :zoomieg:"
     bot.sendMessage(msg["channel"], ranIntern)
 
 

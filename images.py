@@ -13,16 +13,13 @@ def getGiphy(bot, msg):
     urlStart = "http://api.giphy.com/v1/gifs/search?q="
     urlEnd = "&api_key=dc6zaTOxFJmzC&limit="
     imageLimit = "1"
-    keywords = ",".join(msg["text"].split(",")[1:])
-    if("jon" in keywords.lower()):
-        keywords = "sloth"
-    print(keywords)
-    data = urllib.request.urlopen(urlStart + keywords +urlEnd + imageLimit).read().decode("utf-8")#.read())
+    qWord = ",".join(msg["text"].split(",")[1:]).replace(" ", "")
+    data = urllib.request.urlopen(urlStart + qWord +urlEnd + imageLimit).read().decode("utf-8")#.read())
     jsonData = json.loads(data)
     try:
         gif = jsonData["data"][0]["images"]["original"]["url"]
     except IndexError:
-        gif = "gif not found"
+        gif = "no gif for: " + qWord
     bot.sendMessage(msg["channel"], gif)
 
 

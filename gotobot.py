@@ -44,6 +44,7 @@ class GoTo:
         self.userDict       = {}   # {"ID":"@username","ID2":"@username2"}
         self.idDict         = {}   # {"@username":"ID","@user2":"ID2"}
         self.groupDict      = {}   # {"ID":"channel info...", ... }
+        self.chanDict       = {}   # {"ID":"channel info...", ... }
         self.polls          = []   # list of polls
         self.messageCount   = 0    # for distractionChannel()
         self.whiteWrite     = open # fd for whitelist
@@ -92,6 +93,8 @@ class GoTo:
             users = (self.sc.api_call("users.list", token=self.token))["members"]
             groups = (self.sc.api_call("groups.list", token=self.token))["groups"]
             ims = (self.sc.api_call("im.list", token=self.token))["ims"]
+            channels = (self.sc.api_call("channels.list", token=self.token))["channels"]
+            #print(channels)
             for user in users:
                 self.userDict[user["id"]] = user["name"]
                 self.idDict[user["name"]] = user["id"]
@@ -102,6 +105,10 @@ class GoTo:
                 self.groupDict[group['id']] = group
             for im in ims:
                 self.groupDict[im['id']] = im
+            for chan in channels:
+                print(chan)
+                self.chanDict[group['id']] = chan
+            print(str(self.chanDict))
             #print(self.groupDict)
             if self.sc.rtm_connect(): # connected to slack real-time messaging api
                 print("connected")
@@ -111,7 +118,7 @@ class GoTo:
                     for msg in msgs:
                         # debug messages
                         ##if ("subtype" not in msg):
-                        ##    print(msg)
+                        print(msg)
                         
                         #images.distractionChan(self)
                         
@@ -266,7 +273,7 @@ class GoTo:
     # delete every message sent, from last 100, in private groups and ims
     # TODO -- needs to have "has_more" check for > 100
     def deleteAll(self, msg):
-        print("\ndeleting all messages in private groups and ims")
+        print("\ndeleting all messages in private groups, ims, public channels")
         for chan in self.groupDict:
             if(chan.startswith("D")):
                 print("deleting ims for: " + chan + " -> " +  str(self.userDict[self.groupDict[chan]['user']]))
@@ -281,6 +288,13 @@ class GoTo:
                 if ("user" in message and message["user"] == self.id and ("subtype" not in message)):
                     self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=self.groupDict[chan]["id"])
                     print("deleted: " + message["ts"])
+        for chan in self.chanDict: # TODO -- refactor into single dict of all accessible areas (IM/GROUPS/CHANNELS)
+            print("deleting messages in channel: " + chan + " -> " +  str(self.chanDict[chan]['name']))
+            msgResponse = self.sc.api_call("channels.history", token=self.token, channel=self.chanDict[chan]["id"])
+            msgJson = msgResponse
+            if ("user" in message and message["user"] == self.id and ("subtype" not in message)):
+                self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=self.chanDict[chan]["id"])
+                print("deleted: " + message["ts"])
         print("done deleting\n")
 
 

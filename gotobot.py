@@ -245,6 +245,45 @@ class GoTo:
             s = s.substring(0, left)
 
 
+    # delete the last message posted by the bot in the channel requested
+    # tried doing it based off the message json but `key errors` happened
+    def delete(self, msg):
+        print("\ndeleting last message in specified channel: " + str(msg["channel"]))
+        msgResponse = self.sc.api_call("groups.history", token=self.token, channel=msg["channel"])
+        msgJson =msgResponse
+        if("messages" in msgJson):
+            for message in msgJson["messages"]:
+                # can only delete messages owned by sender
+                if ("user" in message and message["user"] == self.id and ("subtype" not in message)):
+                    self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=msg["channel"])
+                    print("deleted: " + message["ts"])
+                    break
+        else:
+            self.sendMessage(msg['channel'], "no bot messages in channel")
+        print("done deleting\n")
+
+
+    # delete every message sent, from last 100, in private groups and ims
+    # TODO -- needs to have "has_more" check for > 100
+    def deleteAll(self, msg):
+        print("\ndeleting all messages in private groups and ims")
+        for chan in self.groupDict:
+            if(chan.startswith("D")):
+                print("deleting ims for: " + chan + " -> " +  str(self.userDict[self.groupDict[chan]['user']]))
+                msgResponse = self.sc.api_call("im.history", token=self.token, channel=self.groupDict[chan]["id"])
+                msgJson = msgResponse
+            elif (chan.startswith("G")):
+                print("deleting group messages in: " + chan + " -> " +  str(self.groupDict[chan]['name']))
+                msgResponse = self.sc.api_call("groups.history", token=self.token, channel=self.groupDict[chan]["id"])
+                msgJson = msgResponse
+            for message in msgJson["messages"]:
+                # can only delete messages owned by sender
+                if ("user" in message and message["user"] == self.id and ("subtype" not in message)):
+                    self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=self.groupDict[chan]["id"])
+                    print("deleted: " + message["ts"])
+        print("done deleting\n")
+
+
 def colorCode(bot, msg):
     print("color")
     name = msg["text"][1 + msg["text"].find(" "):]
@@ -327,45 +366,6 @@ def quote(bot, msg):
     except Exception:
         print("[!!!] error in quote")
         bot.sendError()
-
-
-# delete the last message posted by the bot in the channel requested
-# tried doing it based off the message json but `key errors` happened
-def delete(bot, msg):
-    print("\ndeleting last message in specified channel: " + str(msg["channel"]))
-    msgResponse = bot.sc.api_call("groups.history", token=bot.token, channel=msg["channel"])
-    msgJson =msgResponse
-    if("messages" in msgJson):
-        for message in msgJson["messages"]:
-            # can only delete messages owned by sender
-            if ("user" in message and message["user"] == bot.id and ("subtype" not in message)):
-                bot.sc.api_call("chat.delete", token=bot.token, ts=message["ts"], channel=msg["channel"])
-                print("deleted: " + message["ts"])
-                break
-    else:
-        bot.sendMessage(msg['channel'], "no bot messages in channel")
-    print("done deleting\n")
-
-
-# delete every message sent, from last 100, in private groups and ims
-# TODO -- needs to have "has_more" check for > 100
-def deleteAll(bot, msg):
-    print("\ndeleting all messages in private groups and ims")
-    for chan in bot.groupDict:
-        if(chan.startswith("D")):
-            print("deleting ims for: " + chan + " -> " +  str(bot.userDict[bot.groupDict[chan]['user']]))
-            msgResponse = bot.sc.api_call("im.history", token=bot.token, channel=bot.groupDict[chan]["id"])
-            msgJson = msgResponse
-        elif (chan.startswith("G")):
-            print("deleting group messages in: " + chan + " -> " +  str(bot.groupDict[chan]['name']))
-            msgResponse = bot.sc.api_call("groups.history", token=bot.token, channel=bot.groupDict[chan]["id"])
-            msgJson = msgResponse
-        for message in msgJson["messages"]:
-            # can only delete messages owned by sender
-            if ("user" in message and message["user"] == bot.id and ("subtype" not in message)):
-                bot.sc.api_call("chat.delete", token=bot.token, ts=message["ts"], channel=bot.groupDict[chan]["id"])
-                print("deleted: " + message["ts"])
-    print("done deleting\n")
 
 
 def test(bot, msg):
@@ -463,13 +463,13 @@ if __name__ == "__main__":
       "help": "`ship it`               - Returns ship it squirrel image"
     },{
       "text": ["~deleteall"],
-      "callback":deleteAll,
+      "callback":GoTo.deleteAll,
       "type": "text",
       "help": "`~deleteall`            - Deletes all private group/dm messages sent by the bot."
     }
     # ,{
     #   "text": ["~delete"],
-    #   "callback":delete,
+    #   "callback":GoTo.delete,
     #   "type": "text",
     #   "help": "`~delete`               - Deletes the last message sent by bot in the specified channel."
     # }

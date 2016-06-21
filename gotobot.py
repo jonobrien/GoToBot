@@ -94,31 +94,29 @@ class GoTo:
             groups = (self.sc.api_call("groups.list", token=self.token))["groups"]
             ims = (self.sc.api_call("im.list", token=self.token))["ims"]
             channels = (self.sc.api_call("channels.list", token=self.token))["channels"]
-            #print(channels)
             for user in users:
                 self.userDict[user["id"]] = user["name"]
                 self.idDict[user["name"]] = user["id"]
             # setup the groupDict used for private group/im info and id reference
             # contains all meta data about those channels and can be used later
             # get it once, so every delete call doesn't repeat them
+            # TODO -- seems like joining a channel after starting the bots
+            #   allows for deletion even though bot joined after the dictionary was created
             for group in groups:
                 self.groupDict[group['id']] = group
             for im in ims:
                 self.groupDict[im['id']] = im
             for chan in channels:
-                print(chan)
-                self.chanDict[group['id']] = chan
-            print(str(self.chanDict))
-            #print(self.groupDict)
+                self.chanDict[chan['id']] = chan
             if self.sc.rtm_connect(): # connected to slack real-time messaging api
                 print("connected")
-                while True:
 
+                while True:
                     msgs = self.sc.rtm_read()
                     for msg in msgs:
                         # debug messages
                         ##if ("subtype" not in msg):
-                        print(msg)
+                        ######print(msg)
                         
                         #images.distractionChan(self)
                         
@@ -292,9 +290,11 @@ class GoTo:
             print("deleting messages in channel: " + chan + " -> " +  str(self.chanDict[chan]['name']))
             msgResponse = self.sc.api_call("channels.history", token=self.token, channel=self.chanDict[chan]["id"])
             msgJson = msgResponse
-            if ("user" in message and message["user"] == self.id and ("subtype" not in message)):
-                self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=self.chanDict[chan]["id"])
-                print("deleted: " + message["ts"])
+            for message in msgJson["messages"]:
+                # seems slack added a bot_id field, different from what they say userid is...
+                if ("user" and "bot_id" in message and message["user"] == self.id and ("subtype" not in message)):
+                    self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=self.chanDict[chan]["id"])
+                    print("deleted: " + message["ts"])
         print("done deleting\n")
 
 

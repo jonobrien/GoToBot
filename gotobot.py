@@ -36,14 +36,13 @@ class GoTo:
         self.id             = authTestResult["user_id"]
         #self.distrChan      = "G0EFAE1EE"
         self.quoteChan      = "G0CCGHGKS"
-        self.interns        = ["Steven G", "Micheal", "Tommy", "Yura"] # all the interns separately
+        self.interns        = ["Steven G", "Micheal", "Tommy", "Yura"]
         self.people         = self.interns + ["Zach", "David", "Alan", "Alison", 
-                                "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek", "Sean"] # everyone in the company
+                                "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek"]
         self.bots           = ["U0CK96B71","U0CK96B71","U0ARYU2CT"] # list of bots in use
         self.last_channel   = ""   # last channel message received from
         self.userDict       = {}   # {"ID":"@username","ID2":"@username2"}
         self.idDict         = {}   # {"@username":"ID","@user2":"ID2"}
-        self.groupDict      = {}   # {"ID":"channel info...", ... }
         self.chanDict       = {}   # {"ID":"channel info...", ... }
         self.polls          = []   # list of polls
         self.messageCount   = 0    # for distractionChannel()
@@ -97,15 +96,15 @@ class GoTo:
             for user in users:
                 self.userDict[user["id"]] = user["name"]
                 self.idDict[user["name"]] = user["id"]
-            # setup the groupDict used for private group/im info and id reference
+            # setup the chanDict used for private group/im and public channel info and id reference
             # contains all meta data about those channels and can be used later
             # get it once, so every delete call doesn't repeat them
             # TODO -- seems like joining a channel after starting the bots
             #   allows for deletion even though bot joined after the dictionary was created
             for group in groups:
-                self.groupDict[group['id']] = group
+                self.chanDict[group['id']] = group
             for im in ims:
-                self.groupDict[im['id']] = im
+                self.chanDict[im['id']] = im
             for chan in channels:
                 self.chanDict[chan['id']] = chan
             if self.sc.rtm_connect(): # connected to slack real-time messaging api
@@ -272,21 +271,28 @@ class GoTo:
     # TODO -- needs to have "has_more" check for > 100
     def deleteAll(self, msg):
         print("\ndeleting all messages in private groups, ims, public channels")
-        for chan in self.groupDict:
+        for chan in self.chanDict:
             if(chan.startswith("D")):
-                print("deleting ims for: " + chan + " -> " +  str(self.userDict[self.groupDict[chan]['user']]))
-                msgResponse = self.sc.api_call("im.history", token=self.token, channel=self.groupDict[chan]["id"])
+                print("deleting ims for: " + chan + " -> " +  str(self.userDict[self.chanDict[chan]['user']]))
+                msgResponse = self.sc.api_call("im.history", token=self.token, channel=self.chanDict[chan]["id"])
                 msgJson = msgResponse
             elif (chan.startswith("G")):
-                print("deleting group messages in: " + chan + " -> " +  str(self.groupDict[chan]['name']))
-                msgResponse = self.sc.api_call("groups.history", token=self.token, channel=self.groupDict[chan]["id"])
+                print("deleting group messages in: " + chan + " -> " +  str(self.chanDict[chan]['name']))
+                msgResponse = self.sc.api_call("groups.history", token=self.token, channel=self.chanDict[chan]["id"])
                 msgJson = msgResponse
+                
+            elif (chan.startswith("C")):
+                print("deleting messages in channel: " + chan + " -> " +  str(self.chanDict[chan]['name']))
+                msgResponse = self.sc.api_call("channels.history", token=self.token, channel=self.chanDict[chan]["id"])
+                msgJson = msgResponse
+                
+                
             for message in msgJson["messages"]:
                 # can only delete messages owned by sender
                 if ("user" in message and message["user"] == self.id and ("subtype" not in message)):
-                    self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=self.groupDict[chan]["id"])
+                    self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=self.chanDict[chan]["id"])
                     print("deleted: " + message["ts"])
-        for chan in self.chanDict: # TODO -- refactor into single dict of all accessible areas (IM/GROUPS/CHANNELS)
+            '''for chan in self.chanDict: # TODO -- refactor into single dict of all accessible areas (IM/GROUPS/CHANNELS)
             print("deleting messages in channel: " + chan + " -> " +  str(self.chanDict[chan]['name']))
             msgResponse = self.sc.api_call("channels.history", token=self.token, channel=self.chanDict[chan]["id"])
             msgJson = msgResponse
@@ -295,6 +301,7 @@ class GoTo:
                 if ("user" and "bot_id" in message and message["user"] == self.id and ("subtype" not in message)):
                     self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=self.chanDict[chan]["id"])
                     print("deleted: " + message["ts"])
+            '''
         print("done deleting\n")
 
 

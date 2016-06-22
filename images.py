@@ -13,7 +13,7 @@ def getGiphy(bot, msg):
     urlStart = "http://api.giphy.com/v1/gifs/search?q="
     urlEnd = "&api_key=dc6zaTOxFJmzC&limit="
     imageLimit = "1"
-    qWord = ",".join(msg["text"].split(",")[1:]).replace(" ", "")
+    qWord = ",".join(msg["text"].split(",")[1:]).strip().replace(" ", "+")
     data = urllib.request.urlopen(urlStart + qWord +urlEnd + imageLimit).read().decode("utf-8")#.read())
     jsonData = json.loads(data)
     try:

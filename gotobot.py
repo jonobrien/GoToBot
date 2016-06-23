@@ -37,7 +37,7 @@ class GoTo:
         #self.distrChan      = "G0EFAE1EE"
         self.quoteChan      = "G0CCGHGKS"
         self.interns        = ["Steven G", "Micheal", "Tommy", "Yura"]
-        self.people         = self.interns + ["Zach", "David", "Alan", "Alison", 
+        self.people         = self.interns + ["Zach", "David", "Alan", "Alison",
                                 "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek"]
         self.bots           = ["U0CK96B71","U0CK96B71","U0ARYU2CT"] # list of bots in use
         self.last_channel   = ""   # last channel message received from
@@ -116,9 +116,9 @@ class GoTo:
                         # debug messages
                         ##if ("subtype" not in msg):
                         ######print(msg)
-                        
+
                         #images.distractionChan(self)
-                        
+
                         catFacts.subbedToCatFacts(self)
 
                         #### kick a user when they join a channel #####################################
@@ -132,7 +132,7 @@ class GoTo:
                         #
                         ##### send message every time a user becomes active ###########################
                         #
-                        #elif("type" in msg and msg["type"] == "presence_change" and 
+                        #elif("type" in msg and msg["type"] == "presence_change" and
                         #                                msg["presence"] == "active" and msg["user"]):
                         #    # if(msg["user"] not in self.bots):
                         #        # not b0t, Luna, gotoo
@@ -148,7 +148,7 @@ class GoTo:
                             error = "message error - probably no quotes found"
                             self.sendMessage(self.last_channel, error) # error messages don"t have a channel
                             self.sendError()
-                        elif("type" in msg and msg["type"] == "message"and "text" in msg and 
+                        elif("type" in msg and msg["type"] == "message"and "text" in msg and
                                             all(c in self.legalChars for c in msg["text"].replace("'",""))):
                             #print(msg)
                             self.inWhitelist(msg)
@@ -195,7 +195,7 @@ class GoTo:
     def sendMessage(self,channel, message):
         try:
             #self.sc.rtm_send_message(channel, message)
-            self.sc.api_call("chat.postMessage", channel=channel, 
+            self.sc.api_call("chat.postMessage", channel=channel,
                         text=message, as_user=True, unfurl_media=True)
             self.last_channel = channel
         except Exception:
@@ -226,7 +226,7 @@ class GoTo:
                 imOpen = self.sc.api_call("im.open", token=self.token, user=recipient)
                 imJson = imOpen
                 dmChannel = imJson["channel"]["id"]
-                chatPost = self.sc.api_call("chat.postMessage",token=self.token, 
+                chatPost = self.sc.api_call("chat.postMessage",token=self.token,
                                 channel=dmChannel, text=message, as_user="true")
                 #whitelist the channel
                 self.inWhitelist(msg)
@@ -236,7 +236,7 @@ class GoTo:
 
     def addReaction(self, channel,timestamp,reaction):
         try:
-            self.sc.api_call("reactions.add", token=self.token, name=reaction, 
+            self.sc.api_call("reactions.add", token=self.token, name=reaction,
                             channel=channel, timestamp=timestamp)
         except Exception:
             self.sendError()
@@ -271,37 +271,56 @@ class GoTo:
     # TODO -- needs to have "has_more" check for > 100
     def deleteAll(self, msg):
         print("\ndeleting all messages in private groups, ims, public channels")
+        queryStr = ''
+        im = "im.history"
+        group = "groups.history"
+        chanStr = "channels.history"
+
         for chan in self.chanDict:
+            hasMore = {}
             if(chan.startswith("D")):
-                print("deleting ims for: " + chan + " -> " +  str(self.userDict[self.chanDict[chan]['user']]))
-                msgResponse = self.sc.api_call("im.history", token=self.token, channel=self.chanDict[chan]["id"])
-                msgJson = msgResponse
+                queryStr = im
+                print("            deleting ims for: " + chan + " -> " +  str(self.userDict[self.chanDict[chan]['user']]))
             elif (chan.startswith("G")):
-                print("deleting group messages in: " + chan + " -> " +  str(self.chanDict[chan]['name']))
-                msgResponse = self.sc.api_call("groups.history", token=self.token, channel=self.chanDict[chan]["id"])
-                msgJson = msgResponse
-                
+                queryStr = group
+                print("  deleting group messages in: " + chan + " -> " +  str(self.chanDict[chan]['name']))
             elif (chan.startswith("C")):
+                queryStr = chanStr
                 print("deleting messages in channel: " + chan + " -> " +  str(self.chanDict[chan]['name']))
-                msgResponse = self.sc.api_call("channels.history", token=self.token, channel=self.chanDict[chan]["id"])
-                msgJson = msgResponse
-                
-                
-            for message in msgJson["messages"]:
-                # can only delete messages owned by sender
-                if ("user" in message and message["user"] == self.id and ("subtype" not in message)):
-                    self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=self.chanDict[chan]["id"])
-                    print("deleted: " + message["ts"])
-            '''for chan in self.chanDict: # TODO -- refactor into single dict of all accessible areas (IM/GROUPS/CHANNELS)
-            print("deleting messages in channel: " + chan + " -> " +  str(self.chanDict[chan]['name']))
-            msgResponse = self.sc.api_call("channels.history", token=self.token, channel=self.chanDict[chan]["id"])
-            msgJson = msgResponse
-            for message in msgJson["messages"]:
-                # seems slack added a bot_id field, different from what they say userid is...
-                if ("user" and "bot_id" in message and message["user"] == self.id and ("subtype" not in message)):
-                    self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=self.chanDict[chan]["id"])
-                    print("deleted: " + message["ts"])
-            '''
+            msgJson = self.sc.api_call(queryStr, token=self.token, channel=self.chanDict[chan]["id"])
+            #print(msgJson)
+            if ("has_more" in msgJson and msgJson["has_more"] == True):
+                for message in msgJson["messages"]: # collect initial 100
+                    message["chann"] = chan
+                    hasMore[message["ts"]] = message  #'ts' is unique enough for each message in indiv. chan
+                more = msgJson
+                while(msgJson["has_more"] == True):
+                    msgJson = self.sc.api_call(queryStr, token=self.token,
+                                channel=chan, latest=more["messages"][-1]["ts"], inclusive=1) # need to page through history
+                    for message in msgJson["messages"]: # collect remaining history
+                        message["chann"] = chan
+                        hasMore[message["ts"]] = message  #'ts' is unique enough for each message in indiv. chan
+            if (hasMore): # if has more, this is all messages in that channel
+                time.sleep(1) # rate limit prevention
+                lim = 0
+                for message in hasMore.values():
+                    lim+=1
+                    if (lim % 20 == 0):
+                        time.sleep(3)
+                    # seems slack added a bot_id field, different from what they say userid is...
+                    if ("user" in message and message["user"] == self.id and ("subtype" not in message)):
+                        self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=chan)
+                        print("deleted: " + message["ts"])
+            elif (msgJson["messages"]): # <= 100 to delete, has messages
+                for message in msgJson["messages"]:
+                    if ("user" in message and message["user"] == self.id and ("subtype" not in message)):
+                        self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=chan)
+                        print("deleted: " + message["ts"])
+            else:
+                if(chan.startswith("D")):
+                    print("no messages to delete in: " + chan + " -> " +  str(self.userDict[self.chanDict[chan]['user']]))
+                else:
+                    print("no messages to delete in: " + chan + " -> " +  str(self.chanDict[chan]['name']))
         print("done deleting\n")
 
 
@@ -351,7 +370,7 @@ def quote(bot, msg):
         #  new quote
         if (cmd and person and text):
             if(person in bot.idDict):
-                fileName = person + "Quotes.txt"  
+                fileName = person + "Quotes.txt"
                 if(os.path.isfile(fileName)):
                     with open(fileName, "a+") as f:
                         f.write("," + text)
@@ -404,7 +423,7 @@ def randominterns(bot,msg):
 
 def luna(bot,msg):
     bot.sendMessage(msg["channel"], "luna shutdown")
-    
+
 def partyParrotMsg(bot,msg):
     txt = msg['text'].lower()
     txt = txt[12: len(txt)].strip()
@@ -443,7 +462,7 @@ if __name__ == "__main__":
       "callback":randomIntern,
       "type": "text",
       "help": "`~randomintern`         - select a random intern to give a task to"
-    },{  
+    },{
       "text": ["~help"],
       "callback":GoTo.help,
       "type": "text"
@@ -547,7 +566,7 @@ if __name__ == "__main__":
       "help": "`~partyparrot (string)` - Converts text to party parrot"
     }
     # {
-    #   "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack", 
+    #   "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack",
     #         ":heart_eyes:",":heartbeat:",":heartpulse:",":hearts:"],
     #   "callback": playGong,
     #   "type": "text",

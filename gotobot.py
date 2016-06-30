@@ -96,6 +96,7 @@ class GoTo:
             for user in users:
                 self.userDict[user["id"]] = user["name"]
                 self.idDict[user["name"]] = user["id"]
+
             # setup the chanDict used for private group/im and public channel info and id reference
             # contains all meta data about those channels and can be used later
             # get it once, so every delete call doesn't repeat them
@@ -221,15 +222,21 @@ class GoTo:
         print("\n" + str(msg) + "\n\n")
         cmd,userName,message = ([x for x in msg["text"].split(",") if x != ""] + [None]*3)[:3]
         if (userName and message):
+            recipient = ''
+            # slack converts the @name to the uid number when you mention someone via text
+            if (userName.startswith("@")):
+                recipient = self.userDict[userName] # @U1234 passed in
             try:
-                recipient = self.idDict[userName]
-                imOpen = self.sc.api_call("im.open", token=self.token, user=recipient)
-                imJson = imOpen
-                dmChannel = imJson["channel"]["id"]
+                recipient = self.idDict[userName] # jono passed in
+
+                if (recipient == self.id):
+                    self.sendMessage(msg["channel"], "bot cannot dm self\n")
+                imOpenJson = self.sc.api_call("im.open", token=self.token, user=recipient)
+                dmChannel = imOpenJson["channel"]["id"]
+                # don't whitelist everytime, also this doesn't work as text deosn't pass check, user case 1
+                self.inWhitelist(msg) # check returned json for already open channel, inform user case 2
                 chatPost = self.sc.api_call("chat.postMessage",token=self.token,
                                 channel=dmChannel, text=message, as_user="true")
-                #whitelist the channel
-                self.inWhitelist(msg)
             except Exception:
                 self.sendError()
 
@@ -363,45 +370,57 @@ def quote(bot, msg):
             return -1
         if(person is not None):
             # can handle all cases and forms of the '@uSerName' 'username' etc
-            person = person.lower().replace("@","")
-        if (channel != bot.quoteChan):
-            print("quote check")
-            return -1
+            person = person.upper().replace("@","").replace("<","").replace(">","").replace(" ","")
+        #if (channel != bot.quoteChan):
+        #    print("quote check")
+        #    return -1
         #  new quote
         if (cmd and person and text):
-            if(person in bot.idDict):
-                fileName = person + "Quotes.txt"
-                if(os.path.isfile(fileName)):
-                    with open(fileName, "a+") as f:
-                        f.write("," + text)
-                else:
-                    with open(fileName, "a+") as f:
-                        f.write(text)
-                bot.sendMessage(channel, "Quote added " + text)
+            name = person
+            if (name.startswith("U")): # user typed ~quote,@name
+                name = bot.userDict[name]
+            if (name.lower() in bot.idDict): # user typed ~quote,name as orig, expected
+                name = name.lower()
             else:
                 #print('[!!] cmd person text else\n')
-                bot.sendMessage(channel, "incorrect args for ~quote,person,text (actual input is -> " +cmd+"," + str(person) + ", " + str(text) + ")")
+                bot.sendMessage(channel, "incorrect args for ~quote,person,text (actual input is -> "
+                                            + cmd + "," + str(person) + ", " + str(text) + ")")
                 return -1
+            fileName = name.lower() + "Quotes.txt"
+            if (os.path.isfile(fileName)):
+                with open(fileName, "a+") as f:
+                    f.write("," + text)
+            else:
+                with open(fileName, "a+") as f:
+                    f.write(text)
+            bot.sendMessage(channel, "Quote added for: " + name + " " + text)
+
         # user requested quote from saved files
-        elif(cmd and person):
+        elif (cmd and person):
+            name = person.lower()
+            print(name)
             quotes = []
-            if(person in bot.idDict):
-                fileName = person + "Quotes.txt"
-                if(os.path.isfile(fileName)):
-                    with open(fileName, "r") as read:
-                        quotes = read.read().split(",")
-                else:
-                    bot.sendMessage(channel, "no quotes for " + person + " you should add some")
-                if(quotes):
-                    quote = random.choice(quotes)
-                    bot.sendMessage(channel, quote)
+            if (name.upper().startswith("U")): # user typed ~quote,@name
+                name = bot.userDict[person]
+            if (name.lower() in bot.idDict): # user typed ~quote,name as orig, expected
+                name = name.lower()
             else:
                 #print('[!!] cmd person else\n')
-                bot.sendMessage(channel, "incorrect args for ~quote,person (actual input is -> " +cmd+"," + str(person) + ")")
+                bot.sendMessage(channel, "incorrect args for ~quote,person (actual input is -> " + cmd + "," + str(person) + ")")
                 return -1
+            fileName = name.lower() + "Quotes.txt"
+            if (os.path.isfile(fileName)):
+                with open(fileName, "r") as read:
+                       quotes = read.read().split(",")
+            else:
+                bot.sendMessage(channel, "no quotes for " + name.lower() + " you should add some")
+            if (quotes):
+                quote = random.choice(quotes)
+                bot.sendMessage(channel, quote)
+
         else:
             #print('[!!] outer else\n')
-            bot.sendMessage(channel, "not enough args for ~quote,person,text or ~quote,person (actual input is -> " +cmd+"," + str(person) + ", " + str(text) + ")")
+            bot.sendMessage(channel, "not enough args for ~quote,person,text or ~quote,person (actual input is -> " +cmd+"," + str(person.lower()) + ", " + str(text) + ")")
             return -1
     except Exception:
         print("[!!!] error in quote")

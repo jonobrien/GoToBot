@@ -52,16 +52,12 @@ class GoTo:
         self.whitelist      = []   # list of channels bot can post in
         self.words          = ["pizza", "cat"]   # list of words in eng. dictionary
         self.legalChars     = string.printable.replace("`", "") # characters that can be manipulated/printed
-        # need to make these files initially, otherwise FNF Error
         with open("whitelist.txt", "a+") as self.whiteRead:
             self.whiteRead.seek(0)
             self.whitelist  = self.whiteRead.read().split(" ")
         with open("EN_dict.txt", "a+") as readLines:
             readLines.seek(0)
             self.words      = readLines.read().split("\n")
-        print(self.whitelist)
-        print(self.words)
-
         print("bot initialized, starting...")
         self.startBot()
 
@@ -79,6 +75,7 @@ class GoTo:
                 info += command["help"] if command["help"][-1] == "\n" else command["help"] + "\n"
         info +="```"
         self.sendMessage(msg["channel"], info)
+
 
 
     def connect(self):
@@ -123,6 +120,7 @@ class GoTo:
                         ##if ("subtype" not in msg):
                         ######print(msg)
 
+                        # this uses the 'EN_dict.txt' file
                         #images.distractionChan(self)
 
                         catFacts.subbedToCatFacts(self)
@@ -149,14 +147,13 @@ class GoTo:
                         ###############################################################################
 
                         if("type" in msg and msg["type"] == "error"):
-                            print("\n[!!] error: \n" + msg)
+                            print("\n\n[!!] error: \n" + msg + "\n\n")
                             # user_is_bot errors because bot cannot use that api function
                             error = "message error - probably no quotes found"
                             self.sendMessage(self.last_channel, error) # error messages don"t have a channel
                             self.sendError()
                         elif("type" in msg and msg["type"] == "message"and "text" in msg and
                                             all(c in self.legalChars for c in msg["text"].replace("'",""))):
-                            #print(msg)
                             self.inWhitelist(msg)
 
                             if(msg["channel"] in self.whitelist):
@@ -173,8 +170,9 @@ class GoTo:
                     time.sleep(1)
             else:
                 print("[!!] Connection Failed, invalid token?")
+
         except AttributeError:
-            print("[!!] error - probably in the send")
+            print("[!!] attribute error - probably in the send")
             traceback.print_exc(file=sys.stdout)
             print("[!!] restarting the bot")
             self.sc = SlackClient(self.token)
@@ -495,12 +493,13 @@ if __name__ == "__main__":
       "callback":catFacts.catFacts,
       "type": "text",
       "help": "`~catfacts`             - Returns a random catfact"
-    },{
-      "text": ["~quote"],
-      "callback":quote,
-      "type": "text",
-      "help": ""
-    },{
+    }#,{
+    #"text": ["~quote"],
+    #"callback":quote,
+    #"type": "text",
+    #"help": ""
+    #}
+    ,{
       "text": ["~startpoll","~poll","~createpoll","~start poll","~poll","~create poll"],
       "callback":poll.startPoll,
       "type": "text",

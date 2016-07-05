@@ -28,6 +28,7 @@ class GoTo:
         self.token = ""
         #with open("token.txt", "r") as tRead:
         #         self.token = tRead.read()
+        # read me from the environment...heroku
         self.token = os.environ.get("slack_token")
         #print(self.token)
         #global sc

@@ -28,6 +28,8 @@ class GoTo:
         self.token = ""
         with open("token.txt", "r") as tRead:
                  self.token = tRead.read()
+        #self.token = os.environ.get("slack_token")
+        print(self.token)
         #global sc
         self.sc             = SlackClient(self.token)
         authTestResult = self.sc.api_call("auth.test", token=self.token)
@@ -51,11 +53,14 @@ class GoTo:
         self.words          = ["pizza", "cat"]   # list of words in eng. dictionary
         self.legalChars     = string.printable.replace("`", "") # characters that can be manipulated/printed
         # need to make these files initially, otherwise FNF Error
-        with open("whitelist.txt", "r") as self.whiteRead:
+        with open("whitelist.txt", "a+") as self.whiteRead:
+            self.whiteRead.seek(0)
             self.whitelist  = self.whiteRead.read().split(" ")
-        with open("EN_dict.txt", "r") as readLines:
+        with open("EN_dict.txt", "a+") as readLines:
+            readLines.seek(0)
             self.words      = readLines.read().split("\n")
-
+        print(self.whitelist)
+        print(self.words)
 
         print("bot initialized, starting...")
         self.startBot()

@@ -1,6 +1,6 @@
 # GoToBot
 A Slack bot written in Python 3.
-Requires Python 3.X
+Requires Python 3.4
 
 # Key Features
 Using a mapping dictionary with callbacks to function calls:

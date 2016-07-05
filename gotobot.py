@@ -26,10 +26,10 @@ class GoTo:
     def start(self):
         print("initializing bot...")
         self.token = ""
-        with open("token.txt", "r") as tRead:
-                 self.token = tRead.read()
-        #self.token = os.environ.get("slack_token")
-        print(self.token)
+        #with open("token.txt", "r") as tRead:
+        #         self.token = tRead.read()
+        self.token = os.environ.get("slack_token")
+        #print(self.token)
         #global sc
         self.sc             = SlackClient(self.token)
         authTestResult = self.sc.api_call("auth.test", token=self.token)

@@ -39,7 +39,7 @@ class GoTo:
         self.id             = authTestResult["user_id"]
         #self.distrChan      = "G0EFAE1EE"
         self.quoteChan      = "G0CCGHGKS"
-        self.interns        = ["Steven G", "Micheal", "Tommy", "Yura"]
+        self.interns        = ["Micheal"]
         self.people         = self.interns + ["Zach", "David", "Alan", "Alison",
                                 "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek"]
         self.bots           = ["U0CK96B71","U0CK96B71","U0ARYU2CT"] # list of bots in use

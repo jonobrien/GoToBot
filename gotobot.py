@@ -455,6 +455,9 @@ def partyParrotMsg(bot,msg):
     print(pp.convert_str_to_emoji(txt))
     bot.sendMessage(msg["channel"], pp.convert_str_to_emoji(txt, space="           "))
 
+def send87(bot, msg):
+    bot.sendMessage(msg["channel"], "87")
+
 
 # def playGong(bot, msg):
 #     CHUNK = 1024
@@ -588,6 +591,12 @@ if __name__ == "__main__":
       "callback": partyParrotMsg,
       "type": "text",
       "help": "`~partyparrot (string)` - Converts text to party parrot"
+    },
+    {
+      "text":["~send87"],
+      "callback": send87,
+      "type": "text",
+      "help": "`~send87` - Test function that sends 87"
     }
     # {
     #   "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack",

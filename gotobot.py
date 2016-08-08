@@ -39,7 +39,7 @@ class GoTo:
         self.id             = authTestResult["user_id"]
         #self.distrChan      = "G0EFAE1EE"
         self.quoteChan      = "G0CCGHGKS"
-        self.interns        = ["Steven G", "Micheal", "Tommy", "Yura"]
+        self.interns        = ["Micheal"]
         self.people         = self.interns + ["Zach", "David", "Alan", "Alison",
                                 "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek"]
         self.bots           = ["U0CK96B71","U0CK96B71","U0ARYU2CT"] # list of bots in use
@@ -455,6 +455,9 @@ def partyParrotMsg(bot,msg):
     print(pp.convert_str_to_emoji(txt))
     bot.sendMessage(msg["channel"], pp.convert_str_to_emoji(txt, space="           "))
 
+def send87(bot, msg):
+    bot.sendMessage(msg["channel"], "87")
+
 
 # def playGong(bot, msg):
 #     CHUNK = 1024
@@ -588,6 +591,12 @@ if __name__ == "__main__":
       "callback": partyParrotMsg,
       "type": "text",
       "help": "`~partyparrot (string)` - Converts text to party parrot"
+    },
+    {
+      "text":["~send87"],
+      "callback": send87,
+      "type": "text",
+      "help": "`~send87` - Test function that sends 87"
     }
     # {
     #   "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack",

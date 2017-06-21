@@ -497,13 +497,12 @@ if __name__ == "__main__":
       "callback":catFacts.catFacts,
       "type": "text",
       "help": "`~catfacts`             - Returns a random catfact"
-    }#,{
-    #"text": ["~quote"],
-    #"callback":quote,
-    #"type": "text",
-    #"help": ""
-    #}
-    ,{
+    },{
+      "text": ["~quote"],
+      "callback":quote,
+      "type": "text",
+      "help": ""
+    },{
       "text": ["~startpoll","~poll","~createpoll","~start poll","~poll","~create poll"],
       "callback":poll.startPoll,
       "type": "text",

@@ -52,7 +52,7 @@ class GoTo:
         self.whiteWrite     = open # fd for whitelist
         self.whitelist      = []   # list of channels bot can post in
         self.words          = ["pizza", "cat"]   # list of words in eng. dictionary
-        self.legalChars     = string.printable.replace("`", "") # characters that can be manipulated/printed
+        self.legalChars     = string.printable.replace("`", "") # characters that can be printed
         with open("whitelist.txt", "a+") as self.whiteRead:
             self.whiteRead.seek(0)
             self.whitelist  = self.whiteRead.read().split(" ")
@@ -69,7 +69,7 @@ class GoTo:
         info += "hosted on Github:\n"
         info += "https://github.com/Omodi/GoToBot\n"
         info += "https://github.com/jonobrien/GoToBot\n"
-        info += "https://github.com/ThomasFoertmeyer/GoToBot\n\n"
+        info += "https://github.com/immaterialism/GoToBot\n\n"
         info += "Available Commands:\n"
         for command in router:
             if "help" in command and len(command["help"]) > 0:
@@ -79,11 +79,14 @@ class GoTo:
 
 
 
+
     def connect(self):
         print("connect")
 
+
     def main(self):
         pass
+
 
 
 
@@ -126,42 +129,45 @@ class GoTo:
 
                         catFacts.subbedToCatFacts(self)
 
-                        #### kick a user when they join a channel #####################################
+                        #### kick a user when they join a channel #################################
                         #      (need user api key, not bot key)
                         #
                         #
                         # if("subtype" in msg and msg["subtype"] == "group_join"):
                         #     print("remove")
-                        #     print(self.sc.api_call("groups.kick",channel=msg["channel"], user="U0CNP6WRK"))##bots can't kick, use your user api key not bot key to have bot kick users
+                        #     ## bots can't kick, use your user api key
+                        #     ## not bot key to have bot kick users
+                        #     print(self.sc.api_call("groups.kick",channel=msg["channel"], 
+                        #           user="U0CNP6WRK"))
                         #
                         #
-                        ##### send message every time a user becomes active ###########################
+                        ##### send message every time a user becomes active #######################
                         #
                         #elif("type" in msg and msg["type"] == "presence_change" and
-                        #                                msg["presence"] == "active" and msg["user"]):
+                        #                           msg["presence"] == "active" and msg["user"]):
                         #    # if(msg["user"] not in self.bots):
                         #        # not b0t, Luna, gotoo
                         #        # post to interns-education as "user is active"
                         #        # message = self.userDict[msg["user"]] + " is active"
                         #        # sendMessage("G09LLA9EW",message)
                         #        # print("[I] sent: "+message)
-                        ###############################################################################
+                        ###########################################################################
 
                         if("type" in msg and msg["type"] == "error"):
                             print("\n\n[!!] error: \n" + msg + "\n\n")
                             # user_is_bot errors because bot cannot use that api function
                             error = "message error - probably no quotes found"
-                            self.sendMessage(self.last_channel, error) # error messages don"t have a channel
+                            self.sendMessage(self.last_channel, error) # err msgs don't have a chan
                             self.sendError()
                         elif("type" in msg and msg["type"] == "message"and "text" in msg and
-                                            all(c in self.legalChars for c in msg["text"].replace("'",""))):
+                                    all(c in self.legalChars for c in msg["text"].replace("'",""))):
                             self.inWhitelist(msg)
 
                             if(msg["channel"] in self.whitelist):
                                 m = msg["text"]
                                 #  cuts text contained between <> ex: <test>
                                 # TODO -- more detailed usage info for specific commands
-                                # to allow for future ~help,<~function> to only display the help message
+                                # to allow for future ~help,<~function> to only display the help msg
                                 m = re.sub(r'&lt;(.*?)&gt;', '', m)
                                 msg["santized"] = m
                                 for r in router:
@@ -260,6 +266,15 @@ class GoTo:
             s = s.substring(0, left)
 
 
+    """
+    only delete messages that the bot sent and skip messages that have already been deleted
+    """
+    def deleteBotMessage(self, msg, chan):
+        if "user" in msg and (msg["user"] == self.id) and ("subtype" not in msg):
+            self.sc.api_call("chat.delete", token=self.token, ts=msg["ts"], channel=chan)
+            print("deleted: " + msg["ts"])
+
+
     # delete the last message posted by the bot in the channel requested
     # tried doing it based off the message json but `key errors` happened
     def delete(self, msg):
@@ -289,44 +304,53 @@ class GoTo:
 
         for chan in self.chanDict:
             hasMore = {}
-            if(chan.startswith("D")):
+            if chan not in self.whitelist:
+                print('[I] skipping channel not in whitelist: {0}'.format(chan))
+                continue
+            elif(chan.startswith("D")):
                 queryStr = im
                 print("            deleting ims for: " + chan + " -> " +  str(self.userDict[self.chanDict[chan]['user']]))
             elif (chan.startswith("G")):
                 queryStr = group
                 print("  deleting group messages in: " + chan + " -> " +  str(self.chanDict[chan]['name']))
-            elif (chan.startswith("C")):
+            elif (chan.startswith("C") and chan in self.whitelist):
                 queryStr = chanStr
                 print("deleting messages in channel: " + chan + " -> " +  str(self.chanDict[chan]['name']))
             msgJson = self.sc.api_call(queryStr, token=self.token, channel=self.chanDict[chan]["id"])
             #print(msgJson)
             if ("has_more" in msgJson and msgJson["has_more"] == True):
+                print('[I] has_more')
                 for message in msgJson["messages"]: # collect initial 100
                     message["chann"] = chan
                     hasMore[message["ts"]] = message  #'ts' is unique enough for each message in indiv. chan
                 more = msgJson
-                while(msgJson["has_more"] == True):
+                count = 0
+                # 100*100 message history per free team
+                while("has_more" in msgJson and msgJson["has_more"] == True and count < 100):
+                    print('getting more... {0}'.format(count))
+                    count +=1
                     msgJson = self.sc.api_call(queryStr, token=self.token,
                                 channel=chan, latest=more["messages"][-1]["ts"], inclusive=1) # need to page through history
-                    for message in msgJson["messages"]: # collect remaining history
-                        message["chann"] = chan
-                        hasMore[message["ts"]] = message  #'ts' is unique enough for each message in indiv. chan
+                    try:
+                        for message in msgJson["messages"]: # collect remaining history
+                            message["chann"] = chan
+                            hasMore[message["ts"]] = message  #'ts' is unique enough for each message in indiv. chan
+                    except KeyError:
+                        continue
+                print('[I] no more')
             if (hasMore): # if has more, this is all messages in that channel
                 time.sleep(1) # rate limit prevention
                 lim = 0
                 for message in hasMore.values():
-                    lim+=1
+                    print(lim)
+                    lim += 1
                     if (lim % 20 == 0):
-                        time.sleep(3)
+                        time.sleep(.1)
                     # seems slack added a bot_id field, different from what they say userid is...
-                    if ("user" in message and message["user"] == self.id and ("subtype" not in message)):
-                        self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=chan)
-                        print("deleted: " + message["ts"])
-            elif (msgJson["messages"]): # <= 100 to delete, has messages
+                    self.deleteBotMessage(message, chan)
+            elif ("messages" in msgJson and msgJson["messages"]): # <= 100 to delete, has messages
                 for message in msgJson["messages"]:
-                    if ("user" in message and message["user"] == self.id and ("subtype" not in message)):
-                        self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=chan)
-                        print("deleted: " + message["ts"])
+                    self.deleteBotMessage(message, chan)
             else:
                 if(chan.startswith("D")):
                     print("no messages to delete in: " + chan + " -> " +  str(self.userDict[self.chanDict[chan]['user']]))

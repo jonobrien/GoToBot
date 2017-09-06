@@ -1,3 +1,4 @@
 # Quote files, etc
 *.txt
 __pycache__
+venv/

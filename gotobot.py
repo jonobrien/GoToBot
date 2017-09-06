@@ -285,7 +285,8 @@ class GoTo:
             for message in msgJson["messages"]:
                 # can only delete messages owned by sender
                 if ("user" in message and message["user"] == self.id and ("subtype" not in message)):
-                    self.sc.api_call("chat.delete", token=self.token, ts=message["ts"], channel=msg["channel"])
+                    self.sc.api_call("chat.delete", token=self.token, ts=message["ts"],
+                                                                            channel=msg["channel"])
                     print("deleted: " + message["ts"])
                     break
         else:
@@ -297,65 +298,75 @@ class GoTo:
     # TODO -- needs to have "has_more" check for > 100
     def deleteAll(self, msg):
         print("\ndeleting all messages in private groups, ims, public channels")
-        queryStr = ''
+        queryStr = '' # default is empty so we can be explicit
         im = "im.history"
         group = "groups.history"
         chanStr = "channels.history"
 
         for chan in self.chanDict:
             hasMore = {}
+            currChanName = None
+            if 'name' in self.chanDict[chan]:
+                currChanName = self.chanDict[chan]['name']
             if chan not in self.whitelist:
-                print('[I] skipping channel not in whitelist: {0}'.format(chan))
+                print('[I] skipping channel not in whitelist: {0} -> {1}'
+                                        .format(chan, currChanName))
                 continue
             elif(chan.startswith("D")):
                 queryStr = im
-                print("            deleting ims for: " + chan + " -> " +  str(self.userDict[self.chanDict[chan]['user']]))
+                print("            deleting ims for: {0} -> {1}"
+                                        .format(chan, self.userDict[self.chanDict[chan]['user']]))
             elif (chan.startswith("G")):
                 queryStr = group
-                print("  deleting group messages in: " + chan + " -> " +  str(self.chanDict[chan]['name']))
-            elif (chan.startswith("C") and chan in self.whitelist):
+                print("  deleting group messages in: {0} -> {1}"
+                                        .format(chan, currChanName))
+            elif (chan.startswith("C")):
                 queryStr = chanStr
-                print("deleting messages in channel: " + chan + " -> " +  str(self.chanDict[chan]['name']))
-            msgJson = self.sc.api_call(queryStr, token=self.token, channel=self.chanDict[chan]["id"])
-            #print(msgJson)
+                print("deleting messages in channel: {0} -> {1}"
+                                        .format(chan, currChanName))
+            msgJson = self.sc.api_call(queryStr, token=self.token,
+                                        channel=self.chanDict[chan]["id"])
+
             if ("has_more" in msgJson and msgJson["has_more"] == True):
                 print('[I] has_more')
                 for message in msgJson["messages"]: # collect initial 100
                     message["chann"] = chan
-                    hasMore[message["ts"]] = message  #'ts' is unique enough for each message in indiv. chan
+                    hasMore[message["ts"]] = message  #'ts' is "unique" for message in indiv. chan
                 more = msgJson
                 count = 0
                 # 100*100 message history per free team
                 while("has_more" in msgJson and msgJson["has_more"] == True and count < 100):
-                    print('getting more... {0}'.format(count))
-                    count +=1
+                    count += 1
+                    # need to page through history
                     msgJson = self.sc.api_call(queryStr, token=self.token,
-                                channel=chan, latest=more["messages"][-1]["ts"], inclusive=1) # need to page through history
+                                channel=chan, latest=more["messages"][-1]["ts"], inclusive=1)
                     try:
                         for message in msgJson["messages"]: # collect remaining history
                             message["chann"] = chan
-                            hasMore[message["ts"]] = message  #'ts' is unique enough for each message in indiv. chan
-                    except KeyError:
+                            #'ts' is unique enough for each message in indiv. chan for key here
+                            hasMore[message["ts"]] = message
+                    except KeyError: # when there are no more messages it errors, so we break out
                         continue
                 print('[I] no more')
-            if (hasMore): # if has more, this is all messages in that channel
+            if (hasMore): # all messages in that channel
                 time.sleep(1) # rate limit prevention
                 lim = 0
                 for message in hasMore.values():
-                    print(lim)
                     lim += 1
                     if (lim % 20 == 0):
                         time.sleep(.1)
-                    # seems slack added a bot_id field, different from what they say userid is...
+                    # seems slack added a NEW bot_id field, different from what they say userid is
                     self.deleteBotMessage(message, chan)
             elif ("messages" in msgJson and msgJson["messages"]): # <= 100 to delete, has messages
                 for message in msgJson["messages"]:
                     self.deleteBotMessage(message, chan)
             else:
                 if(chan.startswith("D")):
-                    print("no messages to delete in: " + chan + " -> " +  str(self.userDict[self.chanDict[chan]['user']]))
+                    print("no messages to delete in: {0} -> {1}"
+                                        .format(chan, self.userDict[self.chanDict[chan]['user']]))
                 else:
-                    print("no messages to delete in: " + chan + " -> " +  str(self.chanDict[chan]['name']))
+                    print("no messages to delete in: {0} -> {1}"
+                                        .format(chan, currChanName))
         print("done deleting\n")
 
 
@@ -411,8 +422,8 @@ def quote(bot, msg):
                 name = name.lower()
             else:
                 #print('[!!] cmd person text else\n')
-                bot.sendMessage(channel, "incorrect args for ~quote,person,text (actual input is -> "
-                                            + cmd + "," + str(person) + ", " + str(text) + ")")
+                bot.sendMessage(channel, "incorrect args for ~quote,person,text " +
+                        "(actual input is -> " + cmd + "," + str(person) + ", " + str(text) + ")")
                 return -1
             fileName = name.lower() + "Quotes.txt"
             if (os.path.isfile(fileName)):
@@ -434,7 +445,8 @@ def quote(bot, msg):
                 name = name.lower()
             else:
                 #print('[!!] cmd person else\n')
-                bot.sendMessage(channel, "incorrect args for ~quote,person (actual input is -> " + cmd + "," + str(person) + ")")
+                bot.sendMessage(channel, "incorrect args for ~quote,person (actual input is -> " +
+                                                                    cmd + "," + str(person) + ")")
                 return -1
             fileName = name.lower() + "Quotes.txt"
             if (os.path.isfile(fileName)):
@@ -448,7 +460,9 @@ def quote(bot, msg):
 
         else:
             #print('[!!] outer else\n')
-            bot.sendMessage(channel, "not enough args for ~quote,person,text or ~quote,person (actual input is -> " +cmd+"," + str(person.lower()) + ", " + str(text) + ")")
+            bot.sendMessage(channel, "not enough args for ~quote,person,text or " +
+                                                "~quote,person (actual input is -> " +cmd+"," +
+                                                str(person.lower()) + ", " + str(text) + ")")
             return -1
     except Exception:
         print("[!!!] error in quote")

@@ -32,7 +32,8 @@ Using a mapping dictionary with callbacks to function calls:
 1. create heroku account
 2. download heroku toolbelt and login locally
 3. configure python buildpack for heroku stack
-4. if there is an issue building remotely: `heroku run python gotobot.py --app=<APPNAME>`
+4. scale the dyno to tell remote what to run when deployed `heroku ps:scale web=1 --app=<APPNAME>`
+5. if there is an issue building remotely: `heroku run python gotobot.py --app=<APPNAME>`
 
 # Docs and API Wrappers
 - [python-slackclient](https://github.com/slackhq/python-slackclient)

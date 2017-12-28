@@ -1,5 +1,10 @@
 import urllib.request
+
+
+
+
 subbedUsers = []
+
 
 def subbedToCatFacts(bot):
     global subbedUsers
@@ -8,9 +13,11 @@ def subbedToCatFacts(bot):
         dm = "~dm," + u +"," + catF
         bot.sendDM({"text":dm})
 
+
 def catFacts(bot, msg):
     request = str(urllib.request.urlopen("http://catfacts-api.appspot.com/api/facts?number=1").read())
     bot.sendMessage(msg["channel"], request[request.find('[') + 2:request.find(']') - 1])
+
 
 def subToCatFacts(bot, msg):
     global subbedUsers

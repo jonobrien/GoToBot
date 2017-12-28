@@ -11,7 +11,7 @@ def quote(bot, msg):
         if(person is not None):
             # can handle all cases and forms of the '@uSerName' 'username' etc
             person = person.upper().replace("@","").replace("<","").replace(">","").replace(" ","")
-        #if (channel != bot.quoteChan):
+        #if (channel not in bot.quoteChans):
         #    print("quote check")
         #    return -1
         #  new quote

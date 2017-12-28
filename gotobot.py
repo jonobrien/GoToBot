@@ -7,18 +7,13 @@ import queue
 from slackclient import SlackClient
 import sys, traceback
 import json
-import pony as p
-from botFunctions import Router
-import poll
-import quote
-# import wave
-# import pyaudio
-import images
+import botFunctions
 import catFacts
 import re
-import partyparrot.partyparrot as pp
-import partyparrot.alphabet as al
-#import git
+
+
+
+
 class GoTo:
 
     def __init__(self):
@@ -31,14 +26,15 @@ class GoTo:
         #with open("token.txt", "r") as tRead:
         #         self.token = tRead.read()
         # read me from the environment...heroku
+        self.router = botFunctions.router
         self.token = os.environ.get("slack_token")
         self.sc             = SlackClient(self.token)
-        authTestResult = self.sc.api_call("auth.test", token=self.token)
+        authTestResult = self.apiCall("auth.test")
         if "error" in authTestResult:
             raise ValueError("Invalid Token")
         self.id             = authTestResult["user_id"]
-        #self.distrChan      = "G0EFAE1EE"
-        self.quoteChan      = "G0CCGHGKS"
+        #self.distrChan      = "G0EFAE1EE" # used with distractionChan() in images.py
+        #self.quoteChans     = ["G0CCGHGKS"] # uncomment check in quote() to restrict channels
         self.interns        = ["Micheal"]
         self.people         = self.interns + ["Zach", "David", "Alan", "Alison",
                                 "Bulent", "Carlos", "Jeff", "Steven", "Thurston", "Linda","Derek"]
@@ -71,13 +67,11 @@ class GoTo:
         info += "https://github.com/jonobrien/GoToBot\n"
         info += "https://github.com/immaterialism/GoToBot\n\n"
         info += "Available Commands:\n"
-        for command in router:
+        for command in self.router:
             if "help" in command and len(command["help"]) > 0:
                 info += command["help"] if command["help"][-1] == "\n" else command["help"] + "\n"
         info +="```"
         self.sendMessage(msg["channel"], info)
-
-
 
 
     def connect(self):
@@ -87,7 +81,8 @@ class GoTo:
     def main(self):
         pass
 
-
+    def apiCall(self, endpoint):
+        return self.sc.api_call(endpoint, token=self.token)
 
 
     def startBot(self):
@@ -95,19 +90,23 @@ class GoTo:
             print("startBot() id: " + self.id)
             # need groups.list api call for the dict of private group info dict by id key
             # make it once at startup, save it for later
-            users = (self.sc.api_call("users.list", token=self.token))["members"]
-            groups = (self.sc.api_call("groups.list", token=self.token))["groups"]
-            ims = (self.sc.api_call("im.list", token=self.token))["ims"]
-            channels = (self.sc.api_call("channels.list", token=self.token))["channels"]
+            users    = (self.apiCall('users.list'))['members']
+            groups   = (self.apiCall('groups.list'))['groups']
+            ims      = (self.apiCall('im.list'))['ims']
+            channels = (self.apiCall('channels.list'))["channels"]
+            self.teamInfo = (self.apiCall('team.info')) # preserve enterprise info
+
             for user in users:
-                self.userDict[user["id"]] = user["name"]
-                self.idDict[user["name"]] = user["id"]
+                self.userDict[user['id']] = user['name']
+                self.idDict[user['name']] = user['id']
 
             # setup the chanDict used for private group/im and public channel info and id reference
             # contains all meta data about those channels and can be used later
             # get it once, so every delete call doesn't repeat them
             # TODO -- seems like joining a channel after starting the bots
             #   allows for deletion even though bot joined after the dictionary was created
+            # ^* this is due to the bot deleting based on whitelist, it has knowledge of
+            # ^* existing names already, so that is expected
             for group in groups:
                 self.chanDict[group['id']] = group
             for im in ims:
@@ -115,7 +114,7 @@ class GoTo:
             for chan in channels:
                 self.chanDict[chan['id']] = chan
             if self.sc.rtm_connect(): # connected to slack real-time messaging api
-                print("connected")
+                print('connected to team: {0}'.format(self.teamInfo['team']['name']))
 
                 while True:
                     msgs = self.sc.rtm_read()
@@ -158,12 +157,11 @@ class GoTo:
                             # user_is_bot errors because bot cannot use that api function
                             error = "message error - probably no quotes found"
                             self.sendMessage(self.last_channel, error) # err msgs don't have a chan
-                            self.sendError()
+                            self.restartBot()
                         elif("type" in msg and msg["type"] == "message"and "text" in msg and
                                     all(c in self.legalChars for c in msg["text"].replace("'",""))):
-                            self.inWhitelist(msg)
 
-                            if(msg["channel"] in self.whitelist):
+                            if(self.inWhitelist(msg)):
                                 m = msg["text"]
                                 #  cuts text contained between <> ex: <test>
                                 # TODO -- more detailed usage info for specific commands
@@ -174,24 +172,15 @@ class GoTo:
                                     for t in r["text"]:
                                         if(t.lower() in m.lower()):
                                             r["callback"](self, msg)
-                    time.sleep(1)
+
+                    time.sleep(1) # artificial rate-limit
             else:
                 print("[!!] Connection Failed, invalid token?")
 
         except AttributeError:
-            print("[!!] attribute error - probably in the send")
-            traceback.print_exc(file=sys.stdout)
-            print("[!!] restarting the bot")
-            self.sc = SlackClient(self.token)
-            time.sleep(5)
-            self.start()
+            self.restartBot()
         except Exception:
-            print("[!!] uncaught error")
-            traceback.print_exc(file=sys.stdout)
-            print("[!!] restarting the bot")
-            time.sleep(5)
-            self.sc = SlackClient(self.token)
-            self.start()
+            self.restartBot()
 
 
     def inWhitelist(self,msg):
@@ -201,6 +190,9 @@ class GoTo:
             with open("whitelist.txt", "w") as self.whiteWrite:
                 self.whiteWrite.write(" ".join(self.whitelist))
             return True
+        if (msg["channel"] in self.whitelist):
+            return True
+        return False
 
 
     def sendMessage(self,channel, message):
@@ -211,23 +203,24 @@ class GoTo:
             self.last_channel = channel
         except Exception:
             exception = traceback.print_exc(file=sys.stdout)
-            self.sendError()
+            self.restartbot("\n[!!] sending failed")
 
 
     # need to figure out how to clean the stack
     # for a fresh restart on errors
     # traces seem to just get huge due to all except handling
     # should just try and fix some looping of excepts
-    def sendError(self):
-        print("\n[!!] sending failed")
+    def restartBot(self, msg='\n[!!] exception, restarting in 5s'):
+        print(msg)
         traceback.print_exc(file=sys.stdout)
+        time.sleep(5)
         print("\n[!!] restarting the bot\n")
         self.sc = SlackClient(self.token)
         self.start()
 
 
     # ~dm,user,msg - user has to be the @"user" string
-    # ex: @jono would be `~dm,jono,message text here`
+    # ex: @jono would be `~dm,jono,msg`
     def sendDM(self,msg):
         print("\n" + str(msg) + "\n\n")
         cmd,userName,message = ([x for x in msg["text"].split(",") if x != ""] + [None]*3)[:3]
@@ -248,7 +241,7 @@ class GoTo:
                 chatPost = self.sc.api_call("chat.postMessage",token=self.token,
                                 channel=dmChannel, text=message, as_user="true")
             except Exception:
-                self.sendError()
+                self.restartbot()
 
 
     def addReaction(self, channel,timestamp,reaction):
@@ -256,9 +249,14 @@ class GoTo:
             self.sc.api_call("reactions.add", token=self.token, name=reaction,
                             channel=channel, timestamp=timestamp)
         except Exception:
-            self.sendError()
+            self.restartbot()
 
 
+
+    """ TODO implement this:
+    it would be interesting to provide individual help messages
+    for certain functions to show examples and other usage information
+    """
     def removeComments(s):
         while(s.contains("<") and s.contains(">")):
             left = s.indexOf("<")
@@ -273,7 +271,9 @@ class GoTo:
     def deleteBotMessage(self, msg, chan):
         if "user" in msg and (msg["user"] == self.id) and ("subtype" not in msg):
             self.sc.api_call("chat.delete", token=self.token, ts=msg["ts"], channel=chan)
-            print("deleted: " + msg["ts"])
+            tofix = 'deleted: {0}'.format(msg["ts"])
+            padded = tofix.rjust(len(tofix) + 8, ' ') # r/l is side string is on, padded from opposite
+            print(padded)
 
 
     """
@@ -301,10 +301,13 @@ class GoTo:
         print("done deleting\n")
 
 
-    # delete every message sent, from last 100, in private groups and ims
-    # TODO -- needs to have "has_more" check for > 100
+    """
+    delete every message sent by bot
+    that are in private groups and ims
+    * don't check the whitelist as the bot could be woken from sleep for this
+    """
     def deleteAll(self, msg):
-        print("\ndeleting all messages in private groups, ims, public channels")
+        print("\n[I] deleting all messages in private groups, ims, public channels")
         queryStr = '' # default is empty so we can be explicit
         im = "im.history"
         group = "groups.history"
@@ -315,48 +318,50 @@ class GoTo:
             currChanName = None
             if 'name' in self.chanDict[chan]:
                 currChanName = self.chanDict[chan]['name']
+            else:
+                currChanName = "dm'd -> need to invite/~addgrouptowhitelist"
             if chan not in self.whitelist:
-                print('[I] skipping channel not in whitelist: {0} -> {1}'
+                print('[I] channel not in whitelist: {0} -> {1}'
                                         .format(chan, currChanName))
                 continue
             elif(chan.startswith("D")):
                 queryStr = im
-                print("            deleting ims for: {0} -> {1}"
-                                        .format(chan, self.userDict[self.chanDict[chan]['user']]))
+                userName = self.userDict[self.chanDict[chan]['user']]
+                print('    [I] deleting ims for: {0} -> {1}'
+                                        .format(chan, userName))
             elif (chan.startswith("G")):
                 queryStr = group
-                print("  deleting group messages in: {0} -> {1}"
+                print('    [I] deleting group messages in: {0} -> {1}'
                                         .format(chan, currChanName))
             elif (chan.startswith("C")):
                 queryStr = chanStr
-                print("deleting messages in channel: {0} -> {1}"
+                print('    [I] deleting messages in channel: {0} -> {1}'
                                         .format(chan, currChanName))
             msgJson = self.sc.api_call(queryStr, token=self.token,
-                                               channel=self.chanDict[chan]["id"])
+                                               channel=self.chanDict[chan]['id'])
 
-            if ("has_more" in msgJson and msgJson["has_more"] == True):
-                print('[I] has_more')
-                for message in msgJson["messages"]: # collect initial 100
-                    message["chann"] = chan
-                    hasMore[message["ts"]] = message  #'ts' is "unique" for message in indiv. chan
+            if ('has_more' in msgJson and msgJson['has_more'] == True):
+                print('        has_more, pagination')
+                for message in msgJson['messages']: # collect initial 100
+                    message["chann"] = chan # add channel to each message
+                    hasMore[message['ts']] = message  #'ts' is "unique" for message in indiv. chan
                 more = msgJson
-                count = 0
-                # 100*100 message history per free team
-                while("has_more" in msgJson and msgJson["has_more"] == True and count < 100):
-                    count += 1
+                pageCount = 0
+                # 100*100 message history per free team, restrict large single channel histories
+                while("has_more" in msgJson and msgJson['has_more'] == True and pageCount < 100):
+                    pageCount += 1
                     # need to page through history
                     msgJson = self.sc.api_call(queryStr, token=self.token,
-                                channel=chan, latest=more["messages"][-1]["ts"], inclusive=1)
+                                channel=chan, latest=more['messages'][-1]['ts'], inclusive=1)
                     try:
-                        for message in msgJson["messages"]: # collect remaining history
-                            message["chann"] = chan
-                            #'ts' is unique enough for each message in indiv. chan for key here
-                            hasMore[message["ts"]] = message
-                    except KeyError: # when there are no more messages it errors, so we break out
+                        for message in msgJson['messages']: # collect remaining history
+                            message["chann"] = chan # add channel to each message
+                            hasMore[message["ts"]] = message #'ts' is "unique" for message in indiv. chan
+                    except KeyError: # when there are no more messages it sometimes errors??? skip it
                         continue
-                print('[I] no more')
+                print('        no more')
             if (hasMore): # all messages in that channel
-                time.sleep(1) # rate limit prevention
+                time.sleep(.2) # rate limit prevention
                 lim = 0
                 for message in hasMore.values():
                     lim += 1
@@ -364,93 +369,19 @@ class GoTo:
                         time.sleep(.1)
                     # seems slack added a NEW bot_id field, different from what they say userid is
                     self.deleteBotMessage(message, chan)
-            elif ("messages" in msgJson and msgJson["messages"]): # <= 100 to delete, has messages
-                for message in msgJson["messages"]:
+            elif ('messages' in msgJson and msgJson['messages']): # <= 100 to delete, has messages
+                for message in msgJson['messages']:
                     self.deleteBotMessage(message, chan)
             else:
+                noneFound = 'no messages to delete in: '
                 if(chan.startswith("D")):
-                    print("no messages to delete in: {0} -> {1}"
-                                        .format(chan, self.userDict[self.chanDict[chan]['user']]))
+                    print('{0} {1} -> {2}'.format(noneFound, chan,
+                                                    self.userDict[self.chanDict[chan]['user']]))
                 else:
-                    print("no messages to delete in: {0} -> {1}"
-                                        .format(chan, currChanName))
+                    print('{0} {1} -> {2}'.format(noneFound, chan, currChanName))
         print("done deleting\n")
 
 
-def colorCode(bot, msg):
-    print("color")
-    name = msg["text"][1 + msg["text"].find(" "):]
-    if(name == msg["text"]):
-        message = "invalid arguments"
-        bot.sendMessage(msg["channel"], message)
-        return
-    # tmp="#"
-    # for ch in name[:3]:
-    #     tmp += hex(ord(ch))[2:]
-    if(name.lower() == "jon"):
-        h = "#39FF14"
-    elif(name.lower() == "verbose"):
-        h = "#b00bee"
-    else:
-        h = "#" + hex(abs(hash(name)))[2:8]
-    #print (h)
-    bot.sendMessage(msg["channel"], h)
-
-
-def randomIntern(bot, msg):
-    ranIntern = random.choice(bot.interns)
-    if ranIntern == "Steven G":
-        ranIntern = ":tubieg: :steveng: :partyg: :zoomieg:"
-    bot.sendMessage(msg["channel"], ranIntern)
-
-
-def test(bot, msg):
-    testing = "blackboxwhitebox"*random.randrange(5,20)
-    bot.sendMessage(msg["channel"], testing)
-
-
-def pony(bot, msg):
-    bot.sendMessage(msg["channel"], "```" + p.Pony.getPony() + "```")
-
-
-def randominterns(bot,msg):
-    bot.sendMessage(msg["channel"],"Alex")
-
-
-def luna(bot,msg):
-    bot.sendMessage(msg["channel"], "luna shutdown")
-
-def partyParrotMsg(bot,msg):
-    txt = msg['text'].lower()
-    txt = txt[12: len(txt)].strip()
-    txt = ''.join(ch for ch in txt if ch in al.ALPHABET)
-    print(txt)
-    print(pp.convert_str_to_emoji(txt))
-    bot.sendMessage(msg["channel"], pp.convert_str_to_emoji(txt, space="           "))
-
-def send87(bot, msg):
-    bot.sendMessage(msg["channel"], "87")
-
-
-# def playGong(bot, msg):
-#     CHUNK = 1024
-#     wf = wave.open("gong.wav", "rb")
-#     p = pyaudio.PyAudio()
-#     stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
-#                     channels=wf.getnchannels(),
-#                     rate=wf.getframerate(),
-#                     output=True)
-#     data = wf.readframes(CHUNK)
-#     while data != "":
-#         stream.write(data)
-#         data = wf.readframes(CHUNK)
-#     stream.stop_stream()
-#     stream.close()
-#     p.terminate()
-
-
 if __name__ == "__main__":
-    r = Router()
     g = GoTo()
-    g.router = r
     g.start()

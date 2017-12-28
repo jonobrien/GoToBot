@@ -4,17 +4,24 @@ import random
 import sys, traceback
 
 
+giphyQueryStr = "http://api.giphy.com/v1/gifs/search?q="
+giphyKeyAndLimitStr = "&api_key=dc6zaTOxFJmzC&limit=1"
+
+
 def nye(bot, msg):
     nyeMlg = "http://i.giphy.com/m6ILp14NR2RDq.gif"
     bot.sendMessage(msg["channel"], nyeMlg)
 
 
+"""
+utilize giphy api to get a requested gif
+
+"""
 def getGiphy(bot, msg):
-    urlStart = "http://api.giphy.com/v1/gifs/search?q="
-    urlEnd = "&api_key=dc6zaTOxFJmzC&limit="
-    imageLimit = "1"
+    urlStart = giphyQueryStr
+    urlEnd = giphyKeyAndLimitStr
     qWord = ",".join(msg["text"].split(",")[1:]).strip().replace(" ", "+")
-    data = urllib.request.urlopen(urlStart + qWord +urlEnd + imageLimit).read().decode("utf-8")#.read())
+    data = urllib.request.urlopen(urlStart + qWord +urlEnd).read().decode("utf-8")#.read())
     jsonData = json.loads(data)
     try:
         gif = jsonData["data"][0]["images"]["original"]["url"]
@@ -25,6 +32,7 @@ def getGiphy(bot, msg):
 
 # get a meme of keyword passed in
 # used memeGenerator API to query for memes
+# v1 api does not require api key
 # ~insanity
 # ~meme,keyword
 def getMeme(bot, msg):
@@ -36,16 +44,16 @@ def getMeme(bot, msg):
             keyword = msg["text"].split(",")[1]
             print(keyword)
             url = "http://version1.api.memegenerator.net/Instances_Select_ByNew?languageCode=en&pageIndex=0&pageSize=12&urlName="
-            data = urllib.request.urlopen(url+keyword).read().decode("utf-8")
+            data = urllib.request.urlopen(url + keyword).read().decode("utf-8")
         jsonData = json.loads(data)
         meme = jsonData["result"][random.randrange(0,len(jsonData["result"]))]["instanceImageUrl"]
     except IndexError:
         meme = "wolf not found"
     except ValueError:
-        meme = "invalid search term: " + keyword
+        meme = "invalid search term: {0}".format(keyword)
     except Exception as e:
         meme = "nope.jpg"
-        print("\nexception getMeme " + str(e))
+        print("\nexception getMeme {0}".format(str(e)))
         print()
         traceback.print_exc(file=sys.stdout)
     bot.sendMessage(msg["channel"],meme)
@@ -58,13 +66,13 @@ def distractionChan(bot):
         print("messageCount: " + str(int(bot.messageCount)))
         randomWord = random.choice(bot.words)
         print("random word: " + randomWord)
-        url = "http://api.giphy.com/v1/gifs/search?q="
-        data = urllib.request.urlopen(url + randomWord +"&api_key=dc6zaTOxFJmzC&limit=1").read().decode("utf-8")#.read())
+        url = giphyQueryStr
+        data = urllib.request.urlopen(url + randomWord + giphyKeyAndLimitStr).read().decode("utf-8")
         jsonData = json.loads(data)
         try:
             wordGif = jsonData["data"][0]["images"]["original"]["url"]
         except IndexError:
-            wordGif = "random gif not found for " + randomWord
+            wordGif = "random gif not found for {0}".format(randomWord)
         bot.sendMessage(bot.distrChan, wordGif)
         bot.sendMessage(bot.distrChan, randomWord)
 

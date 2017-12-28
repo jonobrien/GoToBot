@@ -8,7 +8,9 @@ from slackclient import SlackClient
 import sys, traceback
 import json
 import pony as p
+from botFunctions import Router
 import poll
+import quote
 # import wave
 # import pyaudio
 import images
@@ -30,8 +32,6 @@ class GoTo:
         #         self.token = tRead.read()
         # read me from the environment...heroku
         self.token = os.environ.get("slack_token")
-        #print(self.token)
-        #global sc
         self.sc             = SlackClient(self.token)
         authTestResult = self.sc.api_call("auth.test", token=self.token)
         if "error" in authTestResult:
@@ -170,7 +170,7 @@ class GoTo:
                                 # to allow for future ~help,<~function> to only display the help msg
                                 m = re.sub(r'&lt;(.*?)&gt;', '', m)
                                 msg["santized"] = m
-                                for r in router:
+                                for r in self.router:
                                     for t in r["text"]:
                                         if(t.lower() in m.lower()):
                                             r["callback"](self, msg)
@@ -267,7 +267,8 @@ class GoTo:
 
 
     """
-    only delete messages that the bot sent and skip messages that have already been deleted
+    only delete messages that the bot sent and skip messages
+    that have already been deleted
     """
     def deleteBotMessage(self, msg, chan):
         if "user" in msg and (msg["user"] == self.id) and ("subtype" not in msg):
@@ -275,19 +276,25 @@ class GoTo:
             print("deleted: " + msg["ts"])
 
 
-    # delete the last message posted by the bot in the channel requested
-    # tried doing it based off the message json but `key errors` happened
+    """
+    delete the last message posted by the bot in the channel requested
+      * tried doing it based solely off the message json
+      * but `key errors` occur, need to check owner id
+    """
     def delete(self, msg):
-        print("\ndeleting last message in specified channel: " + str(msg["channel"]))
+        print("\ndeleting last message in specified channel: {0}"
+                                            .format(msg["channel"]))
         msgResponse = self.sc.api_call("groups.history", token=self.token, channel=msg["channel"])
-        msgJson =msgResponse
+        msgJson = msgResponse
         if("messages" in msgJson):
             for message in msgJson["messages"]:
                 # can only delete messages owned by sender
                 if ("user" in message and message["user"] == self.id and ("subtype" not in message)):
-                    self.sc.api_call("chat.delete", token=self.token, ts=message["ts"],
-                                                                            channel=msg["channel"])
-                    print("deleted: " + message["ts"])
+                    self.sc.api_call("chat.delete", token=self.token,
+                                                       ts=message["ts"],
+                                                  channel=msg["channel"]
+                                    )
+                    print("deleted: {0}".format(message["ts"]))
                     break
         else:
             self.sendMessage(msg['channel'], "no bot messages in channel")
@@ -325,7 +332,7 @@ class GoTo:
                 print("deleting messages in channel: {0} -> {1}"
                                         .format(chan, currChanName))
             msgJson = self.sc.api_call(queryStr, token=self.token,
-                                        channel=self.chanDict[chan]["id"])
+                                               channel=self.chanDict[chan]["id"])
 
             if ("has_more" in msgJson and msgJson["has_more"] == True):
                 print('[I] has_more')
@@ -397,78 +404,6 @@ def randomIntern(bot, msg):
     bot.sendMessage(msg["channel"], ranIntern)
 
 
-def quote(bot, msg):
-    try:
-        print(msg)
-        # pad with None values if nothing there on split
-        # protects against empty strings as well
-        cmd,person,text = ([x for x in msg["text"].split(",") if x != ""] + [None]*3)[:3]
-        channel = msg["channel"]
-        if("~quote,person" in msg["text"]):
-            print('inf loop check')
-            return -1
-        if(person is not None):
-            # can handle all cases and forms of the '@uSerName' 'username' etc
-            person = person.upper().replace("@","").replace("<","").replace(">","").replace(" ","")
-        #if (channel != bot.quoteChan):
-        #    print("quote check")
-        #    return -1
-        #  new quote
-        if (cmd and person and text):
-            name = person
-            if (name.startswith("U")): # user typed ~quote,@name
-                name = bot.userDict[name]
-            if (name.lower() in bot.idDict): # user typed ~quote,name as orig, expected
-                name = name.lower()
-            else:
-                #print('[!!] cmd person text else\n')
-                bot.sendMessage(channel, "incorrect args for ~quote,person,text " +
-                        "(actual input is -> " + cmd + "," + str(person) + ", " + str(text) + ")")
-                return -1
-            fileName = name.lower() + "Quotes.txt"
-            if (os.path.isfile(fileName)):
-                with open(fileName, "a+") as f:
-                    f.write("," + text)
-            else:
-                with open(fileName, "a+") as f:
-                    f.write(text)
-            bot.sendMessage(channel, "Quote added for: " + name + " " + text)
-
-        # user requested quote from saved files
-        elif (cmd and person):
-            name = person.lower()
-            print(name)
-            quotes = []
-            if (name.upper().startswith("U")): # user typed ~quote,@name
-                name = bot.userDict[person]
-            if (name.lower() in bot.idDict): # user typed ~quote,name as orig, expected
-                name = name.lower()
-            else:
-                #print('[!!] cmd person else\n')
-                bot.sendMessage(channel, "incorrect args for ~quote,person (actual input is -> " +
-                                                                    cmd + "," + str(person) + ")")
-                return -1
-            fileName = name.lower() + "Quotes.txt"
-            if (os.path.isfile(fileName)):
-                with open(fileName, "r") as read:
-                       quotes = read.read().split(",")
-            else:
-                bot.sendMessage(channel, "no quotes for " + name.lower() + " you should add some")
-            if (quotes):
-                quote = random.choice(quotes)
-                bot.sendMessage(channel, quote)
-
-        else:
-            #print('[!!] outer else\n')
-            bot.sendMessage(channel, "not enough args for ~quote,person,text or " +
-                                                "~quote,person (actual input is -> " +cmd+"," +
-                                                str(person.lower()) + ", " + str(text) + ")")
-            return -1
-    except Exception:
-        print("[!!!] error in quote")
-        bot.sendError()
-
-
 def test(bot, msg):
     testing = "blackboxwhitebox"*random.randrange(5,20)
     bot.sendMessage(msg["channel"], testing)
@@ -515,133 +450,7 @@ def send87(bot, msg):
 
 
 if __name__ == "__main__":
-    # TODO -- move out of this file
-    router = [{
-      "text": ["~colorname", "~color name"],
-      "callback":colorCode,
-      "type": "text",
-      "help": "`~colorname (string)`   - the space is necessary.  Returns a hex color code derived from input"
-    },{
-      "text": ["~randomintern"],
-      "callback":randomIntern,
-      "type": "text",
-      "help": "`~randomintern`         - select a random intern to give a task to"
-    },{
-      "text": ["~help"],
-      "callback":GoTo.help,
-      "type": "text"
-    },{
-      "text": ["~catfacts", "~cat facts"],
-      "callback":catFacts.catFacts,
-      "type": "text",
-      "help": "`~catfacts`             - Returns a random catfact"
-    },{
-      "text": ["~quote"],
-      "callback":quote,
-      "type": "text",
-      "help": ""
-    },{
-      "text": ["~startpoll","~poll","~createpoll","~start poll","~poll","~create poll"],
-      "callback":poll.startPoll,
-      "type": "text",
-      "help": "`~startpoll,(nameOfPoll),(option1),(option2),...(optionX)`\n                        - Creates a poll that can be voted on, closed or have an option added to the poll"
-    },{
-      "text": ["~stoppoll","~removepoll","~stop poll","~remove poll"],
-      "callback":poll.stopPoll,
-      "type": "text",
-      "help": "`~stoppoll,(pollName)`  - Ends the poll and displays results"
-    },{
-      "text": ["~vote","~votepoll","~vote poll"],
-      "callback":poll.vote,
-      "type": "text",
-      "help": "`~vote,(pollName),(option)`\n                        - Votes for (option). If you have aready voted it removes your old vote"
-    },{
-      "text": ["~addoption"],
-      "callback":poll.addOption,
-      "type": "text",
-      "help": "`~addoption,(pollName),(newOption)`\n                        - Creates a new option for a poll"
-    },{
-      "text": ["ship it",":shipit:", "shipit"],
-      "callback":images.shipIt,
-      "type": "text",
-      "help": "`ship it`               - Returns ship it squirrel image"
-    },{
-      "text": ["~deleteall"],
-      "callback":GoTo.deleteAll,
-      "type": "text",
-      "help": "`~deleteall`            - Deletes all private group/dm messages sent by the bot."
-    }
-    # ,{
-    #   "text": ["~delete"],
-    #   "callback":GoTo.delete,
-    #   "type": "text",
-    #   "help": "`~delete`               - Deletes the last message sent by bot in the specified channel."
-    # }
-    ,{
-      "text": ["~nye"],
-      "callback":images.nye,
-      "type": "text",
-      "help": "`~nye`                  - Returns a bill nye gif"
-    }
-    # ,{
-    #   "text": ["test"],
-    #   "callback":test,
-    #   "type": "text",
-    #   "help": "`test` `testing`        - any appearance of the string `test` there will be a response posted"
-    # }
-    ,{
-      "text": ["~meme"],
-      "callback":images.getMeme,
-      "type": "text",
-      "help": "`~meme,(keyword)`       - Gets a meme with given keyword.  Returns nope.jpg if no meme found"
-    },{
-      "text": ["~gif"],
-      "callback":images.getGiphy,
-      "type": "text",
-      "help": "`~gif,(keyword)`        - Returns a gif with the given keyword"
-    },{
-      "text": ["~insanity"],
-      "callback":images.getMeme,
-      "type": "text",
-      "help": "`~insanity`             - Returns an insanity wolf meme"
-    },
-    # {
-    #   "text": ["~dm"],
-    #   "callback":GoTo.sendDM,
-    #   "type": "text",
-    #   "help": ""
-    # },
-    # {
-    #   "text": ["~pony"],
-    #   "callback": pony,
-    #   "type": "text",
-    #   "help": "sends ascii art"
-    # },
-    {
-      "text": ["~random intern", "~ randomintern"],
-      "callback": randominterns,
-      "type": "text",
-      "help": ""
-    },
-    {
-      "text":["~partyparrot"],
-      "callback": partyParrotMsg,
-      "type": "text",
-      "help": "`~partyparrot (string)` - Converts text to party parrot"
-    },
-    {
-      "text":["~send87"],
-      "callback": send87,
-      "type": "text",
-      "help": "`~send87` - Test function that sends 87"
-    }
-    # {
-    #   "text": ["zach", "zachisan", "<3", ":heart:",":heart_decoration:", "zack",
-    #         ":heart_eyes:",":heartbeat:",":heartpulse:",":hearts:"],
-    #   "callback": playGong,
-    #   "type": "text",
-    #   "help": ""
-    # }
-    ]
+    r = Router()
     g = GoTo()
+    g.router = r
     g.start()

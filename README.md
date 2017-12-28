@@ -13,6 +13,10 @@ Using a mapping dictionary with callbacks to function calls:
 - generate memes/gifs from various APIs
 - auto-restart
 
+
+Currently does not support sub-threads via messages
+
+
 # Setup for gotobot.py
 1. clone the repo
 2. login to slack and go to `https://<TEAMNAME>.slack.com/apps/build/custom-integration`

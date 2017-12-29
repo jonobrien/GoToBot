@@ -6,7 +6,8 @@ import urllib.request
 import os.path
 import queue
 from slackclient import SlackClient
-import sys, traceback
+import sys
+import traceback
 import json
 import re
 # add more features

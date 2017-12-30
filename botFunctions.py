@@ -164,7 +164,7 @@ router = [
         "callback":GoTo.deleteAll,
         "type": "text",
         "help": formatHelpMsg("`~deleteall`",
-                              "- Deletes all private group/dm messages sent by the bot.")
+                              "- Deletes all messages from bot in whitelisted channels, and reacts when done.")
     }, {
         "text": ["~nye"],
         "callback":images.nye,

@@ -251,7 +251,10 @@ class GoTo:
                 self.restartbot()
 
     """
+    react to a message in given channel specified by given timestamp
 
+    emoji string does not include wrapping colons:
+        ex: 'white_check_mark' not ':white_check_mark:'
     """
     def addReaction(self, channel, timestamp, reaction):
         try:
@@ -380,7 +383,7 @@ class GoTo:
                     print('{0} {1} -> {2}'.format(noneFound, chan, self.userDict[self.chanDict[chan]['user']]))
                 else:
                     print('{0} {1} -> {2}'.format(noneFound, chan, currChanName))
-        self.addReaction(msg['channel'], msg['ts'], ':white_check_mark:')  # confirmation
+        self.addReaction(msg['channel'], msg['ts'], 'white_check_mark')  # confirmation
         print("[I] done deleting\n")
 
 
